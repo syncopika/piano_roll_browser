@@ -219,6 +219,24 @@ var noteFrequencies = {
 	"Bb1": 58.27,
 	"B1": 61.74,
 */	
+	"C7": 2093.00,
+	"B6": 1975.53,
+	"Bb6": 1864.66,
+	"A#6": 1864.66,
+	"A6": 1760.00,
+	"Ab6": 1661.22,
+	"G#6": 1661.22,
+	"G6": 1567.98,
+	"Gb6": 1479.98,
+	"F#6": 1479.98,
+	"F6": 1396.91,
+	"E6": 1318.51,
+	"Eb6": 1244.51,
+	"D#6": 1244.51,
+	"D6": 1174.66,
+	"Db6": 1108.73,
+	"C#6": 1108.73,
+	"C6": 1046.50,
 
 	"B5": 987.77,
 	"Bb5": 932.33,
@@ -293,6 +311,8 @@ var noteFrequencies = {
 	"C2": 65.41
 };
 
+
+/***** FUNCTIONALITY ********/
 /* 
 this function takes an array of notes and an index and plays the note at that index 
 with a specific duration.
@@ -316,7 +336,6 @@ function readAndPlayNote(array, index){
 		}
 	}
 }
-
 /* allows for a note to sound temporarily when user clicks on a block */
 function clickNote(id){
 	var parent = document.getElementById(id).parentNode.id;
@@ -341,12 +360,20 @@ function addNote(id){
 	}
 	clickNote(id);
 }
+/* make a row highlightable on mouse over - easier to see what note a block is*/
+function highlightRow(id, color){
+	//get id of parent
+	var parent = document.getElementById(id).parentNode.id;
+	//highlight
+	$('#' + parent).css('background-color', color);
+}
 
+/***** PRODUCE THE GRID ********/
 /* dynamically produce piano roll */
 var thePiano = $('#piano');
 thePiano.css("text-align", "center");
 
-/* this will provide the headers for each column in the grid */
+/* this will provide the headers for each column in the grid (i.e. number for each beat/subbeat) */
 for(var i = 0; i < numberOfMeasures * subdivision + 1; i++){
 	var columnHeader = document.createElement('div');
 	columnHeader.id = "col_" + (i - 1); //the - 1 here is important! 
@@ -382,7 +409,6 @@ for(var i = 0; i < numberOfMeasures * subdivision + 1; i++){
 	columnHeader.style.cssFloat = "left";
 	thePiano.append(columnHeader);
 }
-
 //can't pass in a jquery selected element
 appendDummyElement(document.getElementById('piano'));
 
@@ -418,7 +444,6 @@ for(note in noteFrequencies){
 	}
 	
 	newRow.appendChild(newRowText);
-	
 	thePiano.append(newRow);
 	/* append columns to each row */
 	/* for now, test 3 measures of eight notes -> 3 * 8 = 24 columns */
@@ -438,15 +463,13 @@ for(note in noteFrequencies){
 
 		// hook up an event listener to allow for picking notes on the grid!
 		column.addEventListener("click", function(){ addNote(this.id) });
+		// allow for highlighting to make it clear which note a block is
+		column.addEventListener("mouseenter", function(){ highlightRow(this.id, '#FFFF99') });
+		column.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
 		newRow.appendChild(column);
 	}
 	//use this to clear the float lefts
 	appendDummyElement(newRow);
-	/*
-	var dummyElement = document.createElement('div');
-	dummyElement.style.clear = "both";
-	newRow.appendChild(dummyElement);
-	*/
 }
 
 function appendDummyElement(elementToAppendTo){
@@ -455,10 +478,11 @@ function appendDummyElement(elementToAppendTo){
 	elementToAppendTo.appendChild(dummyElement);
 }
 
-/* now how to figure which beats are rest and which are notes? */
+/******* GET NOTES AND PLAY ******/
+/* now how to figure which beats are rests and which are notes? */
 /*
 	get an array of all the possible notes for each beat. since subdivision is 8,
-	there will 8 beats per measure. so 24 arrays! eeeek!
+	there will 8 beats per measure. so 32 arrays! eeeek!
 	- still have to think about tempo also!!!
 	
 	check each array for a green background. only ONE green allowed per array, for 
@@ -482,7 +506,7 @@ function readInNotes(){
 		for(var j = 0; j < column.length; j++){
 			// look for green background! 
 			if(column[j].style.backgroundColor === "rgb(0, 178, 0)"){
-				console.log("found!!");
+				//console.log("found!!");
 				found = 1;
 				var freq = noteFrequencies[column[j].parentNode.id];
 				theNotes.push(new Note(freq, 200));
@@ -493,7 +517,7 @@ function readInNotes(){
 			theNotes.push(new Note(0.0, 200)); //200 ms per eight note for now
 		}
 	}
-	console.log(theNotes);
+	//console.log(theNotes);
 	readAndPlayNote(theNotes, 0);
 }
 
