@@ -1,0 +1,503 @@
+<!doctype html>
+
+<head>
+	<title> piano roll in the browser wow </title>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+	<meta charset='utf-8'>
+</head>
+
+<style>
+	html{
+		font-family: Arial;
+	}
+	
+	table, tr, td{
+		border: 1px solid #000;
+	}
+
+	#parent{
+		display: block;
+	}
+	
+	#wavetypeLabel{
+		font-family: 'gothic ms';
+		font-size: 14px;
+		padding-left: 10px;
+	}
+	
+	ul{
+		padding: 0;
+		margin: 0;
+	}
+	
+	li{
+		list-style-type: none;
+		display: inline-block;
+	}
+	
+	li h2{
+		font-size: 12px;
+	}
+	
+	.footer{
+		text-align: center;
+		margin-top: 3%;
+		font-size: 12px;
+		font-family: 'ms gothic';
+	}
+</style>
+
+<body>
+
+<h2 id='title'> yay piano roll ʕ•ᴥ•ʔ</h2>
+
+<ul>
+	<li><h2 id='measures'></h2></li>
+	<li>|</li>
+	<li><h2 id='timeSig'></h2></li>
+	<li>|</li>
+	<li><h2 id='subdiv'></h2></li>
+</ul>
+
+<ul>
+	<li><button onclick='readInNotes()'> play! </button></li>
+	<li>
+		<label id='wavetypeLabel'> wave type:
+		<select id='selectWave'>
+			<option> sine </option>
+			<option> square </option>
+			<option> sawtooth </option>
+			<option> triangle </option>
+		</select>
+		</label>
+	</li>
+</ul>
+
+<!-- each instrument will have its own div, which should be one row -->
+<br>
+<br>
+
+<div class='instrument' id='inst1'>
+	<table>
+		<tr>
+			<td> INSTRUMENT </td>
+			<td> measure </td>
+		</tr>
+	</table>
+</div>
+
+<br>
+
+<!-- create a piano for each instrument -->
+<div id='piano'>
+</div>
+
+
+
+<div class='footer'>
+	<p> 2017 nch works </p>
+</div>
+
+</body>
+
+<script>
+//references:
+//http://jsfiddle.net/remotesynth/73cD5/?utm_source=website&utm_medium=embed&utm_campaign=73cD5
+//https://modernweb.com/creating-sound-with-the-web-audio-api-and-oscillators/
+//http://www.phy.mtu.edu/~suits/notefreqs.html
+//http://stackoverflow.com/questions/1114024/constructors-in-javascript-objects
+//http://stackoverflow.com/questions/32239560/web-audio-oscillators-unexpectedly-glide-from-one-frequency-to-another-in-chrome
+
+/**** INFORMATION ABOUT THE CURRENT SETUP ****/
+var numberOfMeasures = 4;
+var subdivision = 8; //each measure subdivided by eighth notes
+var timeSignature = "4/4";
+
+$('#measures').html("number of measures: " + numberOfMeasures);
+$('#timeSig').html("time signature: " + timeSignature);
+$('#subdiv').html("subdivision: " + subdivision);
+
+/**** SET UP AUDIO CONTEXT *****/
+var context = new AudioContext();
+var oscillator = context.createOscillator();
+var oscillator2 = context.createOscillator();
+oscillator.type = "sine"; //default type of sound
+oscillator2.type = "sine";
+oscillator.start(0); /* cannot call start more than once, so start it here! */
+oscillator2.start(0);
+
+var g = context.createGain();
+var g2 = context.createGain();
+g.gain.value = 0; /* but set gain to 0 initially so no sound will be heard */
+g2.gain.value = 0;
+
+oscillator.connect(g); //hook up gain with oscillator
+g.connect(context.destination); //the hook up gain with audio context
+oscillator2.connect(g2);
+g2.connect(context.destination);
+
+/*****  NOTE CLASS ******/
+//this class will hold a note's frequency and duration
+//duration is in miliseconds (i.e. 600, 300, 1000)
+function Note(freq, duration){
+	this.freq = freq ? freq : 0.0; //if a value for freq is passed, use it. otherwise 0.
+	this.duration = duration ? duration : 0.0;
+
+	this.setFreq = function(value){
+		this.freq = value;
+	}
+	
+	this.setDuration = function(value){
+		this.duration = value;
+	}
+	
+	this.getFrequency = function(){
+		return this.freq;
+	}
+	
+	this.getDuration = function(){
+		return this.duration;
+	}
+}
+
+/* testing 
+var n1 = new Note();
+n1.setFreq(200);
+n1.setDuration(1);
+console.log(n1);
+var n2 = new Note(250, 2);
+console.log(n2);
+*/
+
+/***** NECESSARY GLOBAL VARIABLES ******/
+var notes = [
+	new Note(130.81, 1000), 
+	new Note(800.81, 1000), 
+	new Note(0.0, 1000), 
+	new Note(0.0, 1000), 
+	new Note(90.81, 300), 
+	new Note(0.0, 300), 
+	new Note(100.81, 3000)
+];
+
+// note frequencies @ 440Hz
+var noteFrequencies = {
+/*
+	"C0": 16.35,
+	"C#0": 17.32,
+	"Db0": 17.32,
+	"D0": 18.35,
+	"D#0": 19.45,
+	"Eb0": 19.45,
+	"E0": 20.60,
+	"F0": 21.83,
+	"F#0": 23.12,
+	"Gb0": 23.12,
+	"G0": 24.50,
+	"G#0": 25.96,
+	"Ab0": 25.96,
+	"A0": 27.50,
+	"A#0": 29.14,
+	"Bb0": 29.14,
+	"B0": 30.87,
+	
+	"C1": 32.70,
+	"C#1": 34.65,
+	"Db1": 34.65,
+	"D1": 36.71,
+	"D#1": 38.89,
+	"Eb1": 38.89,
+	"E1": 41.20,
+	"F1": 43.65,
+	"F#1": 46.25,
+	"Gb1": 46.25,
+	"G1": 49.00,
+	"G#1": 51.91,
+	"Ab1": 51.91,
+	"A1": 55.00,
+	"A#1": 58.27,
+	"Bb1": 58.27,
+	"B1": 61.74,
+*/	
+
+	"B5": 987.77,
+	"Bb5": 932.33,
+	"A#5": 932.33,
+	"A5": 880.00,
+	"Ab5": 830.61,
+	"G#5": 830.61,
+	"G5": 783.99,
+	"Gb5": 739.99,
+	"F#5": 739.99,
+	"F5": 698.46,
+	"E5": 659.25,
+	"Eb5": 622.25,
+	"D#5": 622.25,
+	"D5": 587.33,
+	"Db5": 554.37,
+	"C#5": 554.37,
+	"C5": 523.25,
+
+	"B4": 493.88,
+	"Bb4": 466.16,
+	"A#4": 466.16,
+	"A4": 440.00,
+	"Ab4": 415.30,
+	"G#4": 415.30,
+	"G4": 392.00,
+	"Gb4": 369.99,
+	"F#4": 369.99,
+	"F4": 349.23,
+	"E4": 329.63,
+	"Eb4": 311.13,
+	"D#4": 311.13,
+	"D4": 293.66,
+	"Db4": 277.18,
+	"C#4": 277.18,
+	"C4": 261.63,
+	
+	"B3": 246.94,
+	"Bb3": 233.08,
+	"A#3": 233.08,
+	"A3": 220.00,
+	"Ab3": 207.63,
+	"G#3": 207.63,
+	"G3": 196.00,
+	"Gb3": 185.00,
+	"F#3": 185.00,
+	"F3": 174.61,
+	"E3": 164.81,
+	"Eb3": 155.56,
+	"D#3": 155.56,
+	"D3": 146.83,
+	"Db3": 138.59,
+	"C#3": 138.59,
+	"C3": 130.81,
+	
+	"B2": 123.47,
+	"Bb2": 116.54,
+	"A#2": 116.54,
+	"A2": 110.00,
+	"Ab2": 103.83,
+	"G#2": 103.83,
+	"G2": 98.00,
+	"Gb2": 92.50,
+	"F#2": 92.50,
+	"F2": 87.31,
+	"E2": 82.41,
+	"Eb2": 77.78,
+	"D#2": 77.78,
+	"D2": 73.42,
+	"Db2": 69.30,
+	"C#2": 69.30,
+	"C2": 65.41
+};
+
+/* 
+this function takes an array of notes and an index and plays the note at that index 
+with a specific duration.
+*/
+function readAndPlayNote(array, index){  
+	
+	/* when to stop playing */
+	if(index === array.length){
+		g.gain.value = 0;
+		g2.gain.value = 0;
+	}else{
+		oscillator.type = $('#selectWave').val();
+		//oscillator.frequency.value = array[index].getFrequency();
+		/* tip! by setting value at a certain time, this prevents the 'gliding' from one freq. to the next */
+		oscillator.frequency.setValueAtTime(array[index].getFrequency(), 0);
+		g.gain.value = .4;
+		//g2.gain.value = .2;
+		if(index < array.length){
+			//hold the current note for whatever duration was specified
+			setTimeout(function(){readAndPlayNote(array, ++index)}, array[index].getDuration()); 
+		}
+	}
+}
+
+/* allows for a note to sound temporarily when user clicks on a block */
+function clickNote(id){
+	var parent = document.getElementById(id).parentNode.id;
+	setTimeout(function(){
+		oscillator.type = $('#selectWave').val();
+		oscillator.frequency.setValueAtTime(noteFrequencies[parent], 0);
+		g.gain.value = 1;
+		//this setTimeout makes sure the oscillator gets silent again
+		setTimeout(function(){
+			oscillator.frequency.value = 0.0;
+			g.gain.value = 0;
+		}, 100);
+	}, 10); //use a small value like 10 so it starts "immediately"
+}
+/* make blocks on grid clickable */
+function addNote(id){
+	if($('#' + id).css("background-color") === "rgb(0, 178, 0)"){
+		$('#' + id).css("background-color", "transparent");
+		//also delete from array
+	}else{
+		$('#' + id).css("background-color", "#00B200");
+	}
+	clickNote(id);
+}
+
+/* dynamically produce piano roll */
+var thePiano = $('#piano');
+thePiano.css("text-align", "center");
+
+/* this will provide the headers for each column in the grid */
+for(var i = 0; i < numberOfMeasures * subdivision + 1; i++){
+	var columnHeader = document.createElement('div');
+	columnHeader.id = "col_" + (i - 1); //the - 1 here is important! 
+	
+	if(i > 0){
+		columnHeader.style.borderRight = "1px solid #000";
+		columnHeader.style.textAlign = "center";
+		
+		if(i < subdivision + 1){
+			if(i === subdivision){
+				columnHeader.style.borderRight = '3px solid #000';
+			}
+			columnHeader.textContent = i;
+		}else if(i !== numberOfMeasures * subdivision + 1){
+			var subdiv = (i % subdivision) === 0 ? subdivision : (i % subdivision);
+			if(subdivision === subdiv){
+				columnHeader.style.borderRight = '3px solid #000';
+			}
+			columnHeader.textContent = subdiv; 
+		}
+	}
+	
+	if(i === 0){
+		columnHeader.style.width = '50px';
+		columnHeader.style.height = '12px';
+		columnHeader.style.border = '1px solid #000';
+	}else{
+		columnHeader.style.width = '40px';
+		columnHeader.style.height = '12px';
+		columnHeader.style.fontSize = '10px';
+	}
+	
+	columnHeader.style.cssFloat = "left";
+	thePiano.append(columnHeader);
+}
+
+//can't pass in a jquery selected element
+appendDummyElement(document.getElementById('piano'));
+
+var note;
+for(note in noteFrequencies){
+	
+	note = note;
+	
+    // ignore enharmonics 
+    if(note.substring(0, 2) === "Gb" || note.substring(0, 2) === "Db" ||
+	   note.substring(0, 2) === "D#" || note.substring(0, 2) === "G#" ||
+	   note.substring(0, 2) === "A#"){
+		continue;
+	}
+	
+	//first create new element for new pitch
+	var newRow = document.createElement('div');
+	newRow.id = note;
+	newRow.style.width = '100%';
+	
+	var newRowText = document.createElement('div');
+	newRowText.innerHTML = note.substring(0, note.length - 1) + "<sub>" + note[note.length-1] + "</sub>";
+	newRowText.style.fontSize = '11px';
+	newRowText.style.border = "1px solid #000";
+	newRowText.style.cssFloat = "left";
+	newRowText.style.width = "50px";
+	
+	//this adjustment is only necessary for labeling the DOM elements so that they're clickable
+	//previously, without this adjustment, sometimes you'd get a string id with two '#' chars for the sharp notes,
+	//because of how I decided to label my ids. since you also need a # for jQuery selection, adjustment is necessary. 
+	if(note.indexOf('#') != -1){
+		note = note.replace('#', 's'); //s for sharp
+	}
+	
+	newRow.appendChild(newRowText);
+	
+	thePiano.append(newRow);
+	/* append columns to each row */
+	/* for now, test 3 measures of eight notes -> 3 * 8 = 24 columns */
+	var j = 0;
+	for(; j < numberOfMeasures * subdivision; j++){
+		var column = document.createElement("div");
+		column.id = note + "col_" + j;
+		column.style.cssFloat = "left";
+		column.style.width = '40px';
+		column.style.height = '15px';
+		
+		if((j + 1) % subdivision == 0){
+			column.style.borderRight = "3px solid #000";
+		}else{
+			column.style.borderRight = "1px solid #000";
+		}
+
+		// hook up an event listener to allow for picking notes on the grid!
+		column.addEventListener("click", function(){ addNote(this.id) });
+		newRow.appendChild(column);
+	}
+	//use this to clear the float lefts
+	appendDummyElement(newRow);
+	/*
+	var dummyElement = document.createElement('div');
+	dummyElement.style.clear = "both";
+	newRow.appendChild(dummyElement);
+	*/
+}
+
+function appendDummyElement(elementToAppendTo){
+	var dummyElement = document.createElement('div');
+	dummyElement.style.clear = "both";
+	elementToAppendTo.appendChild(dummyElement);
+}
+
+/* now how to figure which beats are rest and which are notes? */
+/*
+	get an array of all the possible notes for each beat. since subdivision is 8,
+	there will 8 beats per measure. so 24 arrays! eeeek!
+	- still have to think about tempo also!!!
+	
+	check each array for a green background. only ONE green allowed per array, for 
+	now at least. if green, put as new note in notes array. otherwise, make Note with 0.
+	-ok, but how about if I want a quarter note (2 connected blocks)?
+	-maybe make an option for placing eigth notes, quarter notes, whole notes,
+	(eventually 16th?)
+	
+	-if placing quarter note, remember to remove borders
+	-adjust duration accordingly
+
+*/
+var theNotes = [];
+/* this will read all the notes and put them in an array */
+function readInNotes(){
+	theNotes = [];
+	// gather each column
+	for(var i = 0; i < subdivision * numberOfMeasures; i++){
+		var column = $("div[id$='col_" + i + "']").get();
+		var found = 0;
+		for(var j = 0; j < column.length; j++){
+			// look for green background! 
+			if(column[j].style.backgroundColor === "rgb(0, 178, 0)"){
+				console.log("found!!");
+				found = 1;
+				var freq = noteFrequencies[column[j].parentNode.id];
+				theNotes.push(new Note(freq, 200));
+				break;
+			}
+		}
+		if(found === 0){
+			theNotes.push(new Note(0.0, 200)); //200 ms per eight note for now
+		}
+	}
+	console.log(theNotes);
+	readAndPlayNote(theNotes, 0);
+}
+
+</script>
+
+
+</html>
