@@ -1,6 +1,4 @@
-# piano_roll
-a piano roll in the browser, wow! check it out: https://syncopika.github.io/piano_roll/
-<hr>         
+# piano_roll 
 
 inspired by LMMS, one of the best software applications ever!     
     
