@@ -50,31 +50,35 @@
 
 <body>
 
-<h2 id='title'> piano roll fun ʕ•ᴥ•ʔ</h2>
+<div id='toolbar'>
 
-<ul>
-	<li><h2 id='measures'></h2></li>
-	<li>|</li>
-	<li><h2 id='timeSig'></h2></li>
-	<li>|</li>
-	<li><h2 id='subdiv'></h2></li>
-</ul>
+	<h2 id='title'> piano roll fun ʕ•ᴥ•ʔ</h2>
 
-<ul>
-	<li><button onclick='readInNotes()'> play! </button></li>
-	<li><button onclick='stopPlay()'> stop! </button></li>
-	<li><button onclick='addNewMeasure()'> add new measure </button></li>
-	<li>
-		<label id='wavetypeLabel'> wave type:
-		<select id='selectWave'>
-			<option> sine </option>
-			<option> square </option>
-			<option> sawtooth </option>
-			<option> triangle </option>
-		</select>
-		</label>
-	</li>
-</ul>
+	<ul>
+		<li><h2 id='measures'></h2></li>
+		<li>|</li>
+		<li><h2 id='timeSig'></h2></li>
+		<li>|</li>
+		<li><h2 id='subdiv'></h2></li>
+	</ul>
+
+	<ul>
+		<li><button onclick='readInNotes()'> play! </button></li>
+		<li><button onclick='stopPlay()'> stop! </button></li>
+		<li><button onclick='addNewMeasure()'> add new measure </button></li>
+		<li>
+			<label id='wavetypeLabel'> wave type:
+			<select id='selectWave'>
+				<option> sine </option>
+				<option> square </option>
+				<option> sawtooth </option>
+				<option> triangle </option>
+			</select>
+			</label>
+		</li>
+	</ul>
+
+</div>
 
 <!-- each instrument will have its own div, which should be one row -->
 <br>
@@ -111,6 +115,17 @@
 //http://stackoverflow.com/questions/32239560/web-audio-oscillators-unexpectedly-glide-from-one-frequency-to-another-in-chrome
 //http://stackoverflow.com/questions/15261030/web-audio-start-and-stop-oscillator-then-start-it-again
 //http://stackoverflow.com/questions/18785951/how-to-get-width-of-a-div-in-percentage-using-jquery
+//http://alemangui.github.io/blog//2015/12/26/ramp-to-value.html
+
+//TODO:
+/*
+-allow color customizations for highlight, note blocks
+-legato, staccato toggling for individual notes
+-bend notes? :>
+-multiple instruments => this is gonna be hard because we can't keep adding rows and columns to the DOM => reuse same grid, but store note info!
+-onion-skin type thing to show where other instruments' notes are like in PxTone
+*/
+
 
 /**** INFORMATION ABOUT THE CURRENT SETUP ****/
 var numberOfMeasures = 4; //4 measures by default
@@ -140,7 +155,7 @@ function initOscillator(g){
 function initGain(){
 	var g = context.createGain();
 	/* set gain to 0 initially so no sound will be heard */
-	g.gain.value = 0;
+	g.gain.value = 0.0;
 	return g;
 }
 
@@ -327,26 +342,42 @@ function readAndPlayNote(array, index){
 		//oscillator.frequency.value = array[index].getFrequency();
 		/* tip! by setting value at a certain time, this prevents the 'gliding' from one freq. to the next */
 		oscillator.frequency.setValueAtTime(array[index].getFrequency(), 0);
-		g.gain.value = .4;
+		//by setting gain value here according to the two conditions, this allows for the 'articulation' of notes without 
+		//the 'helicopter' sound when a certain note frequency is 0. 
+		//previously, the gain would have been .3 even for notes with 0 frequency,
+		//which causes some increase in volume in background sound.
+		//it was only detectable when I added the setTimeout below where I set gain to 0.
+		//this is fixed by always setting gain to 0 if a note's frequency is 0.
+		g.gain.value = array[index].getFrequency() > 0 ? .3 : 0.0;
 		if(index < array.length){
 			//hold the current note for whatever duration was specified
-			timer = setTimeout(function(){readAndPlayNote(array, ++index)}, array[index].getDuration()); 
+			//in other words, hold this current note for array[index].getDuration(), then move on to the next note.
+			//note that index is pre-incremented for the next note, but we also need the duration for this current index!
+			//therefore, currIndex will hold the current note's index.
+			var currIndex = index;
+			
+			//change gain to 0 after a really small amount of time to give the impression of articulation
+			//100 might have to be a better value later to coordinate with when the next note will play
+			setTimeout(function(){ g.gain.value = 0.0; }, 100); 
+			
+			timer = setTimeout(function(){readAndPlayNote(array, ++index)}, array[currIndex].getDuration()); 
 		}
 	}
 }
 /* stop playback */
 function stopPlay(){
 	clearTimeout(timer);
-	g.gain.value = 0;
+	g.gain.value = 0.0;
 }
 /* allows for a note to sound temporarily when user clicks on a block */
 function clickNote(id){
 	var parent = document.getElementById(id).parentNode.id;
 	parent = parent.replace('s', '#'); //replace any 's' with '#' so we can match a key in noteFrequencies
+	
 	setTimeout(function(){
 		oscillator.type = $('#selectWave').val();
 		oscillator.frequency.setValueAtTime(noteFrequencies[parent], 0);
-		g.gain.value = 1;
+		g.gain.value = .3;
 		//this setTimeout makes sure the oscillator gets silent again
 		setTimeout(function(){
 			oscillator.frequency.value = 0.0;
@@ -358,8 +389,19 @@ function clickNote(id){
 function addNote(id){
 	if($('#' + id).css("background-color") === "rgb(0, 178, 0)"){
 		$('#' + id).css("background-color", "transparent");
+		
+		//change hasNote attribute to false (0) in column header
+		var headerId = id.substring(id.indexOf("col"));
+		var currValue = parseInt(document.getElementById(headerId).getAttribute("hasNote"));
+		document.getElementById(headerId).setAttribute("hasNote", --currValue);
+		
 	}else{
 		$('#' + id).css("background-color", "#00B200");
+		
+		//change hasNote attribute to true (1) in column header
+		var headerId = id.substring(id.indexOf("col"));
+		var currValue = parseInt(document.getElementById(headerId).getAttribute("hasNote"));
+		document.getElementById(headerId).setAttribute("hasNote", ++currValue);
 	}
 	clickNote(id);
 }
@@ -379,7 +421,7 @@ function addNewMeasure(){
 	//the new subdivisions of the new measure
 	var dummy = $("div[id='columnHeaderRow_dummy']").get()[0];
 	var dummyParent = dummy.parentNode;
-	console.log(dummyParent);
+	//console.log(dummyParent);
 	
 	/* increase width horizontally of #piano */
 	if(dummyParent.style.width){
@@ -397,6 +439,11 @@ function addNewMeasure(){
 		newHeader.style.height = '12px';
 		newHeader.style.fontSize = '10px';
 		newHeader.style.cssFloat = "left";
+		
+		//0 == false; i.e. does not have a note in the column
+		//this attribute should help optimize performance a bit
+		newHeader.setAttribute("hasNote", 0); 
+		
 		newHeader.textContent =  i + 1;
 		
 		if(i + 1 === subdivision){
@@ -483,6 +530,9 @@ for(var i = 0; i < numberOfMeasures * subdivision + 1; i++){
 		columnHeader.style.height = '12px';
 		columnHeader.style.fontSize = '10px';
 	}
+	
+	//0 == false; i.e. does not have a note in the column
+	columnHeader.setAttribute("hasNote", 0); 
 	
 	columnHeader.style.cssFloat = "left";
 	columnHeaderRow.append(columnHeader);
@@ -584,6 +634,13 @@ function readInNotes(){
 	notes = [];
 	// gather each column
 	for(var i = 0; i < subdivision * numberOfMeasures; i++){
+	
+		// skip any columns where hasnote attribute of header === 0
+		// this should make performance at least a bit better when dealing with many measures
+		if(document.getElementById('col_' + i).getAttribute('hasnote') === '0'){
+			continue;
+		}
+	
 		var column = $("div[id$='col_" + i + "']").get();
 		var found = 0;
 		for(var j = 0; j < column.length; j++){
