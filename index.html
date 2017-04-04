@@ -634,12 +634,19 @@ function readInNotes(){
 	notes = [];
 	// gather each column
 	for(var i = 0; i < subdivision * numberOfMeasures; i++){
-	
+		
+		/*
+		the below will not work! you'd just be skipping over the rests in between notes and end up
+		stringing all the notes together. not what you want. 
+		-instead, try putting all the columns where hasnote attribute is 1 in an ordered set of some kind and then
+		 play all the notes from column 0 up to the HIGHEST numbered column that has hasnote === 1.
+		
 		// skip any columns where hasnote attribute of header === 0
 		// this should make performance at least a bit better when dealing with many measures
 		if(document.getElementById('col_' + i).getAttribute('hasnote') === '0'){
 			continue;
 		}
+		*/
 	
 		var column = $("div[id$='col_" + i + "']").get();
 		var found = 0;
