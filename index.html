@@ -15,14 +15,18 @@
 		border: 1px solid #000;
 	}
 
-	#parent{
-		display: block;
+	#piano{
+		display: inline-block;
 	}
 	
 	#wavetypeLabel{
-		font-family: 'gothic ms';
+		font-family: 'arial', 'gothic ms';
 		font-size: 14px;
 		padding-left: 10px;
+	}
+	
+	#title{
+		margin: 0;
 	}
 	
 	ul{
@@ -50,9 +54,9 @@
 
 <body>
 
-<div id='toolbar'>
+<h2 id='title'> piano roll fun ʕ•ᴥ•ʔ</h2>
 
-	<h2 id='title'> piano roll fun ʕ•ᴥ•ʔ</h2>
+<div id='toolbar'>
 
 	<ul>
 		<li><h2 id='measures'></h2></li>
@@ -119,6 +123,7 @@
 
 //TODO:
 /*
+-tempo change - currently ~152 bpm!
 -allow color customizations for highlight, note blocks
 -legato, staccato toggling for individual notes
 -bend notes? :>
@@ -160,7 +165,7 @@ function initGain(){
 
 /*****  NOTE CLASS ******/
 //this class will hold a note's frequency and duration
-//duration is in miliseconds (i.e. 600, 300, 1000)
+//duration is in miliseconds (i.e. 600, 300, 1000) - because using setTimeout to play notes for specified duration
 function Note(freq, duration){
 	this.freq = freq ? freq : 0.0; //if a value for freq is passed, use it. otherwise 0.
 	this.duration = duration ? duration : 0.0;
@@ -421,13 +426,9 @@ function addNewMeasure(){
 	//the new subdivisions of the new measure
 	var dummy = $("div[id='columnHeaderRow_dummy']").get()[0];
 	var dummyParent = dummy.parentNode;
-	
-	/* increase width horizontally of #piano */
-	if(dummyParent.style.width){
-		dummyParent.style.width = parseInt(dummyParent.style.width) + 20 + "%";
-	}else{
-		dummyParent.style.width = "100%";  
-	}
+
+	// this is important for letting the grid expand horizontally
+	dummyParent.parentNode.style.whiteSpace = "nowrap";
 	
 	//new column headers 
 	for(var i = 0; i < subdivision; i++){
@@ -436,7 +437,8 @@ function addNewMeasure(){
 		newHeader.style.width = '40px';
 		newHeader.style.height = '12px';
 		newHeader.style.fontSize = '10px';
-		newHeader.style.cssFloat = "left";
+		newHeader.style.display = 'inline-block';
+		newHeader.style.textAlign = "center";
 		
 		//0 == false; i.e. does not have a note in the column
 		//this attribute should help optimize performance a bit
@@ -464,7 +466,7 @@ function addNewMeasure(){
 			newColumn.id = noteRows[j].id + "col_" + ((numberOfMeasures * subdivision) + k);
 			//adjust id if needed
 			newColumn.id = replaceSharp(newColumn.id);
-			newColumn.style.cssFloat = "left";
+			newColumn.style.display = 'inline-block';
 			newColumn.style.width = '40px';
 			newColumn.style.height = '15px';
 			
@@ -490,15 +492,13 @@ function addNewMeasure(){
 /***** PRODUCE THE GRID ********/
 /* dynamically produce piano roll */
 var thePiano = $('#piano');
-thePiano.css("text-align", "center");
-
 var columnHeaderRow = $('#columnHeaderRow');
 
 /* this will provide the headers for each column in the grid (i.e. number for each beat/subbeat) */
 for(var i = 0; i < numberOfMeasures * subdivision + 1; i++){
 	var columnHeader = document.createElement('div');
 	columnHeader.id = "col_" + (i - 1); //the - 1 here is important! 
-	columnHeader.style.display = "inline";
+	columnHeader.style.display = "inline-block";
 	
 	if(i > 0){
 		columnHeader.style.borderRight = "1px solid #000";
@@ -531,7 +531,6 @@ for(var i = 0; i < numberOfMeasures * subdivision + 1; i++){
 	//0 == false; i.e. does not have a note in the column
 	columnHeader.setAttribute("hasNote", 0); 
 	
-	columnHeader.style.cssFloat = "left";
 	columnHeaderRow.append(columnHeader);
 }
 //can't pass in a jquery selected element
@@ -553,14 +552,14 @@ for(note in noteFrequencies){
 	//first create new element for new pitch
 	var newRow = document.createElement('div');
 	newRow.id = replaceSharp(note);
-	newRow.style.width = '100%';
 	
 	var newRowText = document.createElement('div');
 	newRowText.innerHTML = note.substring(0, note.length - 1) + "<sub>" + note[note.length-1] + "</sub>";
 	newRowText.style.fontSize = '11px';
 	newRowText.style.border = "1px solid #000";
-	newRowText.style.cssFloat = "left";
+	newRowText.style.display = 'inline-block';
 	newRowText.style.width = "50px";
+	newRowText.style.verticalAlign = "middle";
 	
 	newRow.appendChild(newRowText);
 	thePiano.append(newRow);
@@ -568,9 +567,11 @@ for(note in noteFrequencies){
 	for(var j = 0; j < numberOfMeasures * subdivision; j++){
 		var column = document.createElement("div");
 		column.id = replaceSharp(note) + "col_" + j;
-		column.style.cssFloat = "left";
+		column.style.display = 'inline-block';
+		//column.style.cssFloat = "left";
 		column.style.width = "40px";
 		column.style.height = "15px";
+		column.style.verticalAlign = "middle";
 		
 		if((j + 1) % subdivision == 0){
 			column.style.borderRight = "3px solid #000";
@@ -585,7 +586,10 @@ for(note in noteFrequencies){
 		column.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
 		newRow.appendChild(column);
 	}
-	//use this to clear the float lefts
+	//
+	//this was used previously to clear the float lefts when I floated all the grid blocks left.
+	//but since they're all now display: inline-block instead, which works much better, this is
+	//really an artifact now. 
 	appendDummyElement(newRow);
 }
 
@@ -603,7 +607,6 @@ function replaceSharp(string){
 
 function appendDummyElement(elementToAppendTo){
 	var dummyElement = document.createElement('div');
-	dummyElement.style.clear = "both";
 	dummyElement.id = elementToAppendTo.id + "_dummy";
 	elementToAppendTo.appendChild(dummyElement);
 }
