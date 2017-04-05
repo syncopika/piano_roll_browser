@@ -126,7 +126,6 @@
 -onion-skin type thing to show where other instruments' notes are like in PxTone
 */
 
-
 /**** INFORMATION ABOUT THE CURRENT SETUP ****/
 var numberOfMeasures = 4; //4 measures by default
 var subdivision = 8; //each measure subdivided by eighth notes
@@ -195,6 +194,7 @@ console.log(n2);
 /***** NECESSARY GLOBAL VARIABLES ******/
 var notes = [];
 var timer; //holds setTimeout to allow for easy stopping
+var currentInstruments = []; //this array will hold all the instruments. each instrument is one oscillator.
 
 // note frequencies @ 440Hz
 var noteFrequencies = {
@@ -421,12 +421,10 @@ function addNewMeasure(){
 	//the new subdivisions of the new measure
 	var dummy = $("div[id='columnHeaderRow_dummy']").get()[0];
 	var dummyParent = dummy.parentNode;
-	//console.log(dummyParent);
 	
 	/* increase width horizontally of #piano */
 	if(dummyParent.style.width){
 		dummyParent.style.width = parseInt(dummyParent.style.width) + 20 + "%";
-		//console.log(dummyParent.style.width);
 	}else{
 		dummyParent.style.width = "100%";  
 	}
@@ -456,7 +454,6 @@ function addNewMeasure(){
 	
 	//now add new columns for each note
 	var noteRows = $('#piano').children().get();
-	//console.log(noteRows);
 	
 	//start at 1 to skip column header row 
 	for(var j = 1; j < noteRows.length; j++){
@@ -572,8 +569,8 @@ for(note in noteFrequencies){
 		var column = document.createElement("div");
 		column.id = replaceSharp(note) + "col_" + j;
 		column.style.cssFloat = "left";
-		column.style.width = '40px';
-		column.style.height = '15px';
+		column.style.width = "40px";
+		column.style.height = "15px";
 		
 		if((j + 1) % subdivision == 0){
 			column.style.borderRight = "3px solid #000";
@@ -629,26 +626,25 @@ function appendDummyElement(elementToAppendTo){
 
 */
 
+
 /* this will read all the notes and put them in an array */
 function readInNotes(){
 	notes = [];
-	// gather each column
-	for(var i = 0; i < subdivision * numberOfMeasures; i++){
-		
-		/*
-		the below will not work! you'd just be skipping over the rests in between notes and end up
-		stringing all the notes together. not what you want. 
-		-instead, try putting all the columns where hasnote attribute is 1 in an ordered set of some kind and then
-		 play all the notes from column 0 up to the HIGHEST numbered column that has hasnote === 1.
-		
-		// skip any columns where hasnote attribute of header === 0
-		// this should make performance at least a bit better when dealing with many measures
-		if(document.getElementById('col_' + i).getAttribute('hasnote') === '0'){
-			continue;
-		}
-		*/
 	
-		var column = $("div[id$='col_" + i + "']").get();
+	//first find what the last column with a note (hasnote === 1) is 
+	//this will aid performance and prevent unnecessary column look-throughs 
+	var columnHeaders = document.getElementById('columnHeaderRow').children;
+	var lastColumn = -1;
+	for(var k = 0; k < columnHeaders.length; k++){
+		if(columnHeaders[k].getAttribute('hasnote') === '1'){
+			lastColumn = parseInt(columnHeaders[k].id.substring(4));
+		}
+	}
+	
+	// gather each column
+	for(var i = 0; i <= lastColumn; i++){
+		
+		var column = $("div[id$='col_" + i + "']").get(); //get all the blocks in each column
 		var found = 0;
 		for(var j = 0; j < column.length; j++){
 			// look for green background! 
