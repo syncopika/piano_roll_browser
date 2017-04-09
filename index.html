@@ -3,6 +3,7 @@
 <head>
 	<title> piano roll in the browser wow </title>
 	<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+	<script src='classes.js'></script>
 	<meta charset='utf-8'>
 </head>
 
@@ -67,9 +68,12 @@
 	</ul>
 
 	<ul>
-		<li><button onclick='readInNotes()'> play! </button></li>
+		<li><button onclick='play()'> play! </button></li>
+		<li><button onclick='playAll()'> play <b>all</b>! </button></li>
 		<li><button onclick='stopPlay()'> stop! </button></li>
 		<li><button onclick='addNewMeasure()'> add new measure </button></li>
+		<li><button onclick='addNewInstrument()'> add new instrument </button></li>
+		<li><button onclick='clearGrid()'> clear grid </button></li>
 		<li>
 			<label id='wavetypeLabel'> wave type:
 			<select id='selectWave'>
@@ -88,17 +92,16 @@
 <br>
 <br>
 
-<div class='instrument' id='inst'>
+<div>
 	<table>
-		<tr>
-			<td> INSTRUMENT 1 </td>
+		<tr id='instrumentTable'>
+			<td id='1' selected='1' style='background-color: rgb(188,223,70)' onclick='chooseInstrument(this.id)'> default instrument </td>
 		</tr>
 	</table>
 </div>
 
 <br>
 
-<!-- create a piano for each instrument -->
 <div id='piano'>
 	<div id='columnHeaderRow'></div>
 </div>
@@ -111,6 +114,7 @@
 </body>
 
 <script>
+
 //references:
 //http://jsfiddle.net/remotesynth/73cD5/?utm_source=website&utm_medium=embed&utm_campaign=73cD5
 //https://modernweb.com/creating-sound-with-the-web-audio-api-and-oscillators/
@@ -130,46 +134,26 @@
 -multiple instruments => this is gonna be hard because we can't keep adding rows and columns to the DOM => reuse same grid, but store note info!
 -onion-skin type thing to show where other instruments' notes are like in PxTone
 */
-
-/**** INFORMATION ABOUT THE CURRENT SETUP ****/
-var numberOfMeasures = 4; //4 measures by default
-var subdivision = 8; //each measure subdivided by eighth notes
-var timeSignature = "4/4";
-
-$('#measures').html("number of measures: " + numberOfMeasures);
-$('#timeSig').html("time signature: " + timeSignature);
-$('#subdiv').html("subdivision: " + subdivision);
-
-/**** SET UP AUDIO CONTEXT *****/
-var context = new AudioContext();
-
-var g = initGain();
-var oscillator = initOscillator(g);//context.createOscillator();
-g.connect(context.destination); //the hook up gain with audio context
-
-// connect gain object. each oscillator should have its own gain I think.
-function initOscillator(g){
-	var o = context.createOscillator();
-	o.type = $('#selectWave').val();
-	o.connect(g); 
-	o.start(0);
-	return o;
-}
-
-function initGain(){
-	var g = context.createGain();
-	/* set gain to 0 initially so no sound will be heard */
-	g.gain.value = 0.0;
-	return g;
+/****** INSTRUMENT CLASS ********/
+// this class will hold an instrument's oscillator and current notes for that instrument
+function Instrument(name, oscillator, gain, notesArray){
+	// make these private??
+	this.name = name;
+	this.oscillator = oscillator;
+	this.gain = gain;
+	this.notes = notesArray;
 }
 
 /*****  NOTE CLASS ******/
-//this class will hold a note's frequency and duration
-//duration is in miliseconds (i.e. 600, 300, 1000) - because using setTimeout to play notes for specified duration
-function Note(freq, duration){
-	this.freq = freq ? freq : 0.0; //if a value for freq is passed, use it. otherwise 0.
-	this.duration = duration ? duration : 0.0;
+// this class will hold a note's frequency and duration
+// duration is in miliseconds (i.e. 600, 300, 1000) - because using setTimeout to play notes for specified duration
+function Note(freq, duration, block){
 
+	// make these private??
+	this.freq = freq ? freq : 0.0; // if a value for freq is passed, use it. otherwise 0.
+	this.duration = duration ? duration : 0.0;
+	this.block = block;
+	
 	this.setFreq = function(value){
 		this.freq = value;
 	}
@@ -187,21 +171,14 @@ function Note(freq, duration){
 	}
 }
 
-/* testing 
-var n1 = new Note();
-n1.setFreq(200);
-n1.setDuration(1);
-console.log(n1);
-var n2 = new Note(250, 2);
-console.log(n2);
-*/
 
 /***** NECESSARY GLOBAL VARIABLES ******/
-var notes = [];
-var timer; //holds setTimeout to allow for easy stopping
-var currentInstruments = []; //this array will hold all the instruments. each instrument is one oscillator.
+var instruments = [];		// list of instruments will be an array
+var timer;
+var timers = []; 			// holds timer variables equal to setTimeout to allow for easy stopping
+var currentInstrument; 		// need to keep track of what current instrument is!
 
-// note frequencies @ 440Hz
+// NOTE FREQUENCIES @ 440Hz
 var noteFrequencies = {
 /*
 	"C0": 16.35,
@@ -332,70 +309,74 @@ var noteFrequencies = {
 	"C2": 65.41
 };
 
+/**** INFORMATION ABOUT THE CURRENT SETUP ****/
+var numberOfMeasures = 4; 	// 4 measures by default
+var subdivision = 8; 		// each measure subdivided by eighth notes
+var timeSignature = "4/4";
+
+$('#measures').html("number of measures: " + numberOfMeasures);
+$('#timeSig').html("time signature: " + timeSignature);
+$('#subdiv').html("subdivision: " + subdivision);
+
+/**** SET UP AUDIO CONTEXT *****/
+var context = new AudioContext();
+
+// SET UP INITIAL INSTRUMENT
+// this oscillator is used to hear notes when they get clicked on the grid
+var g = initGain();
+var oscillator = initOscillator(g);	
+g.connect(context.destination);		// hook up gain with audio context
+
+// put initial instrument in instruments object
+var initialInstrument = new Instrument("Instrument 1", oscillator, g, []);
+instruments.push(initialInstrument);
+currentInstrument = instruments[0];
+
 
 /***** FUNCTIONALITY ********/
-/* 
-this function takes an array of notes and an index and plays the note at that index 
-with a specific duration.
-*/
-function readAndPlayNote(array, index){  
-	/* when to stop playing */
-	if(index === array.length){
-		g.gain.value = 0;
-	}else{
-		oscillator.type = $('#selectWave').val();
-		//oscillator.frequency.value = array[index].getFrequency();
-		/* tip! by setting value at a certain time, this prevents the 'gliding' from one freq. to the next */
-		oscillator.frequency.setValueAtTime(array[index].getFrequency(), 0);
-		//by setting gain value here according to the two conditions, this allows for the 'articulation' of notes without 
-		//the 'helicopter' sound when a certain note frequency is 0. 
-		//previously, the gain would have been .3 even for notes with 0 frequency,
-		//which causes some increase in volume in background sound.
-		//it was only detectable when I added the setTimeout below where I set gain to 0.
-		//this is fixed by always setting gain to 0 if a note's frequency is 0.
-		g.gain.value = array[index].getFrequency() > 0 ? .3 : 0.0;
-		if(index < array.length){
-			//hold the current note for whatever duration was specified
-			//in other words, hold this current note for array[index].getDuration(), then move on to the next note.
-			//note that index is pre-incremented for the next note, but we also need the duration for this current index!
-			//therefore, currIndex will hold the current note's index.
-			var currIndex = index;
-			
-			//change gain to 0 after a really small amount of time to give the impression of articulation
-			//100 might have to be a better value later to coordinate with when the next note will play
-			setTimeout(function(){ g.gain.value = 0.0; }, 100); 
-			
-			timer = setTimeout(function(){readAndPlayNote(array, ++index)}, array[currIndex].getDuration()); 
-		}
-	}
+
+// create a new gain object
+function initGain(){
+	var newGain = context.createGain();
+	// set gain to 0 initially so no sound will be heard 
+	newGain.gain.value = 0.0;
+	return newGain;
 }
-/* stop playback */
-function stopPlay(){
-	clearTimeout(timer);
-	g.gain.value = 0.0;
+
+// create a new oscillator
+function initOscillator(gain){
+	var o = context.createOscillator();
+	o.type = $('#selectWave').val();
+	o.connect(gain); 
+	o.start(0);
+	return o;
 }
-/* allows for a note to sound temporarily when user clicks on a block */
+
+/************** DOM MODIFICATION *******************/
+
+// allows for a note to sound temporarily when user clicks on a block 
 function clickNote(id){
 	var parent = document.getElementById(id).parentNode.id;
-	parent = parent.replace('s', '#'); //replace any 's' with '#' so we can match a key in noteFrequencies
+	parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
 	
 	setTimeout(function(){
 		oscillator.type = $('#selectWave').val();
 		oscillator.frequency.setValueAtTime(noteFrequencies[parent], 0);
 		g.gain.value = .3;
-		//this setTimeout makes sure the oscillator gets silent again
+		// this setTimeout makes sure the oscillator gets silent again
 		setTimeout(function(){
 			oscillator.frequency.value = 0.0;
 			g.gain.value = 0;
 		}, 100);
-	}, 10); //use a small value like 10 so it starts "immediately"
+	}, 10); // use a small value like 10 so it starts "immediately"
 }
-/* make blocks on grid clickable */
+
+// make blocks on grid clickable 
 function addNote(id){
 	if($('#' + id).css("background-color") === "rgb(0, 178, 0)"){
 		$('#' + id).css("background-color", "transparent");
 		
-		//change hasNote attribute to false (0) in column header
+		// change hasNote attribute to false (0) in column header
 		var headerId = id.substring(id.indexOf("col"));
 		var currValue = parseInt(document.getElementById(headerId).getAttribute("hasNote"));
 		document.getElementById(headerId).setAttribute("hasNote", --currValue);
@@ -410,27 +391,47 @@ function addNote(id){
 	}
 	clickNote(id);
 }
-/* make a row highlightable on mouse over - easier to see what note a block is*/
+
+// make a row highlightable on mouse over - easier to see what note a block is
 function highlightRow(id, color){
-	//get id of parent
+	// get id of parent
 	var parent = document.getElementById(id).parentNode.id;
-	//highlight
+	// highlight
 	$('#' + parent).css('background-color', color);
 }
-/* add a new measure */
+
+// delete all notes
+function clearGrid(){
+	var columns = document.getElementById("columnHeaderRow").children;
+	// start at 1 to ignore the column before 1 (the blank one)
+	for(var i = 1; i < columns.length; i++){
+		if(columns[i].getAttribute("hasnote") !== "0"){
+			// change hasnote attribute back to 0!
+			columns[i].setAttribute("hasnote", "0");
+			var columnToCheck = $("div[id$='col_" + (i-1) + "']").get();
+			for(var j = 0; j < columnToCheck.length; j++){
+				if(columnToCheck[j].style.backgroundColor === "rgb(0, 178, 0)"){
+					columnToCheck[j].style.backgroundColor = "transparent";
+				}
+			}
+		}
+	}
+}
+
+// add a new measure 
 function addNewMeasure(){
 
 	$('#measures').text( "number of measures: " + (parseInt($('#measures').text().trim().split(' ').reverse()[0]) + 1) );
 	
-	//find the dummy node for the header columns and insert before that node
-	//the new subdivisions of the new measure
+	// find the dummy node for the header columns and insert before that node
+	// the new subdivisions of the new measure
 	var dummy = $("div[id='columnHeaderRow_dummy']").get()[0];
 	var dummyParent = dummy.parentNode;
 
 	// this is important for letting the grid expand horizontally
 	dummyParent.parentNode.style.whiteSpace = "nowrap";
 	
-	//new column headers 
+	// new column headers 
 	for(var i = 0; i < subdivision; i++){
 		var newHeader = document.createElement('div');
 		newHeader.id = "col_" + (numberOfMeasures * subdivision + i); 
@@ -440,8 +441,8 @@ function addNewMeasure(){
 		newHeader.style.display = 'inline-block';
 		newHeader.style.textAlign = "center";
 		
-		//0 == false; i.e. does not have a note in the column
-		//this attribute should help optimize performance a bit
+		// 0 == false; i.e. does not have a note in the column
+		// this attribute should help optimize performance a bit
 		newHeader.setAttribute("hasNote", 0); 
 		
 		newHeader.textContent =  i + 1;
@@ -454,17 +455,17 @@ function addNewMeasure(){
 		dummyParent.insertBefore(newHeader, dummy);
 	}
 	
-	//now add new columns for each note
+	// now add new columns for each note
 	var noteRows = $('#piano').children().get();
 	
-	//start at 1 to skip column header row 
+	// start at 1 to skip column header row 
 	for(var j = 1; j < noteRows.length; j++){
 		for(var k = 0; k < subdivision; k++){
-			//get the dummy element for this row
+			// get the dummy element for this row
 			dummy = $("div[id='" + noteRows[j].id + '_dummy' + "']").get()[0];
 			var newColumn = document.createElement("div");
 			newColumn.id = noteRows[j].id + "col_" + ((numberOfMeasures * subdivision) + k);
-			//adjust id if needed
+			// adjust id if needed
 			newColumn.id = replaceSharp(newColumn.id);
 			newColumn.style.display = 'inline-block';
 			newColumn.style.width = '40px';
@@ -483,21 +484,69 @@ function addNewMeasure(){
 			newColumn.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
 			noteRows[j].insertBefore(newColumn, dummy);
 		}
-		//adjust width of row 
+		// adjust width of row 
 		noteRows[j].style.width = parseInt(noteRows[j].style.width) + 20 + "%";
 	}
-	numberOfMeasures++; //increment measure variable
+	numberOfMeasures++; // increment measure variable
 }
 
-/***** PRODUCE THE GRID ********/
-/* dynamically produce piano roll */
+// choose an instrument 
+function chooseInstrument(thisElement){
+	// console.log(thisElement);
+	// look at grid, collect the notes, save them to the current instrument, and
+	// move on to the clicked-on instrument
+	currentInstrument.notes = readInNotes();
+	
+	var instrumentsView = document.getElementById('instrumentTable').children;
+
+	// change other instruments' label background color to transparent
+	for(var i = 0; i < instrumentsView.length; i++){
+		if(instrumentsView[i]){
+			instrumentsView[i].style.backgroundColor = "transparent";
+		}
+	}
+	
+	// get index of clicked-on instrument in instrumentTable and subtract 1 to
+	// account for 0-index when we use it to look in the global variable 'instruments' 
+	// array for the corresponding instrument object
+	var index = parseInt(thisElement) - 1;
+	//console.log(index);
+	clearGrid();
+	currentInstrument = instruments[index]; // this is the new instrument
+	
+	// then draw the previously-saved notes, if any, onto the grid of the clicked-on instrument
+	drawNotes(currentInstrument); 
+	// console.log(currentInstrument);
+	
+	$('#' + thisElement).css('background-color', 'rgb(188,223,70)');
+}
+
+// draw notes back on to grid
+// takes an instrument object and uses its notes array data to draw back the notes
+function drawNotes(instrumentObject){
+	var notes = instrumentObject.notes;
+	for(var i = 0; i < notes.length; i++){
+		var duration = notes[i].duration;
+		if(notes[i].block){
+			// make sure the column header also sets "hasnote" to 1!
+			var headerID = notes[i].block.id.substring(notes[i].block.id.indexOf("col_"));
+			var header = document.getElementById(headerID);
+			header.setAttribute("hasnote", "1");
+
+			(notes[i].block).style.backgroundColor = "rgb(0, 178, 0)";
+		}
+	}
+}
+
+/***** PRODUCE THE GRID HEADER ********/
+// dynamically produce piano roll 
 var thePiano = $('#piano');
 var columnHeaderRow = $('#columnHeaderRow');
 
-/* this will provide the headers for each column in the grid (i.e. number for each beat/subbeat) */
+// this will provide the headers for each column in the grid (i.e. number for each beat/subbeat) 
 for(var i = 0; i < numberOfMeasures * subdivision + 1; i++){
 	var columnHeader = document.createElement('div');
-	columnHeader.id = "col_" + (i - 1); //the - 1 here is important! 
+	columnHeader.id = "col_" + (i - 1); // the - 1 here is important! 
 	columnHeader.style.display = "inline-block";
 	
 	if(i > 0){
@@ -528,12 +577,12 @@ for(var i = 0; i < numberOfMeasures * subdivision + 1; i++){
 		columnHeader.style.fontSize = '10px';
 	}
 	
-	//0 == false; i.e. does not have a note in the column
+	// 0 == false; i.e. does not have a note in the column
 	columnHeader.setAttribute("hasNote", 0); 
 	
 	columnHeaderRow.append(columnHeader);
 }
-//can't pass in a jquery selected element
+// can't pass in a jquery selected element
 appendDummyElement(document.getElementById('columnHeaderRow'));
 
 /******* BUILDING THE GRID ********/
@@ -593,15 +642,15 @@ for(note in noteFrequencies){
 	appendDummyElement(newRow);
 }
 
-/* helper function to replace '#' in string */
+// helper function to replace '#' in string 
 function replaceSharp(string){
-	//this adjustment is only necessary for labeling the DOM elements so that they're clickable
-	//previously, without this adjustment, sometimes you'd get a string id with two '#' chars for the sharp notes,
-	//because of how I decided to label my ids. since you also need a # for jQuery selection, adjustment is necessary. 
+	// this adjustment is only necessary for labeling the DOM elements so that they're clickable
+	// previously, without this adjustment, sometimes you'd get a string id with two '#' chars for the sharp notes,
+	// because of how I decided to label my ids. since you also need a # for jQuery selection, adjustment is necessary. 
 	if(string.indexOf('#') != -1){
-		return string.replace('#', 's'); //s for sharp
+		return string.replace('#', 's'); // s for sharp
 	}
-	//otherwise do nothing
+	// otherwise do nothing
 	return string;
 }
 
@@ -629,13 +678,12 @@ function appendDummyElement(elementToAppendTo){
 
 */
 
-
 /* this will read all the notes and put them in an array */
 function readInNotes(){
-	notes = [];
+	var notes = []; // don't worry about what was in notes previously. 
 	
-	//first find what the last column with a note (hasnote === 1) is 
-	//this will aid performance and prevent unnecessary column look-throughs 
+	// first find what the last column with a note (hasnote === 1) is 
+	// this will aid performance and prevent unnecessary column look-throughs 
 	var columnHeaders = document.getElementById('columnHeaderRow').children;
 	var lastColumn = -1;
 	for(var k = 0; k < columnHeaders.length; k++){
@@ -643,29 +691,123 @@ function readInNotes(){
 			lastColumn = parseInt(columnHeaders[k].id.substring(4));
 		}
 	}
-	
 	// gather each column
 	for(var i = 0; i <= lastColumn; i++){
 		
 		var column = $("div[id$='col_" + i + "']").get(); //get all the blocks in each column
 		var found = 0;
+		// go down each column and look for green. if found, stop and add to array. then move on.
 		for(var j = 0; j < column.length; j++){
 			// look for green background! 
 			if(column[j].style.backgroundColor === "rgb(0, 178, 0)"){
 				//console.log("found!!");
 				found = 1;
-				//make any corrections to id string before matching with freq key
+				// make any corrections to id string before matching with freq key
 				var freq = noteFrequencies[ (column[j].parentNode.id).replace('s', '#') ];
-				notes.push(new Note(freq, 200));
+				//console.log(column[j]);
+				notes.push(new Note(freq, 300, column[j]));
 				break;
 			}
 		}
 		if(found === 0){
-			notes.push(new Note(0.0, 200)); //200 ms per eight note for now
+			// don't pass in div block location for rests (notes with no pitches)
+			notes.push(new Note(0.0, 300, null)); // 300 ms per eight note for now
 		}
 	}
-	//console.log(notes);
-	readAndPlayNote(notes, 0);
+	return notes;
+}
+
+/* 
+this function takes an array of notes, an index, and an oscillator and plays the note at that index 
+with a specific duration with the passed-in oscillator.
+*/
+function readAndPlayNote(array, index, oscillatorNode, gainNode){  
+	// when to stop playing 
+	if(index === array.length){
+		gainNode.gain.value = 0;
+	}else{
+		oscillatorNode.type = $('#selectWave').val();
+		// oscillator.frequency.value = array[index].getFrequency();
+		/* tip! by setting value at a certain time, this prevents the 'gliding' from one freq. to the next */
+		oscillatorNode.frequency.setValueAtTime(array[index].getFrequency(), 0);
+		// by setting gain value here according to the two conditions, this allows for the 'articulation' of notes without 
+		// the 'helicopter' sound when a certain note frequency is 0. 
+		// previously, the gain would have been .3 even for notes with 0 frequency,
+		// which causes some increase in volume in background sound.
+		// it was only detectable when I added the setTimeout below where I set gain to 0.
+		// this is fixed by always setting gain to 0 if a note's frequency is 0.
+		gainNode.gain.value = array[index].getFrequency() > 0 ? .3 : 0.0;
+		if(index < array.length){
+			// hold the current note for whatever duration was specified
+			// in other words, hold this current note for array[index].getDuration(), then move on to the next note.
+			// note that index is pre-incremented for the next note, but we also need the duration for this current index!
+			// therefore, currIndex will hold the current note's index.
+			var currIndex = index;
+			
+			// change gain to 0 after a really small amount of time to give the impression of articulation
+			// 100 might have to be a better value later to coordinate with when the next note will play
+			setTimeout(function(){ gainNode.gain.value = 0.0; }, 100); 
+			
+			// create a new timer and push to timers array 
+			timer = setTimeout(function(){readAndPlayNote(array, ++index, oscillatorNode, gainNode)}, array[currIndex].getDuration()); 
+		}
+	}
+}
+
+// stop playback 
+function stopPlay(){
+	clearTimeout(timer);
+	//g.gain.value = 0.0;
+	for(var i = 0; i < instruments.length; i++){
+		instruments[i].gain.gain.value = 0.0;
+	}
+}
+
+// play notes for current instrument
+function play(){
+	readAndPlayNote(readInNotes(), 0, currentInstrument.oscillator, currentInstrument.gain);
+}
+
+// play all instruments 
+function playAll(){
+	for(var i = 0; i < instruments.length; i++){
+		readAndPlayNote(instruments[i].notes, 0, instruments[i].oscillator, instruments[i].gain);
+	}
+}
+
+/**********  ADD A NEW INSTRUMENT FUNCTIONS ************/
+function addNewInstrument(){
+	var instrumentTable = document.getElementById("instrumentTable");
+	var newInstrument = document.createElement('td');
+	
+	// we want to be able to access the instruments in sequential order
+	newInstrument.id = "" + (instruments.length + 1); 
+	newInstrument.setAttribute("selected", "0");
+	newInstrument.style.backgroundColor = "transparent";
+	
+	newInstrument.innerHTML = "new_instrument";
+	newInstrument.addEventListener('click', function(event){
+		// pass the event target's id to chooseInstrument()
+		chooseInstrument(event.target.id);
+	});
+	
+	instrumentTable.appendChild(newInstrument);
+	
+	createNewInstrument("blah");
+}
+
+function createNewInstrument(name){
+	// make new oscillator and gain nodes
+	var newGain = initGain();
+	var newOscillator = initOscillator(newGain);
+	newGain.connect(context.destination);
+	
+	// create new instrument with oscillator
+	var newInstrument = new Instrument("blah", newOscillator, newGain, []);
+	instruments.push(newInstrument);
+}
+
+function deleteInstrument(){
 }
 
 </script>
