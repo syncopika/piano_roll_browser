@@ -184,14 +184,14 @@ function initOscillator(gain){
 }
 
 /************** DOM MODIFICATION *******************/
-var soundType = $('#selectWave').val();
+
 // allows for a note to sound temporarily when user clicks on a block 
-function clickNote(id, soundType){
+function clickNote(id, waveType){
 	var parent = document.getElementById(id).parentNode.id;
 	parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
 	
 	setTimeout(function(){
-		oscillator.type = soundType;
+		oscillator.type = waveType;
 		oscillator.frequency.setValueAtTime(noteFrequencies[parent], 0);
 		g.gain.value = .3;
 		// this setTimeout makes sure the oscillator gets silent again
@@ -203,7 +203,7 @@ function clickNote(id, soundType){
 }
 
 // make blocks on grid clickable 
-function addNote(id){
+function addNote(id, type){
 	if($('#' + id).css("background-color") === "rgb(0, 178, 0)"){
 		$('#' + id).css("background-color", "transparent");
 		
@@ -227,7 +227,8 @@ function addNote(id){
 		var currValue = parseInt(document.getElementById(headerId).getAttribute("hasNote"));
 		document.getElementById(headerId).setAttribute("hasNote", ++currValue);
 	}
-	clickNote(id, soundType);
+	var waveType = $('#' + type);
+	clickNote(id, waveType.val());
 }
 
 // make a row highlightable on mouse over - easier to see what note a block is
@@ -313,7 +314,8 @@ function addNewMeasure(){
 			}
 
 			// hook up an event listener to allow for selecting notes on the grid!
-			newColumn.addEventListener("click", function(){ addNote(this.id) });
+			//notice passing in id of option/select element for picking wave type. 
+			newColumn.addEventListener("click", function(){ addNote(this.id, "selectWave") }); 
 			// allow for highlighting to make it clear which note a block is
 			newColumn.addEventListener("mouseenter", function(){ highlightRow(this.id, '#FFFF99') });
 			newColumn.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
@@ -465,7 +467,7 @@ for(note in noteFrequencies){
 		}
 
 		// hook up an event listener to allow for picking notes on the grid!
-		column.addEventListener("click", function(){ addNote(this.id) });
+		column.addEventListener("click", function(){ addNote(this.id, "selectWave") });
 		// allow for highlighting to make it clear which note a block is
 		column.addEventListener("mouseenter", function(){ highlightRow(this.id, '#FFFF99') });
 		column.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
