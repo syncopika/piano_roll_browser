@@ -24,6 +24,8 @@
 
 	#piano{
 		display: inline-block;
+		/* this is important for letting the grid expand horizontally */
+		white-space: nowrap;
 	}
 	
 	#wavetypeLabel{
@@ -182,14 +184,14 @@ function initOscillator(gain){
 }
 
 /************** DOM MODIFICATION *******************/
-
+var soundType = $('#selectWave').val();
 // allows for a note to sound temporarily when user clicks on a block 
-function clickNote(id){
+function clickNote(id, soundType){
 	var parent = document.getElementById(id).parentNode.id;
 	parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
 	
 	setTimeout(function(){
-		oscillator.type = $('#selectWave').val();
+		oscillator.type = soundType;
 		oscillator.frequency.setValueAtTime(noteFrequencies[parent], 0);
 		g.gain.value = .3;
 		// this setTimeout makes sure the oscillator gets silent again
@@ -210,6 +212,13 @@ function addNote(id){
 		var currValue = parseInt(document.getElementById(headerId).getAttribute("hasNote"));
 		document.getElementById(headerId).setAttribute("hasNote", --currValue);
 		
+		// if you choose a same note for the current instrument as another instrument, that will wipe out the 
+		// 'onion-skin' of the other instrument's note. but if you delete that note for
+		// the current instrument later, calling showOnionSkin() here will put back the 'onion-skin' for
+		// the other instrument. there is no static 'onion-skin' layer. it's just changing the background-color 
+		// of note blocks
+		showOnionSkin(); 
+		
 	}else{
 		$('#' + id).css("background-color", "#00B200");
 		
@@ -218,7 +227,7 @@ function addNote(id){
 		var currValue = parseInt(document.getElementById(headerId).getAttribute("hasNote"));
 		document.getElementById(headerId).setAttribute("hasNote", ++currValue);
 	}
-	clickNote(id);
+	clickNote(id, soundType);
 }
 
 // make a row highlightable on mouse over - easier to see what note a block is
@@ -256,9 +265,6 @@ function addNewMeasure(){
 	// the new subdivisions of the new measure
 	var dummy = $("div[id='columnHeaderRow_dummy']").get()[0];
 	var dummyParent = dummy.parentNode;
-
-	// this is important for letting the grid expand horizontally
-	dummyParent.parentNode.style.whiteSpace = "nowrap";
 	
 	// new column headers 
 	for(var i = 0; i < subdivision; i++){
@@ -339,15 +345,15 @@ function chooseInstrument(thisElement){
 	// account for 0-index when we use it to look in the global variable 'instruments' 
 	// array for the corresponding instrument object
 	var index = parseInt(thisElement) - 1;
-	//console.log(index);
 	clearGrid();
 	currentInstrument = instruments[index]; // this is the new instrument
 	
 	// then draw the previously-saved notes, if any, onto the grid of the clicked-on instrument
 	drawNotes(currentInstrument); 
-	// console.log(currentInstrument);
 	
 	$('#' + thisElement).css('background-color', 'rgb(188,223,70)');
+	
+	showOnionSkin();
 }
 
 // draw notes back on to grid
@@ -388,6 +394,7 @@ for(var i = 0; i < numberOfMeasures * subdivision + 1; i++){
 			}
 			columnHeader.textContent = i;
 		}else if(i !== numberOfMeasures * subdivision + 1){
+			// subdiv goes from 1 to 16. if more than 16, start at 1 again. 
 			var subdiv = (i % subdivision) === 0 ? subdivision : (i % subdivision);
 			if(subdivision === subdiv){
 				columnHeader.style.borderRight = '3px solid #000';
@@ -483,6 +490,23 @@ function replaceSharp(string){
 	return string;
 }
 
+// onion-skin!!
+function showOnionSkin(){
+	for(var i = 0; i < instruments.length; i++){
+		if(instruments[i] !== currentInstrument){
+			// go through each instrument's notes
+			for(var j = 0; j < instruments[i].notes.length; j++){
+				// get location of each note
+				var location = instruments[i].notes[j].block; 
+				if(instruments[i].notes[j].freq > 1){
+					// set background color for that location
+					location.style.backgroundColor = "rgba(0, 178, 0, 0.1)";
+				}
+			}
+		}
+	}
+}
+
 function appendDummyElement(elementToAppendTo){
 	var dummyElement = document.createElement('div');
 	dummyElement.id = elementToAppendTo.id + "_dummy";
@@ -491,7 +515,7 @@ function appendDummyElement(elementToAppendTo){
 
 /******* GET NOTES AND PLAY ******/
 
-/* this will read all the notes and put them in an array */
+/* this will read all the notes, put them in an array and returns the array */
 function readInNotes(){
 	var notes = []; // don't worry about what was in notes previously. 
 	
@@ -570,7 +594,6 @@ function readAndPlayNote(array, index, oscillatorNode, gainNode){
 // stop playback 
 function stopPlay(){
 	clearTimeout(timer);
-	//g.gain.value = 0.0;
 	for(var i = 0; i < instruments.length; i++){
 		instruments[i].gain.gain.value = 0.0;
 	}
@@ -583,6 +606,7 @@ function play(){
 
 // play all instruments 
 function playAll(){
+	currentInstrument.notes = readInNotes();
 	for(var i = 0; i < instruments.length; i++){
 		readAndPlayNote(instruments[i].notes, 0, instruments[i].oscillator, instruments[i].gain);
 	}
@@ -622,6 +646,7 @@ function createNewInstrument(name){
 
 function deleteInstrument(){
 }
+
 
 </script>
 
