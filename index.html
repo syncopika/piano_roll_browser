@@ -28,10 +28,14 @@
 		white-space: nowrap;
 	}
 	
-	#wavetypeLabel{
+	#wavetypeLabel, #tempoLabel{
 		font-family: 'arial', 'gothic ms';
 		font-size: 14px;
 		padding-left: 10px;
+	}
+	
+	#changeTempo{
+		width: 40px;
 	}
 	
 	#title{
@@ -73,6 +77,8 @@
 		<li><h2 id='timeSig'></h2></li>
 		<li>|</li>
 		<li><h2 id='subdiv'></h2></li>
+		<li>|</li>
+		<li><h2 id='tempo'>120 bpm</h2></li>
 	</ul>
 
 	<ul>
@@ -92,11 +98,18 @@
 			</select>
 			</label>
 		</li>
+		<li>
+			<label id='tempoLabel'> tempo: 
+			<input id='changeTempo' type='text'></input>
+			</label>
+		</li>
+		<li>
+			<button onclick='changeTempo()'> change tempo </button>
+		</li>
 	</ul>
 
 </div>
 
-<!-- each instrument will have its own div, which should be one row -->
 <br>
 <br>
 
@@ -132,6 +145,10 @@
 //http://stackoverflow.com/questions/15261030/web-audio-start-and-stop-oscillator-then-start-it-again
 //http://stackoverflow.com/questions/18785951/how-to-get-width-of-a-div-in-percentage-using-jquery
 //http://alemangui.github.io/blog//2015/12/26/ramp-to-value.html
+//http://stackoverflow.com/questions/4909167/how-to-add-a-custom-right-click-menu-to-a-webpage
+
+// ooooh make it recordable!
+// https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createMediaStreamDestination
 
 //TODO:
 /*
@@ -147,6 +164,7 @@
 var numberOfMeasures = 4; 	// 4 measures by default
 var subdivision = 8; 		// each measure subdivided by eighth notes
 var timeSignature = "4/4";
+var currentTempo = 500; 	// hold the current tempo - in milliseconds!! default is 120 bpm
 
 $('#measures').html("number of measures: " + numberOfMeasures);
 $('#timeSig').html("time signature: " + timeSignature);
@@ -181,6 +199,34 @@ function initOscillator(gain){
 	o.connect(gain); 
 	o.start(0);
 	return o;
+}
+
+/************** CHANGE TEMPO ******************/
+//http://www.sengpielaudio.com/calculator-bpmtempotime.htm
+
+function changeTempo(){
+	var tempoInput = document.getElementById("changeTempo");
+	var selectedTempo = parseInt(tempoInput.value);
+	var tempoText = document.getElementById("tempo")
+	tempoText.innerHTML = selectedTempo + " bpm";
+	
+	// initially getting milliseconds FOR QUARTER NOTES
+	// note that currentTempo needs to be rounded before use
+	currentTempo = ((Math.round((60000/selectedTempo) * 1000)) / 1000 );
+	
+	// go through all instruments and adjust duration of each note in their note arrays
+	// according to new current tempo
+	for(var i = 0; i < instruments.length; i++){
+		if(instruments[i] != currentInstrument){
+			var noteArray = instruments[i].notes;
+			for(var j = 0; j < noteArray.length; j++){
+				if(noteArray[j].duration > 1){
+					// NEED TO CHECK TYPE OF NOTE TO ASSIGN CORRECT DURATION!
+					 noteArray[j].duration = getCorrectLength(noteArray[j].block, currentTempo)
+				}
+			}
+		}
+	}
 }
 
 /************** DOM MODIFICATION *******************/
@@ -306,6 +352,11 @@ function addNewMeasure(){
 			newColumn.style.display = 'inline-block';
 			newColumn.style.width = '40px';
 			newColumn.style.height = '15px';
+			
+			// IMPORTANT! new attributes for each note
+			newColumn.setAttribute("volume", "");
+			newColumn.setAttribute("length", "eighth"); // length of note (quarter, eighth?)
+			newColumn.setAttribute("type", ""); // type of note - staccato, legato? 
 			
 			if((k + 1) % subdivision == 0){
 				newColumn.style.borderRight = "3px solid #000";
@@ -459,6 +510,11 @@ for(note in noteFrequencies){
 		column.style.width = "40px";
 		column.style.height = "15px";
 		column.style.verticalAlign = "middle";
+	
+		// IMPORTANT! new attributes for each note
+		column.setAttribute("volume", "");
+		column.setAttribute("length", "eighth"); // length of note (quarter, eighth?)
+		column.setAttribute("type", ""); // type of note - staccato, legato? 
 		
 		if((j + 1) % subdivision == 0){
 			column.style.borderRight = "3px solid #000";
@@ -493,6 +549,7 @@ function replaceSharp(string){
 }
 
 // onion-skin!!
+// see where the other instruments' notes are 
 function showOnionSkin(){
 	for(var i = 0; i < instruments.length; i++){
 		if(instruments[i] !== currentInstrument){
@@ -501,7 +558,7 @@ function showOnionSkin(){
 				// get location of each note
 				var location = instruments[i].notes[j].block; 
 				if(instruments[i].notes[j].freq > 1){
-					// set background color for that location
+					// set background color for that location a very light shade of green
 					location.style.backgroundColor = "rgba(0, 178, 0, 0.1)";
 				}
 			}
@@ -516,6 +573,18 @@ function appendDummyElement(elementToAppendTo){
 }
 
 /******* GET NOTES AND PLAY ******/
+
+function getCorrectLength(noteObjectBlock, currentTempo){
+	if(noteObjectBlock){
+		if(noteObjectBlock.getAttribute("length") === "quarter"){
+			return Math.round(currentTempo);
+		}else if(noteObjectBlock.getAttribute("length") === "eighth"){
+			return Math.round(currentTempo / noteLengths["eighth"]);
+		}
+	}else{
+		return Math.round(currentTempo / noteLengths["eighth"]);
+	}
+}
 
 /* this will read all the notes, put them in an array and returns the array */
 function readInNotes(){
@@ -539,18 +608,19 @@ function readInNotes(){
 		for(var j = 0; j < column.length; j++){
 			// look for green background! 
 			if(column[j].style.backgroundColor === "rgb(0, 178, 0)"){
-				//console.log("found!!");
 				found = 1;
 				// make any corrections to id string before matching with freq key
 				var freq = noteFrequencies[ (column[j].parentNode.id).replace('s', '#') ];
-				//console.log(column[j]);
-				notes.push(new Note(freq, 300, column[j]));
+				
+				notes.push(new Note(freq, getCorrectLength(column[j], currentTempo), column[j]));
+		
 				break;
 			}
 		}
 		if(found === 0){
 			// don't pass in div block location for rests (notes with no pitches)
-			notes.push(new Note(0.0, 300, null)); // 300 ms per eight note for now
+			// since by default the measures are subdivided by eighth notes, rests will automatically be eighth rests 
+			notes.push(new Note(0.0,  Math.round(currentTempo / noteLengths["eighth"]), null));
 		}
 	}
 	return notes;
