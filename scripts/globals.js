@@ -1,6 +1,5 @@
 // global variables
 
-/***** NECESSARY GLOBAL VARIABLES ******/
 var instruments = [];		// list of instruments will be an array
 var timer;
 var currentInstrument; 		// need to keep track of what current instrument is!
@@ -135,4 +134,12 @@ var noteFrequencies = {
 	"C#2": 69.30,
 	"C2": 65.41
 };
+
+// figure out note lengths using these. 
+// each note length corresponds to a factor which to divide the currentTempo (milliseconds per quarter note) by
+var noteLengths = {
+	"quarter": 1,
+	"eighth": 2, //this means divide by a factor of 2 to get milliseconds per eighth note
+	"sixteenth": 4
+}
 
