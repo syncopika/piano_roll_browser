@@ -30,12 +30,18 @@
 		font-family: Arial;
 	}
 	
+	/* override padding-bottom from contextMenu/css/screen.css */
+	html body{
+		padding-bottom: 0;
+	}
+	
 	table, tr, td{
 		border: 1px solid #000;
 	}
 
 	#piano{
 		display: inline-block;
+		
 		/* this is important for letting the grid expand horizontally */
 		white-space: nowrap;
 	}
@@ -130,7 +136,7 @@
 </div>
 
 <br>
-<p> left-click to add and delete notes. right-click lets you subdivide a measure for 16th notes. rejoin to undo subdivision. have fun! </p>
+<p> left-click to add and delete notes. right-click lets you subdivide a measure for 16th notes. rejoin to undo subdivision. </p>
 
 <div>
 	<table>
@@ -173,12 +179,11 @@
 
 //TODO:
 /*
--tempo change - currently ~152 bpm!
 -allow color customizations for highlight, note blocks
 -legato, staccato toggling for individual notes
 -bend notes? :>
--multiple instruments => this is gonna be hard because we can't keep adding rows and columns to the DOM => reuse same grid, but store note info!
--onion-skin type thing to show where other instruments' notes are like in PxTone
+-need to customize instruments, i.e. name, type of wave, etc.
+-be able to download/import json data of instruments/notes 
 */
 
 /**** INFORMATION ABOUT THE CURRENT SETUP ****/
@@ -242,26 +247,20 @@ function changeTempo(){
 			var noteArray = instruments[i].notes;
 			for(var j = 0; j < noteArray.length; j++){
 				if(noteArray[j].duration > 1){
-					// NEED TO CHECK TYPE OF NOTE TO ASSIGN CORRECT DURATION!
-					 noteArray[j].duration = getCorrectLength(noteArray[j].block, currentTempo)
+					noteArray[j].duration = getCorrectLength(noteArray[j].block.length, currentTempo);
 				}
 			}
 		}
 	}
 }
 
-function getCorrectLength(noteObjectBlock, currentTempo){
-	if(noteObjectBlock){
-		if(noteObjectBlock.getAttribute("length") === "quarter"){
-			return Math.round(currentTempo);
-		}else if(noteObjectBlock.getAttribute("length") === "eighth"){
-			return Math.round(currentTempo / noteLengths["eighth"]);
-		}else if(noteObjectBlock.getAttribute("length") === "sixteenth"){
-			return Math.round(currentTempo / noteLengths["sixteenth"]);
-		}
-	}else{
-		// by default, rests should have the same length as an eighth note
+function getCorrectLength(length, currentTempo){
+	if(length === "quarter"){
+		return Math.round(currentTempo);
+	}else if(length === "eighth"){
 		return Math.round(currentTempo / noteLengths["eighth"]);
+	}else if(length === "sixteenth"){
+		return Math.round(currentTempo / noteLengths["sixteenth"]);
 	}
 }
 
@@ -325,12 +324,13 @@ function highlightRow(id, color){
 // delete all notes
 function clearGrid(){
 	var columns = document.getElementById("columnHeaderRow").children;
+
 	// start at 1 to ignore the column before 1 (the blank one)
 	for(var i = 1; i < columns.length; i++){
 		if(columns[i].getAttribute("hasnote") !== "0"){
 			// change hasnote attribute back to 0!
 			columns[i].setAttribute("hasnote", "0");
-			var columnToCheck = $("div[id$='col_" + (i-1) + "']").get();
+			var columnToCheck = $("div[id$='" + columns[i].id + "']").get();
 			for(var j = 0; j < columnToCheck.length; j++){
 				if(columnToCheck[j].style.backgroundColor === "rgb(0, 178, 0)"){
 					columnToCheck[j].style.backgroundColor = "transparent";
@@ -437,14 +437,16 @@ function chooseInstrument(thisElement){
 	// array for the corresponding instrument object
 	var index = parseInt(thisElement) - 1;
 	clearGrid();
+	
 	currentInstrument = instruments[index]; // this is the new instrument
 	
 	// then draw the previously-saved notes, if any, onto the grid of the clicked-on instrument
 	drawNotes(currentInstrument); 
 	
+	showOnionSkin();
+	
 	$('#' + thisElement).css('background-color', 'rgb(188,223,70)');
 	
-	showOnionSkin();
 }
 
 // draw notes back on to grid
@@ -452,14 +454,48 @@ function chooseInstrument(thisElement){
 function drawNotes(instrumentObject){
 	var notes = instrumentObject.notes;
 	for(var i = 0; i < notes.length; i++){
-		var duration = notes[i].duration;
-		if(notes[i].block){
-			// make sure the column header also sets "hasnote" to 1!
-			var headerID = notes[i].block.id.substring(notes[i].block.id.indexOf("col_"));
-			var header = document.getElementById(headerID);
-			header.setAttribute("hasnote", "1");
-
-			(notes[i].block).style.backgroundColor = "rgb(0, 178, 0)";
+		// only notes have a valid id (rests have null for id field)
+		if(notes[i].block.id){
+		
+		    // if we switch between instruments that have different length notes in the same place
+			// i.e. C3col_3 for instrument 1 has an eighth note, but then instrument 2 has 2 16th notes 
+			// in the same place, which means that for instrument 2 there is not one C3col_3 column, but instead
+			// C3col_3-1 and C3col_3-2 ! therefore, we need to take out or add new headers and columns as needed!
+		
+			var elementExists = document.getElementById( notes[i].block.id );
+			
+			// if we need to paint in an eighth note, but the column is currently subdivided 
+			if(!elementExists && notes[i].block.length === "eighth"){
+				// now have to look at whether the note to be placed on the grid is a 16th or 8th 
+			    // easy case - the note to add is an 8th note. that means take away the 2 16th notes for this column and replace with 1 block
+				// we can just remove the 2nd 16th block, rename the id of the 1st 16th block, change its attr 'length' to 'eighth', and change its length
+				
+				var blockId = notes[i].block.id;
+				
+				rejoin(blockId, true);
+		
+				// now that the correct column should be in place, assign elementExists the id of the note we need to draw in 
+				elementExists = document.getElementById( notes[i].block.id );
+			
+			}else if(!elementExists && notes[i].block.length === "sixteenth"){
+				// now if the note to draw in is a 16th note and there's no place to put it, create the subdivision
+				// because the note being looked at currently will have a "-1" or "-2" appended, we need to remove that
+				// to find the correct column to subdivide, since the only columns available right now are eighth note columns
+				// without -1 and -2
+				var blockId = notes[i].block.id;
+				var columnToFind = blockId.substring(0, blockId.indexOf("-"));
+				subdivide(columnToFind, true);
+				
+				elementExists = document.getElementById( notes[i].block.id );
+			}
+			
+			// make sure to set column header attr "hasNote" to 1!!!
+			var columnHeader = elementExists.id.substring(elementExists.id.indexOf("col_"));
+			columnHeader = document.getElementById(columnHeader);
+			columnHeader.setAttribute("hasnote", "1");
+			
+			// color in note
+			elementExists.style.backgroundColor = "rgb(0, 178, 0)";
 		}
 	}
 }
@@ -594,11 +630,57 @@ function showOnionSkin(){
 		if(instruments[i] !== currentInstrument){
 			// go through each instrument's notes
 			for(var j = 0; j < instruments[i].notes.length; j++){
+	
+				if(instruments[i].notes[j].block.id === null){
+					continue;
+				}
+				
+				// get note id 
+				var noteId = instruments[i].notes[j].block.id;
 				// get location of each note
-				var location = instruments[i].notes[j].block; 
-				if(instruments[i].notes[j].freq > 1){
+				var location = document.getElementById(noteId);
+		
+				if(!location){
+					// if not present, it's either because there's no 16th measure or 8th measure
+					if(noteId.indexOf("-1") < 0 && noteId.indexOf("-2") < 0){
+						
+						// ok so this note that we want to 'onion-skin' looks like an eighth note but
+						// there's only the 16th note subdivisions available on the grid. 
+						// so we'll find those subdivisions and just color them
+						var subdiv = document.getElementById( noteId + "-1" );
+						
+						// color the subdiv AND its right sibling 
+						if(subdiv.style.backgroundColor !== "rgb(0, 178, 0)"){
+							subdiv.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
+							if(subdiv.nextSibling.style.backgroundColor !== "rgb(0, 178, 0)"){
+								subdiv.nextSibling.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
+							}
+						}
+						
+						/****
+						warning! you also have to consider later quarter notes and longer notes.
+						the function will have to be able to look at the attribut "length" to know 
+						how many sibling elements to color!
+						***/
+					}else if(noteId.indexOf("-1") > 0){
+						var findId = noteId.substring(0, noteId.indexOf("-"));
+						var subdiv = document.getElementById(findId);
+						if(subdiv.style.backgroundColor !== "rgb(0, 178, 0)"){
+							subdiv.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
+						}
+					}else if(noteId.indexOf("-2") > 0){
+						// make a temporary div that will be inserted into the corresponding eighth note column
+						// make a special class for this div. remove it when switching instruments 
+						// but then would I have to take care of it on playback? no because it doesn't even have "hasnote" attribute!
+
+					}
+				}
+				
+				if(location && instruments[i].notes[j].freq > 1){
 					// set background color for that location a very light shade of green
-					location.style.backgroundColor = "rgba(0, 178, 0, 0.1)";
+					if(location.style.backgroundColor === "transparent"){
+						location.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
+					}
 				}
 			}
 		}
@@ -623,15 +705,15 @@ function readInNotes(){
 	var lastColumn = -1;
 	for(var k = 0; k < columnHeaders.length; k++){
 		if(columnHeaders[k].getAttribute('hasnote') === '1'){
-			lastColumn = parseInt(columnHeaders[k].id.substring(4));
+			lastColumn = k;
 		}
 	}
 	// gather each column
-	for(var i = 0; i <= lastColumn; i++){
-		
-		var column = $("div[id$='col_" + i + "']").get(); //get all the blocks in each column
+	// start at 1 to skip 0th index, which is not a valid note column
+	for(var i = 1; i <= lastColumn; i++){
+
+		var column = $("div[id$='" + columnHeaders[i].id + "']").get(); //get all the blocks in each column
 		var found = 0;
-		var subdivided = 0;
 		
 		// go down each column and look for green. if found, stop and add to array. then move on.
 		for(var j = 0; j < column.length; j++){
@@ -641,61 +723,25 @@ function readInNotes(){
 				// make any corrections to id string before matching with freq key
 				var freq = noteFrequencies[ (column[j].parentNode.id).replace('s', '#') ];
 				// add note to array
-				notes.push(new Note(freq, getCorrectLength(column[j], currentTempo), column[j]));
+				notes.push(new Note(freq, getCorrectLength(column[j].getAttribute("length"), currentTempo), column[j]));
 				// note found, stop 
 				break;
 			}
 		}
 		
-		// but wait! what if there is a column that's subdivided? those columns would have "-1" or "-2" appended.
-		// so if column is [] (empty), then check if it's subdivided 
-		if(column.length === 0){
-		
-			column = $("div[id$='col_" + i + "-1']").get();
-			found = 0;
-			// look through "-1" block first
-			// start at 1 to avoid including the column header
-			for(var j = 0; j < column.length; j++){
-				if(column[j].style.backgroundColor === "rgb(0, 178, 0)"){
-					found = 1;
-					subdivided = 1;
-					var freq = noteFrequencies[ (column[j].parentNode.id).replace('s', '#') ];
-					notes.push(new Note(freq, getCorrectLength(column[j], currentTempo), column[j]));
-					break;
-				}
+		// if found === 0, then add a rest. need to know what kind of note this current column represents first.
+		if(found === 0){
+			if(columnHeaders[i].id.indexOf("-1") > 0 || columnHeaders[i].id.indexOf("-2") > 0){
+				notes.push(new Note(0.0,  Math.round(currentTempo / noteLengths["sixteenth"]), column[i]));
+			}else{
+				notes.push(new Note(0.0,  Math.round(currentTempo / noteLengths["eighth"]), column[i]));
 			}
-			
-			// if no note in block "-1", make it a 16th rest 
-			if(found === 0){
-				notes.push(new Note(0.0,  Math.round(currentTempo / noteLengths["sixteenth"]), null));
-			}
-			
-			// then check "-2" block 
-			column = $("div[id$='col_" + i + "-2']").get();
-			found = 0;
-			
-			for(var j = 1; j < column.length; j++){
-				if(column[j].style.backgroundColor === "rgb(0, 178, 0)"){
-					found = 1;
-					var freq = noteFrequencies[ (column[j].parentNode.id).replace('s', '#') ];
-					notes.push(new Note(freq, getCorrectLength(column[j], currentTempo), column[j]));
-					subdivided = 1;
-				}
-			}
-			
-			if(found === 0){
-				notes.push(new Note(0.0,  Math.round(currentTempo / noteLengths["sixteenth"]), null));
-			}
-		}
-			
-		if(found === 0 && subdivided === 0){
-			// don't pass in div block location for rests (notes with no pitches)
-			// since by default the measures are subdivided by eighth notes, rests will automatically be eighth rests 
-			notes.push(new Note(0.0,  Math.round(currentTempo / noteLengths["eighth"]), null));
 		}
 	}
+	
 	return notes;
 }
+
 
 /* 
 this function takes an array of notes, an index, and an oscillator and plays the note at that index 
@@ -707,19 +753,18 @@ function readAndPlayNote(array, index, oscillatorNode, gainNode){
 		gainNode.gain.value = 0;
 	}else{
 		oscillatorNode.type = $('#selectWave').val();
-		// oscillator.frequency.value = array[index].getFrequency();
 		/* tip! by setting value at a certain time, this prevents the 'gliding' from one freq. to the next */
-		oscillatorNode.frequency.setValueAtTime(array[index].getFrequency(), 0);
+		oscillatorNode.frequency.setValueAtTime(array[index].freq, 0);
 		// by setting gain value here according to the two conditions, this allows for the 'articulation' of notes without 
 		// the 'helicopter' sound when a certain note frequency is 0. 
 		// previously, the gain would have been .3 even for notes with 0 frequency,
 		// which causes some increase in volume in background sound.
 		// it was only detectable when I added the setTimeout below where I set gain to 0.
 		// this is fixed by always setting gain to 0 if a note's frequency is 0.
-		gainNode.gain.value = array[index].getFrequency() > 0 ? .3 : 0.0;
+		gainNode.gain.value = array[index].freq > 0 ? .3 : 0.0;
 		if(index < array.length){
 			// hold the current note for whatever duration was specified
-			// in other words, hold this current note for array[index].getDuration(), then move on to the next note.
+			// in other words, hold this current note for array[index].duration, then move on to the next note.
 			// note that index is pre-incremented for the next note, but we also need the duration for this current index!
 			// therefore, currIndex will hold the current note's index.
 			var currIndex = index;
@@ -729,7 +774,7 @@ function readAndPlayNote(array, index, oscillatorNode, gainNode){
 			setTimeout(function(){ gainNode.gain.value = 0.0; }, 100); 
 			
 			// create a new timer and push to timers array 
-			timer = setTimeout(function(){readAndPlayNote(array, ++index, oscillatorNode, gainNode)}, array[currIndex].getDuration()); 
+			timer = setTimeout(function(){readAndPlayNote(array, ++index, oscillatorNode, gainNode)}, array[currIndex].duration); 
 		}
 	}
 }
@@ -792,10 +837,7 @@ function deleteInstrument(){
 
 
 
-/*
-	CONTEXTMENU
-
-*/
+/****  CONTEXT MENU  *****/
 $(function(){
     $.contextMenu({
         selector: '.context-menu-one', 
@@ -807,7 +849,7 @@ $(function(){
             "edit": {
                 name: "Edit", 
                 icon: "edit", 
-                // superseeds "global" callback
+                // supersedes "global" callback
                 callback: function(key, options) {
                     var m = "edit was clicked";
                     window.console && console.log(m) || alert(m); 
@@ -817,64 +859,9 @@ $(function(){
 				name: "Subdivide", 
 				icon: "cut",
 				callback: function(key, options){
-				
 					// get the id of the clicked-on block
 					var id = options.$trigger.attr("id");
-					
-					// check if already subdivided once! prevent 32nd notes for now 
-					if(id.indexOf('-2') > 0){
-						return;
-					}
-					
-					var colNum = id.substring(id.indexOf("col"));
-					var column =  $("div[id$='" + colNum + "']").get();
-					
-					/* revise column header first */
-					var colHead = column[0];
-					colHead.id = colHead.id + "-1";
-					//console.log(column);
-					// split the header as well, but keep the 2nd half invisible
-					// by making width 0
-					var columnHalf = colHead.cloneNode(false);
-					columnHalf.style.width = 0;
-					columnHalf.style.borderRight = "";
-					columnHalf.id = colNum + "-2";
-					colHead.parentNode.insertBefore(columnHalf, colHead.nextSibling);
-					//console.log(column);
-					
-					for(var i = 1; i < column.length; i++){
-					
-						// then split the block into 2 
-						var block = column[i];//document.getElementById(id);
-						
-						// this is the new, 2nd block
-						var block2 = block.cloneNode(false);
-						
-						// now make some changes to the style for block and block2 
-						block.style.width = '19px';
-						block.setAttribute("length", "sixteenth");
-						block.style.borderRight = "1px solid #000";
-						block.id = block.id + "-1";
-						
-						//console.log(block.id);
-						//block.addEventListener("click", function(){ addNote(block.id, "selectWave") }); 
-						block.addEventListener("mouseenter", function(){ highlightRow(block.id, '#FFFF99') });
-						block.addEventListener("mouseleave", function(){ highlightRow(block.id, 'transparent') });
-						block.className = "context-menu-one";
-						
-						block2.setAttribute("length", "sixteenth");
-						block2.style.width = '20px';
-						block2.id = block2.id + "-2"; // give new id to block2
-						block2.className = "context-menu-one";
-						
-						block2.addEventListener("click", function(){ addNote(this.id, "selectWave") }); 
-						block2.addEventListener("mouseenter", function(){ highlightRow(block2.id, '#FFFF99') });
-						block2.addEventListener("mouseleave", function(){ highlightRow(block2.id, 'transparent') });
-						
-						// then put block2 after block1 in DOM
-						block.parentNode.insertBefore(block2, block.nextSibling);
-					
-					}
+					subdivide(id, false);		
 				}
 			},
 			"Rejoin": {
@@ -883,69 +870,7 @@ $(function(){
 				callback: function(key, options){
 					// if user wants to join two notes, they must be adjacent and the same note!
 					// so check if adjacent 
-					var block = document.getElementById( options.$trigger.attr("id") );
-					var adjacentBlock = block.nextSibling; 
-					var blockHeader = block.id.substring(block.id.indexOf("col_"));
-					var column =  $("div[id$='" + blockHeader + "']").get(); //only get the left-side 16th notes of subdivision
-					blockHeader = column[0];
-					
-					// join two empty 16th note columns - must join from left!!!
-					if(blockHeader.getAttribute("hasNote") === "0" && blockHeader.id.indexOf("-2") < 0){
-						
-						// take care of column header first 
-						blockHeader.setAttribute("length", "eighth");
-						blockHeader.id = blockHeader.id.substring(0, blockHeader.id.indexOf("-"));
-						
-						// delete adjacent 16th block
-						blockHeader.parentNode.removeChild(blockHeader.nextSibling);
-						
-						// then take care rest of column
-						for(var i = 1; i < column.length; i++){
-							blockHeader = column[i];
-							blockHeader.style.width = "40px";
-							blockHeader.setAttribute("length", "eighth");
-							blockHeader.id = blockHeader.id.substring(0, blockHeader.id.indexOf("-"));
-							blockHeader.parentNode.removeChild(blockHeader.nextSibling);
-						}							
-					}
-					
-					
-					if(adjacentBlock.style.backgroundColor === "rgb(0, 178, 0)" && 
-					   block.style.backgroundColor === "rgb(0, 178, 0)"){
-					
-						//console.log("ok to rejoin");
-						// take the length of the adjacent block and add it to the current block
-						// i.e. if current block is an eighth, and the adjacent is sixteenth, 
-						// change the current block length attribute to "eighth-sixteenth"
-						// (make sure to add 'eighth-sixteenth' as a length option in the length object in globals)
-						
-						// then remove the right border from the current block so the note looks elongated appropriately
-						
-						// important! change the current block's COLUMN HEADER's attribute "hasNote" to "1.5" !!!
-						// then in the readInNotes function, when you loop through the headers, if it sees 1.5, this means
-						// the current column has an eighth note joined with a sixteenth! so make sure to skip the next column.
-						// additionally, add support for "hasNote === 2, 2.5, 3, 3.5, 4, ..."
-						
-						// ok, but how about deleting different length notes? 
-						// how about this - keep a "head" reference attribute to an adjoined note. i.e. 
-						// if eighth note with adjacent sixteenth, click join on eighth, the sixteenth note will have an attribute "head"
-						// which is the id of the sixteenth. 
-						// so if you had 4 eighth notes and joined them, but want to delete, you can click on any of the 4 and by using "head"
-						// you will know which block to start and end to delete. make sure to give all of their borders back.
-						// also, make sure to adjust headers' "hasNote" attribute back to 0.
-						// and get rid of the 16th note nodes! i.e. delete "-1" and "-2"
-						
-						// subdivide on different length notes?
-						// prevent subdividing on different length notes. allow subdividing on eighth notes only for now. 
-						// i.e. make sure header has "hasNote === 0" before subdividing.
-						
-						// also, need to think about this 
-						// when switching instruments, you need to also go through each note block's length attribute 
-						// in the notes array to determine if any changes need to be made to any note block borders and
-						// background color. have to consider eighth-sixteenth notes and different lengths 
-						
-					}
-					
+					rejoin(options.$trigger.attr("id"), false); // preserve any green notes 
 				}
 			},
             "Delete": {
@@ -961,6 +886,157 @@ $(function(){
         }
     });
 });
+
+
+// pass in id of an element, as well as true or false - true to clear the column of green, false to preserve notes
+function subdivide(elementId, clearColumn){
+
+	// get the id of the clicked-on block
+	var id = elementId; //options.$trigger.attr("id");
+
+	// check if already subdivided once! prevent 32nd notes for now 
+	if(id.indexOf('-2') > 0){
+		return;
+	}
+
+	var colNum = id.substring(id.indexOf("col"));
+	var column =  $("div[id$='" + colNum + "']").get();
+
+	/* revise column header first */
+	var colHead = column[0];
+	colHead.id = colHead.id + "-1";
+	//console.log(column);
+	// split the header as well, but keep the 2nd half invisible
+	// by making width 0
+	var columnHalf = colHead.cloneNode(false);
+	columnHalf.style.width = 0;
+	columnHalf.style.borderRight = "";
+	columnHalf.id = colNum + "-2";
+	colHead.parentNode.insertBefore(columnHalf, colHead.nextSibling);
+	//console.log(column);
+
+	for(var i = 1; i < column.length; i++){
+
+		// then split the block into 2 
+		var block = column[i];//document.getElementById(id);
+		
+		// this is the new, 2nd block
+		var block2 = block.cloneNode(false);
+		
+		// if clearColumn is true, make sure all blocks are transparent
+		if(clearColumn){
+			block.style.backgroundColor = "transparent";
+			block2.style.backgroundColor = "transparent";
+		}
+		
+		// now make some changes to the style for block and block2 
+		block.style.width = '19px';
+		block.setAttribute("length", "sixteenth");
+		block.style.borderRight = "1px solid #000";
+		block.id = block.id + "-1";
+		
+		//block.addEventListener("click", function(){ addNote(block.id, "selectWave") }); 
+		block.addEventListener("mouseenter", function(){ highlightRow(block.id, '#FFFF99') });
+		block.addEventListener("mouseleave", function(){ highlightRow(block.id, 'transparent') });
+		block.className = "context-menu-one";
+		
+		block2.setAttribute("length", "sixteenth");
+		block2.style.width = '20px';
+		block2.id = block2.id + "-2"; // give new id to block2
+		block2.className = "context-menu-one";
+		
+		block2.addEventListener("click", function(){ addNote(this.id, "selectWave") }); 
+		block2.addEventListener("mouseenter", function(){ highlightRow(block2.id, '#FFFF99') });
+		block2.addEventListener("mouseleave", function(){ highlightRow(block2.id, 'transparent') });
+		
+		// then put block2 after block1 in DOM
+		block.parentNode.insertBefore(block2, block.nextSibling);		
+	}
+}
+
+// take an element node id as parameter, and true or false if you want to clear a whole column (no green in any block of the column)
+function rejoin(elementId, clearColumn){
+
+	var block = elementId;
+	if(elementId.indexOf("-1") < 0){
+		// the elementId passed should always have a -1 appended for the left 16th note column. 
+		block = block + "-1";
+	}
+	block = document.getElementById(block);
+	var adjacentBlock = block.nextSibling; 
+	var blockHeader = block.id.substring(block.id.indexOf("col_"));
+	var column =  $("div[id$='" + blockHeader + "']").get(); //only get the left-side 16th notes of subdivision
+	blockHeader = column[0];
+	
+	// join two 16th note columns - must join from left!!!
+	if(blockHeader.id.indexOf("-2") < 0){
+		
+		// take care of column header first 
+		// blockHeader.setAttribute("length", "eighth");
+		blockHeader.id = blockHeader.id.substring(0, blockHeader.id.indexOf("-"));
+		
+		// delete adjacent 16th block
+		blockHeader.parentNode.removeChild(blockHeader.nextSibling);
+		
+		// then take care rest of column
+		for(var i = 1; i < column.length; i++){
+			blockHeader = column[i];
+			blockHeader.style.width = "40px";
+			blockHeader.setAttribute("length", "eighth");
+			
+			if(clearColumn){
+				blockHeader.style.backgroundColor = "transparent";
+			}
+			
+			blockHeader.id = blockHeader.id.substring(0, blockHeader.id.indexOf("-"));
+			blockHeader.parentNode.removeChild(blockHeader.nextSibling);
+		}
+	}
+	
+	
+	if(block.style.backgroundColor === "rgb(0, 178, 0)" && 
+	   adjacentBlock.style.backgroundColor === "rgb(0, 178, 0)"){
+	
+	
+		//console.log("ok to rejoin");
+		// take the length of the adjacent block and add it to the current block
+		// i.e. if current block is an eighth, and the adjacent is sixteenth, 
+		// change the current block length attribute to "eighth-sixteenth"
+		// (make sure to add 'eighth-sixteenth' as a length option in the length object in globals)
+		
+		// then remove the right border from the current block so the note looks elongated appropriately
+		
+		// important! change the current block's COLUMN HEADER's attribute "hasNote" to "1.5" !!!
+		// then in the readInNotes function, when you loop through the headers, if it sees 1.5, this means
+		// the current column has an eighth note joined with a sixteenth! so make sure to skip the next column.
+		// this way, no additional unnecessary notes will get added to the notes array.  
+		// additionally, add support for "hasNote === 2, 2.5, 3, 3.5, 4, ..."
+		
+		// ok, but how about deleting different length notes? 
+		// how about this - keep a "head" reference attribute to an adjoined note. i.e. 
+		// if eighth note with adjacent sixteenth, click join on eighth, the sixteenth note will have an attribute "head"
+		// which is the id of the sixteenth. 
+		// so if you had 4 eighth notes and joined them, but want to delete, you can click on any of the 4 and by using "head"
+		// you will know which block to start and end to delete. make sure to give all of their borders back.
+		// also, make sure to adjust headers' "hasNote" attribute back to 0.
+		// and get rid of the 16th note nodes! i.e. delete "-1" and "-2"
+		
+		// subdivide on different length notes?
+		// prevent subdividing on different length notes. allow subdividing on eighth notes only for now. 
+		// i.e. make sure header has "hasNote === 0" before subdividing.
+		
+		// also, need to think about this 
+		// when switching instruments, you need to also go through each note block's length attribute 
+		// in the notes array to determine if any changes need to be made to any note block borders and
+		// background color. have to consider eighth-sixteenth notes and different lengths 
+		// need to make sure whatever lengths are given to each note in the notes array is REFLECTED WHEN
+		// SWITCHING INSTRUMENTS! this means when switching, loop through notes array, look at length of each note,
+		// and then doing the subdivide or rejoin as needed. therefore, subdivide and rejoin should be separate, standalone functions!
+		
+	}
+
+
+}
 
 
 </script>
