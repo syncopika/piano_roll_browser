@@ -9,6 +9,26 @@ these functions control functionality such as:
 
 ************/
 
+
+// create a new gain object
+// needs a context variable!
+function initGain(){
+	var newGain = context.createGain();
+	// set gain to 0 initially so no sound will be heard 
+	newGain.gain.value = 0.0;
+	return newGain;
+}
+
+// create a new oscillator
+// needs a context variable!
+function initOscillator(gain){
+	var o = context.createOscillator();
+	o.type = "sine"; // sine wave by default 
+	o.connect(gain); 
+	o.start(0);
+	return o;
+}
+
 /****
 
 this will read all the notes, put them in an array and returns the array 
@@ -64,21 +84,21 @@ this function takes an array of notes, an index, and an oscillator and plays the
 with a specific duration with the passed-in oscillator.
 
 ****/
-function readAndPlayNote(array, index, oscillatorNode, gainNode){  
+function readAndPlayNote(array, index, currentInstrument){  
 	// when to stop playing 
 	if(index === array.length){
-		gainNode.gain.value = 0;
+		 currentInstrument.gain.gain.value = 0;
 	}else{
-		oscillatorNode.type = $('#selectWave').val();
+		 currentInstrument.oscillator.type =  currentInstrument.waveType;
 		/* tip! by setting value at a certain time, this prevents the 'gliding' from one freq. to the next */
-		oscillatorNode.frequency.setValueAtTime(array[index].freq, 0);
+		 currentInstrument.oscillator.frequency.setValueAtTime(array[index].freq, 0);
 		// by setting gain value here according to the two conditions, this allows for the 'articulation' of notes without 
 		// the 'helicopter' sound when a certain note frequency is 0. 
 		// previously, the gain would have been .3 even for notes with 0 frequency,
 		// which causes some increase in volume in background sound.
 		// it was only detectable when I added the setTimeout below where I set gain to 0.
 		// this is fixed by always setting gain to 0 if a note's frequency is 0.
-		gainNode.gain.value = array[index].freq > 0 ? .3 : 0.0;
+		 currentInstrument.gain.gain.value = array[index].freq > 0 ? .3 : 0.0;
 		if(index < array.length){
 			// hold the current note for whatever duration was specified
 			// in other words, hold this current note for array[index].duration, then move on to the next note.
@@ -88,10 +108,10 @@ function readAndPlayNote(array, index, oscillatorNode, gainNode){
 			
 			// change gain to 0 after a really small amount of time to give the impression of articulation
 			// 100 might have to be a better value later to coordinate with when the next note will play
-			setTimeout(function(){ gainNode.gain.value = 0.0; }, 100); 
+			setTimeout(function(){  currentInstrument.gain.gain.value = 0.0; }, 100); 
 			
 			// create a new timer and push to timers array 
-			timer = setTimeout(function(){readAndPlayNote(array, ++index, oscillatorNode, gainNode)}, array[currIndex].duration); 
+			timer = setTimeout(function(){readAndPlayNote(array, ++index, currentInstrument)}, array[currIndex].duration); 
 		}
 	}
 }
@@ -114,7 +134,7 @@ play notes for current instrument
 
 ****/
 function play(){
-	readAndPlayNote(readInNotes(), 0, currentInstrument.oscillator, currentInstrument.gain);
+	readAndPlayNote(readInNotes(), 0, currentInstrument);
 }
 
 /****
@@ -125,7 +145,7 @@ play all instruments
 function playAll(){
 	currentInstrument.notes = readInNotes();
 	for(var i = 0; i < instruments.length; i++){
-		readAndPlayNote(instruments[i].notes, 0, instruments[i].oscillator, instruments[i].gain);
+		readAndPlayNote(instruments[i].notes, 0, instruments[i]);
 	}
 }
 
@@ -198,7 +218,7 @@ function addNewInstrument(){
 	
 	instrumentTable.appendChild(newInstrument);
 	
-	createNewInstrument("blah");
+	createNewInstrument("new_instrument");
 }
 
 /****
