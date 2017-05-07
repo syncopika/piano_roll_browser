@@ -2,6 +2,7 @@
 
 DOM MODIFICATION 
 
+
 ***************/
 
 
@@ -26,6 +27,7 @@ function clickNote(id, waveType){
 		}, 100);
 	}, 10); // use a small value like 10 so it starts "immediately"
 }
+
 
 /****
 
@@ -56,9 +58,10 @@ function addNote(id, type){
 		var currValue = parseInt(document.getElementById(headerId).getAttribute("hasNote"));
 		document.getElementById(headerId).setAttribute("hasNote", ++currValue);
 	}
-	var waveType = $('#' + type);
-	clickNote(id, waveType.val());
+	var waveType = currentInstrument.waveType; //$('#' + type);
+	clickNote(id, waveType);
 }
+
 
 /****
 
@@ -191,12 +194,16 @@ function chooseInstrument(thisElement){
 	// move on to the clicked-on instrument
 	currentInstrument.notes = readInNotes();
 	
+	// instrumentTable is specific to my implementation
 	var instrumentsView = document.getElementById('instrumentTable').children;
 
 	// change other instruments' label background color to transparent
 	for(var i = 0; i < instrumentsView.length; i++){
 		if(instrumentsView[i]){
 			instrumentsView[i].style.backgroundColor = "transparent";
+			
+			// detach context menu from old instrument 
+			instrumentsView[i].classList.remove("context-menu-instrument");
 		}
 	}
 	
@@ -207,6 +214,9 @@ function chooseInstrument(thisElement){
 	clearGrid();
 	
 	currentInstrument = instruments[index]; // this is the new instrument
+	
+	// attach new context menu only to current instrument via class name
+	document.getElementById('instrumentTable').children[index].classList.add("context-menu-instrument");
 	
 	// then draw the previously-saved notes, if any, onto the grid of the clicked-on instrument
 	drawNotes(currentInstrument); 
