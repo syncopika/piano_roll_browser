@@ -1,6 +1,7 @@
 <!doctype html>
 
 <head>
+	<meta charset='utf-8'>
 	<title> piano roll in the browser wow </title>
 	<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
 	<script src='scripts/classes.js'></script>
@@ -8,7 +9,6 @@
 	<script src='scripts/dom_modification.js'></script>
 	<script src='scripts/grid_builder.js'></script>
 	<script src='scripts/functionality.js'></script>
-	
 	
 	<!-- stuff needed for contextMenu -->
 	<link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/screen.css" type="text/css"/>
@@ -19,8 +19,7 @@
     <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
     <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.ui.position.min.js" type="text/javascript"></script>
     <script src="https://swisnl.github.io/jQuery-contextMenu/js/main.js" type="text/javascript"></script>
-
-	<meta charset='utf-8'>
+	
 </head>
 
 <style>
@@ -55,12 +54,14 @@
 	}
 	
 	#title{
-		margin: 0;
+		margin: 0 auto;
+		text-align: center;
 	}
 	
-	ul{
+	#toolbar ul{
 		padding: 0;
-		margin: 0;
+		margin: 0 auto;
+		text-align: center;
 	}
 	
 	#toolbar li{
@@ -86,11 +87,17 @@
 		padding: 4px;
 		box-shadow: .1em .1em #d3d3d3;
 	}
+	
+	.btn:hover{
+		background-color: #d0d0d0;
+	}
 </style>
 
 <body>
 
-<h2 id='title'> piano roll fun ʕ•ᴥ•ʔ</h2>
+<h2 id='title'> piano roll fun \ʕ•ᴥ•ʔ/ </h2>
+<p> right-click grid blocks to either subdivide to make 16th notes, or rejoin to undo. </p>
+<p> right-click an instrument block to rename or change the sound! </p>
 
 <div id='toolbar'>
 
@@ -105,12 +112,14 @@
 	</ul>
 
 	<ul>
-		<li><button onclick='play()'> play! </button></li>
-		<li><button onclick='playAll()'> play <b>all</b>! </button></li>
-		<li><button onclick='stopPlay()'> stop! </button></li>
-		<li><button onclick='addNewMeasure()'> add new measure </button></li>
-		<li><button onclick='addNewInstrument()'> add new instrument </button></li>
-		<li><button onclick='clearGrid()'> clear grid </button></li>
+		<li><button class='btn' onclick='play()'> play! </button></li>
+		<li><button class='btn' onclick='playAll()'> play <b>all</b>! </button></li>
+		<li><button class='btn' onclick='stopPlay()'> stop! </button></li>
+		<li><button class='btn' onclick='addNewMeasure()'> add new measure </button></li>
+		<li><button class='btn' onclick='addNewInstrument()'> add new instrument </button></li>
+		<li><button class='btn' onclick='clearGrid()'> clear grid </button></li>
+		
+		<!--
 		<li>
 			<label id='wavetypeLabel'> wave type:
 			<select id='selectWave'>
@@ -121,25 +130,26 @@
 			</select>
 			</label>
 		</li>
+		-->
+		
 		<li>
 			<label id='tempoLabel'> tempo: 
 			<input id='changeTempo' type='text'></input>
 			</label>
 		</li>
 		<li>
-			<button onclick='changeTempo()'> change tempo </button>
+			<button class='btn' onclick='changeTempo()'> change tempo </button>
 		</li>
 	</ul>
 	
 </div>
 
 <br>
-<p> left-click to add and delete notes. right-click lets you subdivide a measure for 16th notes. rejoin to undo subdivision. </p>
 
 <div>
 	<table>
 		<tr id='instrumentTable'>
-			<td id='1' selected='1' style='background-color: rgb(188,223,70)' onclick='chooseInstrument(this.id)'> default instrument </td>
+			<td id='1' class='context-menu-instrument' selected='1' style='background-color: rgb(188,223,70)' onclick='chooseInstrument(this.id)'> default instrument </td>
 		</tr>
 	</table>
 </div>
@@ -181,7 +191,6 @@
 -allow color customizations for highlight, note blocks
 -legato, staccato toggling for individual notes
 -bend notes? :>
--need to customize instruments, i.e. name, type of wave, etc.
 -be able to download/import json data of instruments/notes 
 */
 
@@ -209,32 +218,69 @@ var initialInstrument = new Instrument("Instrument 1", oscillator, g, []);
 instruments.push(initialInstrument);
 currentInstrument = instruments[0];
 
-// create a new gain object
-function initGain(){
-	var newGain = context.createGain();
-	// set gain to 0 initially so no sound will be heard 
-	newGain.gain.value = 0.0;
-	return newGain;
-}
-
-// create a new oscillator
-function initOscillator(gain){
-	var o = context.createOscillator();
-	o.type = $('#selectWave').val();
-	o.connect(gain); 
-	o.start(0);
-	return o;
-}
-
 
 /***** PRODUCE THE GRID HEADER ********/
 // dynamically produce piano roll 
-
 buildGridHeader('columnHeaderRow');
 buildGrid('piano');
 
 
-/****  CONTEXT MENU  *****/
+
+/***** CONTEXT MENU FOR INSTRUMENTS *******/
+$(function(){
+    $.contextMenu({
+        selector: '.context-menu-instrument', 
+        callback: function(key, options) {
+            var m = "global: " + key;
+            window.console && console.log(m) || alert(m); 
+        },
+        items: {
+            name: {
+				name: "Name - press enter to change name", 
+				type: 'text',
+				value: "",
+				events: {
+					keyup: function(e){
+						var node = document.getElementById( e.data.$trigger.attr("id") );
+						if(e.which === 13){
+							node.textContent = this.value;
+							
+							// update the corresponding instrument object's name field
+							var instrumentId = parseInt( e.data.$trigger.attr("id") ) - 1; 
+							instruments[instrumentId].name = this.value;
+						}
+					}
+				}
+			},
+			sep1: "-------------",
+			select: {
+				name: "Select wave type",
+				type: 'select',
+				options: {1: 'square', 2: 'sine', 3: 'sawtooth', 4: 'triangle'},
+				events: {
+					change: function(e){
+						var instrumentId = parseInt( e.data.$trigger.attr("id") ) - 1; 
+						instruments[instrumentId].waveType = (this.options[e.target.options[e.target.selectedIndex].value - 1].textContent);
+					}
+				}
+			},
+			sep2: "-------------",
+            "Delete": {
+				name: "Delete", 
+				icon: "delete",
+				callback: function(key, options){
+					//console.log(options);
+					//alert(options.$trigger.attr("id") );
+				}
+			}
+        }
+    });
+});
+
+
+
+
+/****  CONTEXT MENU FOR GRID NOTES *****/
 $(function(){
     $.contextMenu({
         selector: '.context-menu-one', 
@@ -248,8 +294,7 @@ $(function(){
                 icon: "edit", 
                 // supersedes "global" callback
                 callback: function(key, options) {
-                    var m = "edit was clicked";
-                    window.console && console.log(m) || alert(m); 
+                    // do nothing for now 
                 }
             },
             "Subdivide": {
