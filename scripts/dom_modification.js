@@ -34,7 +34,7 @@ function clickNote(id, waveType){
 make notes clickable / toggle active note (green) 
 
 ****/
-function addNote(id, type){
+function addNote(id){
 	if($('#' + id).css("background-color") === "rgb(0, 178, 0)"){
 		$('#' + id).css("background-color", "transparent");
 		
@@ -79,7 +79,9 @@ function highlightRow(id, color){
 /****
 
 delete all notes - clear the grid
--does not alter subdivisions
+- does not alter subdivisions
+- does not clear onion skin!
+- only clears current instrument's notes 
 
 ****/
 function clearGrid(){
@@ -105,12 +107,43 @@ function clearGrid(){
 
 /****
 
+like clearGrid, but clears EVERYTHING and rejoins any subdivisions 
+
+****/
+function clearGridAll(){
+	var columns = document.getElementById("columnHeaderRow").children;
+
+	// start at 1 to ignore the column before 1 (the blank one)
+	for(var i = 1; i < columns.length; i++){
+		if(columns[i].getAttribute("hasnote") !== "0"){
+			// change hasnote attribute back to 0!
+			columns[i].setAttribute("hasnote", "0");
+			var columnToCheck = $("div[id$='" + columns[i].id + "']").get();
+			for(var j = 0; j < columnToCheck.length; j++){
+				if(columnToCheck[j].style.backgroundColor !== "transparent"){
+					columnToCheck[j].style.backgroundColor = "transparent";
+				}
+				if(columnToCheck[j].style.background !== ""){
+					columnToCheck[j].style.background = "";
+				}
+			}
+		}
+		
+		if(columns[i].id.indexOf("-1") > 0){
+			rejoin(columns[i].id, false);
+		}
+	}
+}
+
+/****
+
 add a new measure
 
 ****/
 function addNewMeasure(){
 
-	$('#measures').text( "number of measures: " + (parseInt($('#measures').text().trim().split(' ').reverse()[0]) + 1) );
+	// updating the measure count - notice specific id of element! 
+	$('#measures').text( "number of measures: " + (parseInt($('#measures').text().match(/[0-9]{1,}/g)[0]) + 1) );
 	
 	// find the dummy node for the header columns and insert before that node
 	// the new subdivisions of the new measure
@@ -120,12 +153,21 @@ function addNewMeasure(){
 	// new column headers 
 	for(var i = 0; i < subdivision; i++){
 		var newHeader = document.createElement('div');
-		newHeader.id = "col_" + (numberOfMeasures * subdivision + i); 
+		newHeader.id = "col_" + (numberOfMeasures * subdivision + i);
+		newHeader.style.margin = "0 auto";
+		newHeader.style.display = 'inline-block';		
+		
+		
+		if(i + 1 === subdivision){
+			newHeader.style.borderRight = "3px solid #000";
+		}else{
+			newHeader.style.borderRight = "1px solid #000";
+		}
+		
+		newHeader.style.textAlign = "center";
 		newHeader.style.width = '40px';
 		newHeader.style.height = '12px';
 		newHeader.style.fontSize = '10px';
-		newHeader.style.display = 'inline-block';
-		newHeader.style.textAlign = "center";
 		
 		// 0 == false; i.e. does not have a note in the column
 		// this attribute should help optimize performance a bit
@@ -133,15 +175,11 @@ function addNewMeasure(){
 		
 		newHeader.textContent =  i + 1;
 		
-		if(i + 1 === subdivision){
-			newHeader.style.borderRight = "3px solid #000";
-		}else{
-			newHeader.style.borderRight = "1px solid #000";
-		}
 		dummyParent.insertBefore(newHeader, dummy);
 	}
 	
 	// now add new columns for each note
+	// note specific id of element 
 	var noteRows = $('#piano').children().get();
 	
 	// start at 1 to skip column header row 
@@ -156,6 +194,7 @@ function addNewMeasure(){
 			newColumn.style.display = 'inline-block';
 			newColumn.style.width = '40px';
 			newColumn.style.height = '15px';
+			newColumn.style.verticalAlign = "middle";
 			
 			// IMPORTANT! new attributes for each note
 			newColumn.setAttribute("volume", "");
@@ -171,7 +210,7 @@ function addNewMeasure(){
 
 			// hook up an event listener to allow for selecting notes on the grid!
 			//notice passing in id of option/select element for picking wave type. 
-			newColumn.addEventListener("click", function(){ addNote(this.id, "selectWave") }); 
+			newColumn.addEventListener("click", function(){ addNote(this.id) }); 
 			// allow for highlighting to make it clear which note a block is
 			newColumn.addEventListener("mouseenter", function(){ highlightRow(this.id, '#FFFF99') });
 			newColumn.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
@@ -236,10 +275,15 @@ draw notes back on to grid
 function drawNotes(instrumentObject){
 	var notes = instrumentObject.notes;
 	for(var i = 0; i < notes.length; i++){
+		
+		if(notes[i].block.id === null){
+			continue;
+		}
+		
 		// only notes have a valid id (rests have null for id field)
 		if(notes[i].block.id){		
 			var elementExists = document.getElementById( notes[i].block.id );
-			
+	
 			// if we need to paint in an eighth note, but the column is currently subdivided 
 			if(!elementExists && notes[i].block.length === "eighth"){
 				
