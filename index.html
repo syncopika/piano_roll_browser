@@ -58,10 +58,22 @@
 		text-align: center;
 	}
 	
-	#toolbar ul{
-		padding: 0;
+	#toolbar{
+		/* border: 1px solid #000; */
+		position: relative;
+		width: 60%;
 		margin: 0 auto;
+	}
+	
+	#toolbar ul{
 		text-align: center;
+		margin-top: 0;
+		margin-bottom: 0;
+		padding-bottom: 0;
+	}
+	
+	#toolbar ul:nth-child(2){
+		margin-bottom: 20px;
 	}
 	
 	#toolbar li{
@@ -71,6 +83,17 @@
 	
 	#toolbar li h2{
 		font-size: 12px;
+	}
+	
+	#pianoNotes{
+		position: absolute;
+		width: 50px;
+		z-index: 100;
+		background-color: #fff;
+	}
+	
+	#instrumentGrid{
+		position: relative;
 	}
 	
 	.footer{
@@ -91,13 +114,18 @@
 	.btn:hover{
 		background-color: #d0d0d0;
 	}
+	
+	select, option{
+		height: 24px;
+	}
+	
 </style>
 
 <body>
 
-<h2 id='title'> piano roll fun \ʕ•ᴥ•ʔ/ </h2>
-
 <div id='toolbar'>
+
+	<h2 id='title'> piano roll fun \ʕ•ᴥ•ʔ/ </h2>
 
 	<ul>
 		<li><h2 id='measures'></h2></li>
@@ -107,6 +135,12 @@
 		<li><h2 id='subdiv'></h2></li>
 		<li>|</li>
 		<li><h2 id='tempo'>120 bpm</h2></li>
+		<li>|</li>
+		<li id='titleLabel'><h2> title:  </h2></li>
+		<li><h2 id='pieceTitle'> hi </h2></li>
+		<li>|</li>
+		<li id='composerLabel'><h2> composer:  </h2></li>
+		<li><h2 id='composer'> hi </h2></li>
 	</ul>
 
 	<ul>
@@ -115,8 +149,10 @@
 		<li><button class='btn' onclick='stopPlay()'> stop! </button></li>
 		<li><button class='btn' onclick='addNewMeasure()'> add new measure </button></li>
 		<li><button class='btn' onclick='addNewInstrument()'> add new instrument </button></li>
-		<li><button class='btn' onclick='clearGrid()'> clear grid </button></li>
-		
+		<li><button class='btn' onclick='clearGrid();showOnionSkin()'> clear grid </button></li>
+		<li><button class='btn' onclick='generateJSON()'> save & export data </button></li>
+		<li><button class='btn' onclick='fileHandler()'> import data </button></li>
+		<input type='file' id='importFile' style='display: none'>
 		<!--
 		<li>
 			<label id='wavetypeLabel'> wave type:
@@ -132,22 +168,30 @@
 		
 		<li>
 			<label id='tempoLabel'> tempo: 
-			<input id='changeTempo' type='text'></input>
+				<input id='changeTempo' type='text'></input>
 			</label>
 		</li>
 		<li>
 			<button class='btn' onclick='changeTempo()'> change tempo </button>
 		</li>
+		
+		<label> demo: </label>
+		<select onchange="getDemo(this)">
+			<option label=""></option>
+			<option>
+				Intrada-Pezel
+			</option>
+		</select>
 	</ul>
 	
 </div>
 
+<!--
 <p style="font-size: 14px"> right-click grid blocks to either subdivide to make 16th notes, or rejoin to undo. </p>
 <p style="font-size: 14px"> right-click an instrument block to rename or change the sound! </p>
+-->
 
-<br>
-
-<div>
+<div id='instrumentGrid'>
 	<table>
 		<tr id='instrumentTable'>
 			<td id='1' class='context-menu-instrument' selected='1' style='background-color: rgb(188,223,70)' onclick='chooseInstrument(this.id)'> default instrument </td>
@@ -162,6 +206,10 @@
 </div>
 
 
+<div id='pianoNotes'>
+</div>
+
+
 <div class='footer'>
 	<p> c.2017 nch works </p>
 </div>
@@ -169,20 +217,22 @@
 </body>
 
 <script>
-//references:
-//http://jsfiddle.net/remotesynth/73cD5/?utm_source=website&utm_medium=embed&utm_campaign=73cD5
-//https://modernweb.com/creating-sound-with-the-web-audio-api-and-oscillators/
-//http://www.phy.mtu.edu/~suits/notefreqs.html
-//http://stackoverflow.com/questions/1114024/constructors-in-javascript-objects
-//http://stackoverflow.com/questions/32239560/web-audio-oscillators-unexpectedly-glide-from-one-frequency-to-another-in-chrome
-//http://stackoverflow.com/questions/15261030/web-audio-start-and-stop-oscillator-then-start-it-again
-//http://stackoverflow.com/questions/18785951/how-to-get-width-of-a-div-in-percentage-using-jquery
-//http://alemangui.github.io/blog//2015/12/26/ramp-to-value.html
-//http://stackoverflow.com/questions/4909167/how-to-add-a-custom-right-click-menu-to-a-webpage
-//https://swisnl.github.io/jQuery-contextMenu/docs.html
-//http://stackoverflow.com/questions/11950811/get-id-of-clicked-element-which-opened-context-menu-using-jquery-contextmenu-plu
-//http://stackoverflow.com/questions/22550424/how-can-i-change-the-background-color-of-multiple-divs-by-dragging-over-them-wit
-//http://www.sengpielaudio.com/calculator-bpmtempotime.htm
+// references:
+// http://jsfiddle.net/remotesynth/73cD5/?utm_source=website&utm_medium=embed&utm_campaign=73cD5
+// https://modernweb.com/creating-sound-with-the-web-audio-api-and-oscillators/
+// http://www.phy.mtu.edu/~suits/notefreqs.html
+// http://stackoverflow.com/questions/1114024/constructors-in-javascript-objects
+// http://stackoverflow.com/questions/32239560/web-audio-oscillators-unexpectedly-glide-from-one-frequency-to-another-in-chrome
+// http://stackoverflow.com/questions/15261030/web-audio-start-and-stop-oscillator-then-start-it-again
+// http://stackoverflow.com/questions/18785951/how-to-get-width-of-a-div-in-percentage-using-jquery
+// http://alemangui.github.io/blog//2015/12/26/ramp-to-value.html
+// http://stackoverflow.com/questions/4909167/how-to-add-a-custom-right-click-menu-to-a-webpage
+// https://swisnl.github.io/jQuery-contextMenu/docs.html
+// http://stackoverflow.com/questions/11950811/get-id-of-clicked-element-which-opened-context-menu-using-jquery-contextmenu-plu
+// http://stackoverflow.com/questions/22550424/how-can-i-change-the-background-color-of-multiple-divs-by-dragging-over-them-wit
+// http://www.sengpielaudio.com/calculator-bpmtempotime.htm
+// http://stackoverflow.com/questions/14976495/get-selected-option-text-with-javascript
+// http://stackoverflow.com/questions/7346563/loading-local-json-file
 
 // ooooh make it recordable!
 // https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createMediaStreamDestination
@@ -192,8 +242,8 @@
 -allow color customizations for highlight, note blocks
 -legato, staccato toggling for individual notes
 -bend notes? :>
--be able to download/import json data of instruments/notes 
 */
+var jsonData = [];
 
 /**** INFORMATION ABOUT THE CURRENT SETUP ****/
 var numberOfMeasures = 4; 	// 4 measures by default
@@ -226,6 +276,35 @@ buildGridHeader('columnHeaderRow');
 buildGrid('piano');
 
 
+/* special block for just piano notes 
+   this is supposed to move right when scroll right 
+*/
+var position = $('#C7').position();
+$('#pianoNotes').css('left', position.left);
+$('#pianoNotes').css('top', position.top);
+
+$(window).scroll(function(){
+
+	// change position of the piano notes bar on the left to move 
+	// with horizontal scroll 
+	$('#pianoNotes').css('top', $("#C7").position().top);
+	$('#pianoNotes').css('left', $(window).scrollLeft());
+	
+	// adjust the left padding the mobile note bar! it should only 
+	// stick to the left edge when moving it. otherwise, keep some padding.  
+	if($('#pianoNotes').position().left === 0){
+		$('#pianoNotes').css('padding-left', '8px');
+	}else{
+		$('#pianoNotes').css('padding-left', '0px');
+	}
+	
+	// move the instruments grid accordingly too 
+	$('#instrumentGrid').css('left', $(window).scrollLeft());
+	
+	// also move the toolbar as well 
+	$('#toolbar').css('left', $(window).scrollLeft());
+	
+});
 
 /***** CONTEXT MENU FOR INSTRUMENTS *******/
 $(function(){
@@ -258,6 +337,17 @@ $(function(){
 				name: "Select wave type",
 				type: 'select',
 				options: {1: 'square', 2: 'sine', 3: 'sawtooth', 4: 'triangle'},
+				selected: function() { 
+					if(currentInstrument.waveType === "square" ){ 
+						return "1";
+					}else if(currentInstrument.waveType === "sine"){
+						return "2";
+					}else if(currentInstrument.waveType === "sawtooth"){
+						return "3";
+					}else{
+						return "4";
+					}		
+				},
 				events: {
 					change: function(e){
 						var instrumentId = parseInt( e.data.$trigger.attr("id") ) - 1; 
@@ -266,6 +356,10 @@ $(function(){
 				}
 			},
 			sep2: "-------------",
+			"Change volume": {
+				name: "change volume"
+			},
+			sep3: "-------------",
             "Delete": {
 				name: "Delete", 
 				icon: "delete",
@@ -392,18 +486,24 @@ function subdivide(elementId, clearColumn){
 		block.id = block.id + "-1";
 		
 		//block.addEventListener("click", function(){ addNote(block.id, "selectWave") }); 
-		block.addEventListener("mouseenter", function(){ highlightRow(block.id, '#FFFF99') });
-		block.addEventListener("mouseleave", function(){ highlightRow(block.id, 'transparent') });
-		block.className = "context-menu-one";
+		//block.addEventListener("mouseenter", function(){ highlightRow(block.id, '#FFFF99') });
+		//block.addEventListener("mouseleave", function(){ highlightRow(block.id, 'transparent') });
+		//block.className = "context-menu-one";
 		
 		block2.setAttribute("length", "sixteenth");
 		block2.style.width = '20px';
 		block2.id = block2.id + "-2"; // give new id to block2
 		block2.className = "context-menu-one";
 		
-		block2.addEventListener("click", function(){ addNote(this.id, "selectWave") }); 
-		block2.addEventListener("mouseenter", function(){ highlightRow(block2.id, '#FFFF99') });
-		block2.addEventListener("mouseleave", function(){ highlightRow(block2.id, 'transparent') });
+		// notice how this.id must be used. this is because using block2.id doesn't actually pass the current block2.id 
+		// string as an argument. I think it has something to do with block2 changing every iteration of this for-loop,
+		// and because we're attaching an event listener that all block2 elements will use. at the very end of the loop,
+		// the last element looked at in the for-loop gets to be the argument for highlightRow. it's not a separate thing for
+		// each block2 element. they're sharing an eventListener, so you can't hardcode an argument if you want it to work for all
+		// the elements. this.id makes sure that the eventListener looks at the id of whatever element is mouseover'd.
+		block2.addEventListener("click", function(){ addNote(this.id) }); 
+		block2.addEventListener("mouseenter", function(){ highlightRow(this.id, '#FFFF99') });
+		block2.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
 		
 		// then put block2 after block1 in DOM
 		block.parentNode.insertBefore(block2, block.nextSibling);		
@@ -415,13 +515,26 @@ function subdivide(elementId, clearColumn){
 function rejoin(elementId, clearColumn){
 
 	var block = elementId;
+	
 	if(elementId.indexOf("-1") < 0){
 		// the elementId passed should always have a -1 appended for the left 16th note column. 
+		// because we're rejoining, we have to look for a column with "-1" in the id 
+		// this becomes useful when we're switching between instruments and one has an eighth
+		// in the same location where currently it's split into two 16ths. there's no proper id 
+		// for an eighth note, but the 16th is there, so we have to get that one by appending "-1".
 		block = block + "-1";
 	}
+	
 	block = document.getElementById(block);
 	var adjacentBlock = block.nextSibling; 
 	var blockHeader = block.id.substring(block.id.indexOf("col_"));
+	
+	// some block columns have a BOLD right-border to indicate the end/start of a new measure 
+	// since subdivision is 8, every 8th column should have a BOLD right border 
+	// this variable will hold the column number. add 1 to account for 0-index offset, then check if
+	// divisible by 8. 
+	var boldBorder = parseInt(blockHeader.substring(blockHeader.indexOf("_") + 1).match(/[0-9]{1,}/g)[0]) + 1;
+	
 	var column =  $("div[id$='" + blockHeader + "']").get(); //only get the left-side 16th notes of subdivision
 	blockHeader = column[0];
 	
@@ -440,6 +553,10 @@ function rejoin(elementId, clearColumn){
 			blockHeader = column[i];
 			blockHeader.style.width = "40px";
 			blockHeader.setAttribute("length", "eighth");
+			
+			if(boldBorder % 8 === 0){
+				blockHeader.style.borderRight = "3px solid #000";
+			}
 			
 			if(clearColumn){
 				blockHeader.style.backgroundColor = "transparent";
@@ -494,6 +611,241 @@ function rejoin(elementId, clearColumn){
 
 }
 
+
+/****
+
+gather JSON data 
+use global jsonData variable
+
+first element in json data array will be an object with 
+one key-value pair indicating how many measures there are.
+
+http://stackoverflow.com/questions/728360/how-do-i-correctly-clone-a-javascript-object
+
+****/
+function generateJSON(){
+
+	currentInstrument.notes = readInNotes();
+	
+	var metadata = {};
+	metadata["measures"] = parseInt( document.getElementById('measures').textContent.match(/[0-9]{1,}/g)[0] );
+	// wait! also need to know: tempo!!! 
+	
+	// put in composer info, name of piece 
+	metadata["composer"] = document.getElementById("composer").textContent;
+	metadata["title"] = document.getElementById("pieceTitle").textContent;
+
+	jsonData.push(metadata);
+	
+	for(var i = 0; i < instruments.length; i++){
+		jsonData.push( [ instruments[i] ] );
+	}
+	
+	jsonData = JSON.stringify(jsonData);
+	jsonData = jsonData.replace(/,/g, ',\n'); // replace all commas with a comma + newline 
+	console.log(jsonData);
+	
+	var blob = new Blob([jsonData], {type: "application/json"});
+	var url = URL.createObjectURL(blob);
+	
+	var link = document.createElement('a');
+	link.href = url;
+	
+	var nameOfFile = prompt("please enter name: ");
+	link.download = nameOfFile + ".json";
+	
+	link.click();
+	
+	// clear array for new data 
+	jsonData = [];
+}
+
+
+/****
+
+import JSON data from file
+
+****/
+function fileHandler(){
+	//initiate file choosing after button click
+	var input = document.getElementById('importFile');
+	input.addEventListener('change', getFile, false);
+	input.click();
+}
+
+function getFile(e){
+	var reader = new FileReader();
+	var file = e.target.files[0];
+	
+	/* check for json file? */
+	
+	//when the image loads, put it on the canvas.
+	reader.onload = (function(theFile){
+	
+		return function(e){
+		
+			// clear grid first
+			clearGridAll();
+		
+			// http://stackoverflow.com/questions/14740927/using-html-5-file-api-to-load-a-json-file
+			// parse JSON using JSON.parse 
+			var data = JSON.parse(e.target.result);
+			//console.log(jsonData);
+			
+			// update metadata 
+			document.getElementById("composer").textContent = data[0]["composer"]; // could be undefined!
+			document.getElementById("pieceTitle").textContent = data[0]["title"]; // could be undefined!
+			
+			// now put the data on the grid 
+			var measures = data[0]["measures"];
+			
+			// add new measures first - NEED TO ALSO DELETE IF TOO MANY!!
+			//console.log(measures);
+			if(measures > 4){
+				for(var i = 0; i < measures - 4; i++){
+					addNewMeasure(); // add new measures as needed 
+				}
+			}
+			
+			// then assign instruments array the data 
+			instruments = []; // clear instruments array 
+			
+			// clear the current instrument table in the dom
+			// http://stackoverflow.com/questions/3955229/remove-all-child-elements-of-a-dom-node-in-javascript
+			var instrumentsGrid = document.getElementById("instrumentTable");
+			while(instrumentsGrid.firstChild){
+				instrumentsGrid.removeChild(instrumentsGrid.firstChild);
+			}
+			
+			for(var i = 1; i < data.length; i++){
+				// put each instrument into the instrument grid 
+				addNewInstrument(data[i][0].name, false);
+				
+				// set up a fresh new oscillator and gain node for each instrument 
+				var newGain = initGain();
+				var newOscillator = initOscillator(newGain);
+				
+				var newInstrument = data[i][0];
+				newInstrument.gain = newGain;
+				newInstrument.oscillator = newOscillator;
+				
+				// connect gain and oscillator to audio context 
+				// note that this context here has been declared at the very beginning!
+				// only one context per program 
+				newGain.connect(context.destination);
+				
+				// add new instrument to array
+				instruments.push(newInstrument);
+			}
+			
+			// make 1st instrument active
+			var instrument1 = document.getElementById("instrumentTable").firstChild;
+			instrument1.style.backgroundColor = "rgb(188,223,70)";
+			instrument1.setAttribute("selected", "1");
+			
+			currentInstrument = instruments[0];
+			drawNotes(currentInstrument);
+			showOnionSkin();
+			
+		}
+	})(file);
+
+	//read the file as a URL
+	reader.readAsText(file);
+};
+
+
+/****
+
+separate file reader function 
+for my local JSON file demos 
+
+if testing locally, remember that Chrome
+is picky about cross-origin requests 
+
+use python -m http.server to launch 
+a local server. then access this page through it. 
+
+****/
+
+function getDemo(selectedDemo){
+
+	// get the selected demo from the dropbox
+	// selectedDemo is the path to the demo to load 
+	var selectedDemo = "demos/" + selectedDemo.options[selectedDemo.selectedIndex].text + ".json"; 
+	//console.log(selectedDemo);
+	var httpRequest = new XMLHttpRequest();
+
+	if(!httpRequest){
+		// unable to make request instance
+		return;
+	}
+	
+	httpRequest.open("GET", selectedDemo);
+	
+	httpRequest.onload = function(){
+
+		// request was successful. process json data now.
+	
+		// clear grid first
+		clearGridAll();
+	
+		var data = JSON.parse(httpRequest.responseText);
+		
+		// update metadata 
+		document.getElementById("composer").textContent = data[0]["composer"]; // could be undefined!
+		document.getElementById("pieceTitle").textContent = data[0]["title"]; // could be undefined!
+		
+		// now put the data on the grid 
+		var measures = data[0]["measures"];
+		
+		// add new measures first - NEED TO ALSO DELETE IF TOO MANY!!
+		//console.log(measures);
+		if(measures > 4){
+			for(var i = 0; i < measures - 4; i++){
+				addNewMeasure(); // add new measures as needed 
+			}
+		}
+		
+		// then assign instruments array the data 
+		instruments = []; // clear instruments array 
+
+		var instrumentsGrid = document.getElementById("instrumentTable");
+		while(instrumentsGrid.firstChild){
+			instrumentsGrid.removeChild(instrumentsGrid.firstChild);
+		}
+		
+		for(var i = 1; i < data.length; i++){
+			// put each instrument into the instrument grid 
+			addNewInstrument(data[i][0].name, false);
+			
+			// set up a fresh new oscillator and gain node for each instrument 
+			var newGain = initGain();
+			var newOscillator = initOscillator(newGain);
+			
+			var newInstrument = data[i][0];
+			newInstrument.gain = newGain;
+			newInstrument.oscillator = newOscillator;
+			
+			newGain.connect(context.destination);
+			
+			// add new instrument to array
+			instruments.push(newInstrument);
+		}
+		
+		// make 1st instrument active
+		var instrument1 = document.getElementById("instrumentTable").firstChild;
+		instrument1.style.backgroundColor = "rgb(188,223,70)";
+		instrument1.setAttribute("selected", "1");
+		
+		currentInstrument = instruments[0];
+		drawNotes(currentInstrument);
+		showOnionSkin();
+	}
+	
+	httpRequest.send();
+
+}
 
 </script>
 
