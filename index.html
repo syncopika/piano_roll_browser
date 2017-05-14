@@ -4,9 +4,9 @@
 	<meta charset='utf-8'>
 	<title> piano roll in the browser wow </title>
 	<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
-	<script src='scripts/dom_modification.js'></script>
 	<script src='scripts/classes.js'></script>
 	<script src='scripts/globals.js'></script>
+	<script src='scripts/dom_modification.js'></script>
 	<script src='scripts/grid_builder.js'></script>
 	<script src='scripts/functionality.js'></script>
 	
@@ -742,6 +742,7 @@ function getFile(e){
 			var instrument1 = document.getElementById("instrumentTable").firstChild;
 			instrument1.style.backgroundColor = "rgb(188,223,70)";
 			instrument1.setAttribute("selected", "1");
+			instrument1.classList.add("context-menu-instrument");
 			
 			currentInstrument = instruments[0];
 			drawNotes(currentInstrument);
@@ -837,6 +838,7 @@ function getDemo(selectedDemo){
 		var instrument1 = document.getElementById("instrumentTable").firstChild;
 		instrument1.style.backgroundColor = "rgb(188,223,70)";
 		instrument1.setAttribute("selected", "1");
+		instrument1.classList.add("context-menu-instrument");
 		
 		currentInstrument = instruments[0];
 		drawNotes(currentInstrument);
