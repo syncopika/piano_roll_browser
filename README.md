@@ -5,6 +5,7 @@ also carries a bit of influence from PxTone Collage, another great piece of soft
 This project is currently still a very early prototype. more to come! (^_^\)    
 
 ### instructions:
+left-click a block in the grid to place a note; click again to remove.   
 right-click blocks on the grid to create 16th notes, or rejoin 16th notes to revert back to 8th notes.    
 right-click an instrument to modify its sound and name.    
 check out a demo! see the demo dropdown box.    
