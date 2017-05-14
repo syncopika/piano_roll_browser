@@ -46,6 +46,7 @@ function readInNotes(){
 			lastColumn = k;
 		}
 	}
+
 	// start at 1 to skip 0th index, which is not a valid note column
 	for(var i = 1; i <= lastColumn; i++){
 
@@ -68,9 +69,11 @@ function readInNotes(){
 		// if found === 0, then add a rest. need to know what kind of note this current column represents first.
 		if(found === 0){
 			if(columnHeaders[i].id.indexOf("-1") > 0 || columnHeaders[i].id.indexOf("-2") > 0){
-				notes.push(new Note(0.0,  Math.round(currentTempo / noteLengths["sixteenth"]), column[i]));
+				// doesn't really matter which block element (i.e. C1, C7, F3, ...) we look at since the whole
+				// column has no note. just use the 2nd element in the column array. (the first one is the header)
+				notes.push(new Note(0.0,  Math.round(currentTempo / noteLengths["sixteenth"]), column[1]));
 			}else{
-				notes.push(new Note(0.0,  Math.round(currentTempo / noteLengths["eighth"]), column[i]));
+				notes.push(new Note(0.0,  Math.round(currentTempo / noteLengths["eighth"]), column[1]));
 			}
 		}
 	}
@@ -178,6 +181,7 @@ function changeTempo(){
 			}
 		}
 	}
+	console.log("done changing tempo!")
 }
 
 /***
@@ -201,7 +205,7 @@ function getCorrectLength(length, currentTempo){
 add a new instrument 
 
 ****/
-function addNewInstrument(){
+function addNewInstrument(name, bool){
 	var instrumentTable = document.getElementById("instrumentTable");
 	var newInstrument = document.createElement('td');
 	
@@ -210,7 +214,11 @@ function addNewInstrument(){
 	newInstrument.setAttribute("selected", "0");
 	newInstrument.style.backgroundColor = "transparent";
 	
-	newInstrument.innerHTML = "new_instrument";
+	if(name === undefined){
+		newInstrument.innerHTML = "new_instrument";
+	}else{
+		newInstrument.innerHTML = name;
+	}
 	newInstrument.addEventListener('click', function(event){
 		// pass the event target's id to chooseInstrument()
 		chooseInstrument(event.target.id);
@@ -218,7 +226,11 @@ function addNewInstrument(){
 	
 	instrumentTable.appendChild(newInstrument);
 	
-	createNewInstrument("new_instrument");
+	// bool is not false - if a new instrument needs to be created
+	// - when importing data, this createNewInstrument step is not needed
+	if(bool !== false){
+		createNewInstrument("new_instrument");
+	}
 }
 
 /****
@@ -228,12 +240,12 @@ create a new instrument
 ****/
 function createNewInstrument(name){
 	// make new oscillator and gain nodes
-	var newGain = initGain();
-	var newOscillator = initOscillator(newGain);
+	var newGain = new initGain();
+	var newOscillator = new initOscillator(newGain);
 	newGain.connect(context.destination);
 	
 	// create new instrument with oscillator
-	var newInstrument = new Instrument("blah", newOscillator, newGain, []);
+	var newInstrument = new Instrument("new_instrument", newOscillator, newGain, []);
 	instruments.push(newInstrument);
 }
 
