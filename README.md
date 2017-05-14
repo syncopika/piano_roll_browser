@@ -10,7 +10,7 @@ right-click an instrument to modify its sound and name.
 check out a demo! see the demo dropdown box.    
 
 ### known problems:
-tempo is pretty wonky past 135.    
+notes getting torn past 150 (need to check what's happening to duration calculations).    
 still need to delete measures, instruments.    
 still need to be able to join notes.    
 need to make volume adjustable for each instrument.    
