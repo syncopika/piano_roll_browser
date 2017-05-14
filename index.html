@@ -4,9 +4,9 @@
 	<meta charset='utf-8'>
 	<title> piano roll in the browser wow </title>
 	<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+	<script src='scripts/dom_modification.js'></script>
 	<script src='scripts/classes.js'></script>
 	<script src='scripts/globals.js'></script>
-	<script src='scripts/dom_modification.js'></script>
 	<script src='scripts/grid_builder.js'></script>
 	<script src='scripts/functionality.js'></script>
 	
@@ -781,7 +781,7 @@ function getDemo(selectedDemo){
 		return;
 	}
 	
-	httpRequest.open("GET", selectedDemo, false);
+	httpRequest.open("GET", selectedDemo);
 	
 	httpRequest.onload = function(){
 
