@@ -12,7 +12,8 @@ check out a demo! see the demo dropdown box.
 ### known problems:
 tempo is pretty wonky past 135.    
 still need to delete measures, instruments.    
-still need to be able to join notes.
+still need to be able to join notes.    
+need to make volume adjustable for each instrument.    
     
 ### features I would like to implement:    
 - ability to change color of highlight and color of note blocks, i.e. different for each new instrument    
