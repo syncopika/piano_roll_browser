@@ -18,7 +18,7 @@ function buildGridHeader( columnHeaderRowId ){
 		var columnHeader = document.createElement('div');
 		columnHeader.id = "col_" + (i - 1); // the - 1 here is important! 
 		columnHeader.style.display = "inline-block";
-		
+		columnHeader.style.margin = "0 auto";
 		if(i > 0){
 			columnHeader.style.borderRight = "1px solid #000";
 			columnHeader.style.textAlign = "center";
@@ -66,8 +66,12 @@ set up rest of grid
 function buildGrid( gridDivId ){
 
 	var thePiano = $('#' + gridDivId);
-
+	
+	// this special div is the bar that shows the available notes 
+	var pianoNotes = $('#pianoNotes');
+	
 	var note;
+	
 	for(note in noteFrequencies){
 		
 		note = note;
@@ -93,6 +97,13 @@ function buildGrid( gridDivId ){
 		
 		newRow.appendChild(newRowText);
 		thePiano.append(newRow);
+		
+		// add new row to pianoNotes div - this will just be a block holding all the notes 
+		var newRowClone = newRow.cloneNode();
+		var textClone = newRowText.cloneNode();
+		textClone.innerHTML = note.substring(0, note.length - 1) + "<sub>" + note[note.length-1] + "</sub>";
+		newRowClone.appendChild(textClone);
+		pianoNotes.append(newRowClone);
 		
 		// append columns to each row 
 		for(var j = 0; j < numberOfMeasures * subdivision; j++){
