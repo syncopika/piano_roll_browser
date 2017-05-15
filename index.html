@@ -12,13 +12,13 @@
 	
 	<!-- stuff needed for contextMenu -->
 	<link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/screen.css" type="text/css"/>
-    <!-- <link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/theme.css" type="text/css"/> -->
-    <!-- <link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/theme-fixes.css" type="text/css"/> -->
-    <!-- <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css"> -->
-        <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
-        <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
-        <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.ui.position.min.js" type="text/javascript"></script>
-        <script src="https://swisnl.github.io/jQuery-contextMenu/js/main.js" type="text/javascript"></script>
+	<!-- <link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/theme.css" type="text/css"/> -->
+	<!-- <link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/theme-fixes.css" type="text/css"/> -->
+	<!-- <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css"> -->
+	<link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
+	<script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
+	<script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.ui.position.min.js" type="text/javascript"></script>
+	<script src="https://swisnl.github.io/jQuery-contextMenu/js/main.js" type="text/javascript"></script>
 	
 </head>
 
@@ -118,6 +118,7 @@
 	select, option{
 		height: 24px;
 	}
+	
 	
 </style>
 
@@ -357,7 +358,21 @@ $(function(){
 			},
 			sep2: "-------------",
 			"Change volume": {
-				name: "change volume"
+				name: "change volume",
+				type: 'select',
+				options: {1: .01, 2: .05, 3: 0.10, 4: 0.15, 5: 0.20, 6: 0.25, 7: 0.30, 8: 0.35, 9: 0.40, 10: 0.45, 11: 0.50},
+				selected: function() {
+					// get this to work! 
+					return " " + currentInstrument.volume;
+				},
+				events: {
+					change: function(e){
+						var instrumentId = parseInt( e.data.$trigger.attr("id") ) - 1; 
+						
+						// console.log( parseFloat( this.options[e.target.options[e.target.selectedIndex - 1].value].textContent ) );
+						instruments[instrumentId].volume = parseFloat( this.options[e.target.options[e.target.selectedIndex].value - 1].textContent );
+					}
+				}
 			},
 			sep3: "-------------",
             "Delete": {
@@ -436,79 +451,85 @@ function subdivide(elementId, clearColumn){
 		return;
 	}
 
-	var colNum = id.substring(id.indexOf("col"));
-	var column =  $("div[id$='" + colNum + "']").get();
-
-	/* revise column header first */
-	var colHead = column[0];
-	colHead.id = colHead.id + "-1";
-
-	// split the header as well, but keep the 2nd half invisible
-	// by making width 0
-	var columnHalf = colHead.cloneNode(false);
-	columnHalf.style.width = 0;
-	columnHalf.style.borderRight = "";
-	columnHalf.id = colNum + "-2";
-	colHead.parentNode.insertBefore(columnHalf, colHead.nextSibling);
-
-	for(var i = 1; i < column.length; i++){
-
-		// then split the block into 2 
-		var block = column[i];
-		
-		// this is the new, 2nd block
-		var block2 = block.cloneNode(false);
-		
-		// check if onion skin on any column blocks
-		if(block.style.background === "linear-gradient(90deg, rgba(0, 178, 0, 0.2) 50%, transparent 50%)"){
-			// make sure original block keeps background, but not block 2
-			block.style.background = "";
-			block2.style.background = "";
-			block.style.backgroundColor = "rgba(0, 178, 0, .2)";
-		}else if(block.style.background === "linear-gradient(90deg, transparent 50%, rgba(0, 178, 0, 0.2) 50%)"){
-			block.style.background = "";
-			block2.style.background = "";
-			block2.style.backgroundColor = "rgba(0, 178, 0, .2)";
-		}
-		
-		// if clearColumn is true, make sure all blocks are transparent
-		if(clearColumn){
-			block.style.backgroundColor = "transparent";
-			block.style.background = ""; /* this is in case linear-gradient is applied */
-			block2.style.backgroundColor = "transparent";
-			block2.style.background = "";
-		}
-		
-		// now make some changes to the style for block and block2 
-		block.style.width = '19px';
-		block.setAttribute("length", "sixteenth");
-		block.style.borderRight = "1px solid #000";
-		block.id = block.id + "-1";
-		
-		//block.addEventListener("click", function(){ addNote(block.id, "selectWave") }); 
-		//block.addEventListener("mouseenter", function(){ highlightRow(block.id, '#FFFF99') });
-		//block.addEventListener("mouseleave", function(){ highlightRow(block.id, 'transparent') });
-		//block.className = "context-menu-one";
-		
-		block2.setAttribute("length", "sixteenth");
-		block2.style.width = '20px';
-		block2.id = block2.id + "-2"; // give new id to block2
-		block2.className = "context-menu-one";
-		
-		// notice how this.id must be used. this is because using block2.id doesn't actually pass the current block2.id 
-		// string as an argument. I think it has something to do with block2 changing every iteration of this for-loop,
-		// and because we're attaching an event listener that all block2 elements will use. at the very end of the loop,
-		// the last element looked at in the for-loop gets to be the argument for highlightRow. it's not a separate thing for
-		// each block2 element. they're sharing an eventListener, so you can't hardcode an argument if you want it to work for all
-		// the elements. this.id makes sure that the eventListener looks at the id of whatever element is mouseover'd.
-		block2.addEventListener("click", function(){ addNote(this.id) }); 
-		block2.addEventListener("mouseenter", function(){ highlightRow(this.id, '#FFFF99') });
-		block2.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
-		
-		// then put block2 after block1 in DOM
-		block.parentNode.insertBefore(block2, block.nextSibling);		
-	}
+	if(id.indexOf('-1') > 0){
+		// this is subdividing a 16th note block! (after 1 subdivision)
 	
+	}else{
+		// this is subdividing an EIGHTH note block (the default one)
+		
+		var colNum = id.substring(id.indexOf("col"));
+		var column =  $("div[id$='" + colNum + "']").get();
+
+		/* revise column header first */
+		var colHead = column[0];
+		colHead.id = colHead.id + "-1";
+
+		// split the header as well, but keep the 2nd half invisible
+		// by making width 0
+		var columnHalf = colHead.cloneNode(false);
+		columnHalf.style.width = 0;
+		columnHalf.style.borderRight = "";
+		columnHalf.id = colNum + "-2";
+		colHead.parentNode.insertBefore(columnHalf, colHead.nextSibling);
+
+		for(var i = 1; i < column.length; i++){
+
+			// then split the block into 2 
+			var block = column[i];
+			
+			// this is the new, 2nd block
+			var block2 = block.cloneNode(false);
+			
+			// check if onion skin on any column blocks
+			if(block.style.background === "linear-gradient(90deg, rgba(0, 178, 0, 0.2) 50%, transparent 50%)"){
+				// make sure original block keeps background, but not block 2
+				block.style.background = "";
+				block2.style.background = "";
+				block.style.backgroundColor = "rgba(0, 178, 0, .2)";
+			}else if(block.style.background === "linear-gradient(90deg, transparent 50%, rgba(0, 178, 0, 0.2) 50%)"){
+				block.style.background = "";
+				block2.style.background = "";
+				block2.style.backgroundColor = "rgba(0, 178, 0, .2)";
+			}
+			
+			// if clearColumn is true, make sure all blocks are transparent
+			if(clearColumn){
+				block.style.backgroundColor = "transparent";
+				block.style.background = ""; /* this is in case linear-gradient is applied */
+				block2.style.backgroundColor = "transparent";
+				block2.style.background = "";
+			}
+			
+			// now make some changes to the style for block and block2 
+			block.style.width = '19px';
+			block.setAttribute("length", "sixteenth");
+			block.style.borderRight = "1px solid #000";
+			block.id = block.id + "-1";
+			
+			//block.addEventListener("click", function(){ addNote(block.id, "selectWave") }); 
+			//block.addEventListener("mouseenter", function(){ highlightRow(block.id, '#FFFF99') });
+			//block.addEventListener("mouseleave", function(){ highlightRow(block.id, 'transparent') });
+			//block.className = "context-menu-one";
+			
+			block2.setAttribute("length", "sixteenth");
+			block2.style.width = '20px';
+			block2.id = block2.id + "-2"; // give new id to block2
+			block2.className = "context-menu-one";
+			
+			// notice how this.id must be used. this is because using block2.id doesn't actually pass the current block2.id 
+			// string as an argument. I think it has something to do with block2 changing every iteration of this for-loop,
+			// and because we're attaching an event listener that all block2 elements will use. at the very end of the loop,
+			// the last element looked at in the for-loop gets to be the argument for highlightRow. it's not a separate thing for
+			// each block2 element. they're sharing an eventListener, so you can't hardcode an argument if you want it to work for all
+			// the elements. this.id makes sure that the eventListener looks at the id of whatever element is mouseover'd.
+			block2.addEventListener("click", function(){ addNote(this.id) }); 
+			block2.addEventListener("mouseenter", function(){ highlightRow(this.id, '#FFFF99') });
+			block2.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
+			
+			// then put block2 after block1 in DOM
+			block.parentNode.insertBefore(block2, block.nextSibling);		
+		}
+	}
 }
 
 // take an element node id as parameter, and true or false if you want to clear a whole column (no green in any block of the column)
