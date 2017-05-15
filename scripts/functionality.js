@@ -182,7 +182,6 @@ function changeTempo(){
 			}
 		}
 	}
-	console.log("done changing tempo!")
 }
 
 /***
