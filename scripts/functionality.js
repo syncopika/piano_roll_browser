@@ -101,7 +101,8 @@ function readAndPlayNote(array, index, currentInstrument){
 		// which causes some increase in volume in background sound.
 		// it was only detectable when I added the setTimeout below where I set gain to 0.
 		// this is fixed by always setting gain to 0 if a note's frequency is 0.
-		 currentInstrument.gain.gain.value = array[index].freq > 0 ? .3 : 0.0;
+		// TODO: make individual notes' volumes changeable! 
+		 currentInstrument.gain.gain.value = array[index].freq > 0 ? parseFloat(currentInstrument.volume) : 0.0;
 		if(index < array.length){
 			// hold the current note for whatever duration was specified
 			// in other words, hold this current note for array[index].duration, then move on to the next note.
