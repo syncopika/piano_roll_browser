@@ -4,10 +4,13 @@
 function Instrument(name, oscillator, gain, notesArray){
 
 	this.name = name;
-	this.oscillator = oscillator;
-	this.gain = gain;
+	this.oscillator = oscillator; // assign an oscillator node object 
+	this.gain = gain; // assign a gain node object
 	this.notes = notesArray;
 	this.waveType = "sine"; //sine wave by default 
+	
+	// volume property so all notes for a particular instrument can be set to a certain volume
+	this.volume = .3; // set default volume to .3 (I think that's probably loud enough)
 }
 
 /*****  NOTE CLASS ******/
