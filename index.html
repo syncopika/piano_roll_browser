@@ -12,13 +12,13 @@
 	
 	<!-- stuff needed for contextMenu -->
 	<link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/screen.css" type="text/css"/>
-	<!-- <link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/theme.css" type="text/css"/> -->
-	<!-- <link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/theme-fixes.css" type="text/css"/> -->
-	<!-- <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css"> -->
-	<link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
-	<script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
-	<script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.ui.position.min.js" type="text/javascript"></script>
-	<script src="https://swisnl.github.io/jQuery-contextMenu/js/main.js" type="text/javascript"></script>
+    <!-- <link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/theme.css" type="text/css"/> -->
+    <!-- <link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/theme-fixes.css" type="text/css"/> -->
+    <!-- <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css"> -->
+        <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
+        <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
+        <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.ui.position.min.js" type="text/javascript"></script>
+        <script src="https://swisnl.github.io/jQuery-contextMenu/js/main.js" type="text/javascript"></script>
 	
 </head>
 
@@ -30,6 +30,10 @@
 	/* override padding-bottom from contextMenu/css/screen.css */
 	html body{
 		padding-bottom: 0;
+	}
+	
+	body, #pianoNotes{
+		display: none;
 	}
 	
 	table, tr, td{
@@ -97,6 +101,7 @@
 	}
 	
 	.footer{
+		position: relative;
 		text-align: center;
 		margin-top: 3%;
 		font-size: 12px;
@@ -219,9 +224,9 @@
 
 <script>
 // references:
+// http://www.phy.mtu.edu/~suits/notefreqs.html
 // http://jsfiddle.net/remotesynth/73cD5/?utm_source=website&utm_medium=embed&utm_campaign=73cD5
 // https://modernweb.com/creating-sound-with-the-web-audio-api-and-oscillators/
-// http://www.phy.mtu.edu/~suits/notefreqs.html
 // http://stackoverflow.com/questions/1114024/constructors-in-javascript-objects
 // http://stackoverflow.com/questions/32239560/web-audio-oscillators-unexpectedly-glide-from-one-frequency-to-another-in-chrome
 // http://stackoverflow.com/questions/15261030/web-audio-start-and-stop-oscillator-then-start-it-again
@@ -234,6 +239,7 @@
 // http://www.sengpielaudio.com/calculator-bpmtempotime.htm
 // http://stackoverflow.com/questions/14976495/get-selected-option-text-with-javascript
 // http://stackoverflow.com/questions/7346563/loading-local-json-file
+// http://stackoverflow.com/questions/14740927/using-html-5-file-api-to-load-a-json-file
 
 // ooooh make it recordable!
 // https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createMediaStreamDestination
@@ -244,13 +250,29 @@
 -legato, staccato toggling for individual notes
 -bend notes? :>
 */
-var jsonData = [];
+
+// prevent flash of unstylized content 
+$(document).ready(function(){
+	$("body").css("display", "block");
+	$("#pianoNotes").css("display", "block");
+	
+	/*  
+		special block for just piano notes 
+		this is supposed to move right when scroll right 
+	*/
+	var position = $('#C7').position();
+	$('#pianoNotes').css('left', position.left);
+	$('#pianoNotes').css('top', position.top);
+});
+
 
 /**** INFORMATION ABOUT THE CURRENT SETUP ****/
+/*** these are also global variables ***/
 var numberOfMeasures = 4; 	// 4 measures by default
 var subdivision = 8; 		// each measure subdivided by eighth notes
 var timeSignature = "4/4";
 var currentTempo = 500; 	// hold the current tempo - in milliseconds!! default is 120 bpm
+var jsonData = []; 			// for saving and exporting json data 
 
 $('#measures').html("number of measures: " + numberOfMeasures);
 $('#timeSig').html("time signature: " + timeSignature);
@@ -277,13 +299,8 @@ buildGridHeader('columnHeaderRow');
 buildGrid('piano');
 
 
-/* special block for just piano notes 
-   this is supposed to move right when scroll right 
-*/
-var position = $('#C7').position();
-$('#pianoNotes').css('left', position.left);
-$('#pianoNotes').css('top', position.top);
-
+// allow components like the toolbar to move with the user when scrolling right
+// after more measures are added 
 $(window).scroll(function(){
 
 	// change position of the piano notes bar on the left to move 
@@ -304,6 +321,9 @@ $(window).scroll(function(){
 	
 	// also move the toolbar as well 
 	$('#toolbar').css('left', $(window).scrollLeft());
+	
+	// and the footer 
+	$('.footer').css('left', $(window).scrollLeft());
 	
 });
 
@@ -340,6 +360,8 @@ $(function(){
 				options: {1: 'square', 2: 'sine', 3: 'sawtooth', 4: 'triangle'},
 				selected: function() { 
 					if(currentInstrument.waveType === "square" ){ 
+						// this string I'm returning is actually the "key" for the options object above.
+						// returning "1" will cause "square" to be shown as selected
 						return "1";
 					}else if(currentInstrument.waveType === "sine"){
 						return "2";
@@ -361,15 +383,17 @@ $(function(){
 				name: "change volume",
 				type: 'select',
 				options: {1: .01, 2: .05, 3: 0.10, 4: 0.15, 5: 0.20, 6: 0.25, 7: 0.30, 8: 0.35, 9: 0.40, 10: 0.45, 11: 0.50},
-				selected: function() {
-					// get this to work! 
-					return " " + currentInstrument.volume;
+				selected: function(){
+					for(key in this.options){	
+						if( parseFloat( this.options[key].textContent ) === currentInstrument.volume){
+							return parseInt(key) + 1; // the keys' index is offset by 1 somehow? ...
+						}
+					}
 				},
 				events: {
 					change: function(e){
 						var instrumentId = parseInt( e.data.$trigger.attr("id") ) - 1; 
-						
-						// console.log( parseFloat( this.options[e.target.options[e.target.selectedIndex - 1].value].textContent ) );
+						// update current isntruments' volume 
 						instruments[instrumentId].volume = parseFloat( this.options[e.target.options[e.target.selectedIndex].value - 1].textContent );
 					}
 				}
@@ -655,6 +679,7 @@ function generateJSON(){
 	// put in composer info, name of piece 
 	metadata["composer"] = document.getElementById("composer").textContent;
 	metadata["title"] = document.getElementById("pieceTitle").textContent;
+	metadata["tempo"] = parseInt( document.getElementById("tempo").textContent );
 
 	jsonData.push(metadata);
 	
@@ -664,7 +689,7 @@ function generateJSON(){
 	
 	jsonData = JSON.stringify(jsonData);
 	jsonData = jsonData.replace(/,/g, ',\n'); // replace all commas with a comma + newline 
-	console.log(jsonData);
+	//console.log(jsonData);
 	
 	var blob = new Blob([jsonData], {type: "application/json"});
 	var url = URL.createObjectURL(blob);
@@ -708,7 +733,6 @@ function getFile(e){
 			// clear grid first
 			clearGridAll();
 		
-			// http://stackoverflow.com/questions/14740927/using-html-5-file-api-to-load-a-json-file
 			// parse JSON using JSON.parse 
 			var data = JSON.parse(e.target.result);
 			//console.log(jsonData);
@@ -717,11 +741,15 @@ function getFile(e){
 			document.getElementById("composer").textContent = data[0]["composer"]; // could be undefined!
 			document.getElementById("pieceTitle").textContent = data[0]["title"]; // could be undefined!
 			
+			// set new tempo acording to json data
+			var tempoText = document.getElementById("tempo");
+			tempoText.innerHTML = data[0]["tempo"] + " bpm";
+			currentTempo = ((Math.round((60000/data[0]["tempo"]) * 1000)) / 1000 );
+			
 			// now put the data on the grid 
 			var measures = data[0]["measures"];
 			
 			// add new measures first - NEED TO ALSO DELETE IF TOO MANY!!
-			//console.log(measures);
 			if(measures > 4){
 				for(var i = 0; i < measures - 4; i++){
 					addNewMeasure(); // add new measures as needed 
@@ -817,6 +845,11 @@ function getDemo(selectedDemo){
 		// update metadata 
 		document.getElementById("composer").textContent = data[0]["composer"]; // could be undefined!
 		document.getElementById("pieceTitle").textContent = data[0]["title"]; // could be undefined!
+		
+		// set new tempo acording to json data
+		var tempoText = document.getElementById("tempo");
+		tempoText.innerHTML = data[0]["tempo"] + " bpm";
+		currentTempo = ((Math.round((60000/data[0]["tempo"]) * 1000)) / 1000 );
 		
 		// now put the data on the grid 
 		var measures = data[0]["measures"];
