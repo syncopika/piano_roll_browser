@@ -1,6 +1,8 @@
 [{"measures":23,
   "composer": "Johann Pezel (1639-1694)",
-  "title": "Intrada"},
+  "title": "Intrada",
+  "tempo": 120
+ },
 [{"name":"Instrument 1",
 "oscillator":{},
 "gain":{},
