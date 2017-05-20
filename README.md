@@ -10,22 +10,19 @@ right-click blocks on the grid to create 16th notes, or rejoin 16th notes to rev
 right-click an instrument to modify its sound, name, and volume.    
 check out a demo! see the demo dropdown box.    
 
-### known problems:
-notes getting torn past 150 (need to check what's happening to duration calculations).    
-pressing stop once does not stop all instruments. why is this?    
+### known problems:  
 onion skin still not quite perfect.
 
 ### current next steps:
-still need to delete measures, instruments.    
+still need to delete instruments.    
 still need to be able to join notes.    
-need to make volume adjustable for each instrument.   
+still need to subdivide for 32nd notes.    
 be able to edit composer and title of piece    
 be able to toggle onionskin    
     
 ### features I would like to implement:    
-- ability to change color of highlight and color of note blocks, i.e. different for each new instrument    
+- ability to change color of highlight and color of note blocks, i.e. different for each instrument    
 - be able to make custom sounds!    
-- allow staccato, legato, and maybe note glides and bends? for individual notes maybe?    
 - be able to record playback
     
 other notes:    
@@ -55,6 +52,8 @@ Another very important feature is the use of custom contextmenus (thanks to <a h
 
 ### demos:    
 Intrada - Johann Pezel (1639 - 1694)    
+    
+Sand Canyon (Kirby's Dream Land 3) - Jun Ishikawa
 
 
     
