@@ -116,9 +116,9 @@ function buildGrid( gridDivId ){
 			column.style.verticalAlign = "middle";
 		
 			// IMPORTANT! new attributes for each note
-			column.setAttribute("volume", "");
-			column.setAttribute("length", "eighth"); // length of note (quarter, eighth?)
-			column.setAttribute("type", ""); // type of note - staccato, legato? 
+			column.setAttribute("volume", 0.3);		 	// set volume to 0.3 initially
+			column.setAttribute("length", "eighth"); 	// length of note (quarter, eighth?)
+			column.setAttribute("type", "default"); 	// type of note - set to default initially 
 			column.className = "context-menu-one";
 			
 			if((j + 1) % subdivision == 0){
