@@ -15,10 +15,10 @@
     <!-- <link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/theme.css" type="text/css"/> -->
     <!-- <link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/theme-fixes.css" type="text/css"/> -->
     <!-- <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css"> -->
-        <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
-        <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
-        <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.ui.position.min.js" type="text/javascript"></script>
-        <script src="https://swisnl.github.io/jQuery-contextMenu/js/main.js" type="text/javascript"></script>
+    <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
+    <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
+    <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.ui.position.min.js" type="text/javascript"></script>
+    <script src="https://swisnl.github.io/jQuery-contextMenu/js/main.js" type="text/javascript"></script>
 	
 </head>
 
@@ -67,6 +67,7 @@
 		position: relative;
 		width: 60%;
 		margin: 0 auto;
+		text-align: center;
 	}
 	
 	#toolbar ul{
@@ -74,10 +75,6 @@
 		margin-top: 0;
 		margin-bottom: 0;
 		padding-bottom: 0;
-	}
-	
-	#toolbar ul:nth-child(2){
-		margin-bottom: 20px;
 	}
 	
 	#toolbar li{
@@ -98,6 +95,10 @@
 	
 	#instrumentGrid{
 		position: relative;
+	}
+	
+	#demo{
+		margin-top: 10px;
 	}
 	
 	.footer{
@@ -133,12 +134,10 @@
 
 	<h2 id='title'> piano roll fun ʕ•ᴥ•ʔ </h2>
 
-	<ul>
+	<ul id='metadata'>
 		<li><h2 id='measures'></h2></li>
 		<li>|</li>
 		<li><h2 id='timeSig'></h2></li>
-		<li>|</li>
-		<li><h2 id='subdiv'></h2></li>
 		<li>|</li>
 		<li><h2 id='tempo'>120 bpm</h2></li>
 		<li>|</li>
@@ -149,28 +148,17 @@
 		<li><h2 id='composer'> hi </h2></li>
 	</ul>
 
-	<ul>
+	<ul id='buttons'>
 		<li><button class='btn' onclick='play()'> play! </button></li>
 		<li><button class='btn' onclick='playAll()'> play <b>all</b>! </button></li>
 		<li><button class='btn' onclick='stopPlay()'> stop! </button></li>
 		<li><button class='btn' onclick='addNewMeasure()'> add new measure </button></li>
+		<li><button class='btn' onclick='deleteMeasure()'> delete measure </button></li>
 		<li><button class='btn' onclick='addNewInstrument()'> add new instrument </button></li>
 		<li><button class='btn' onclick='clearGrid();showOnionSkin()'> clear grid </button></li>
 		<li><button class='btn' onclick='generateJSON()'> save & export data </button></li>
 		<li><button class='btn' onclick='fileHandler()'> import data </button></li>
 		<input type='file' id='importFile' style='display: none'>
-		<!--
-		<li>
-			<label id='wavetypeLabel'> wave type:
-			<select id='selectWave'>
-				<option> sine </option>
-				<option> square </option>
-				<option> sawtooth </option>
-				<option> triangle </option>
-			</select>
-			</label>
-		</li>
-		-->
 		
 		<li>
 			<label id='tempoLabel'> tempo: 
@@ -180,7 +168,9 @@
 		<li>
 			<button class='btn' onclick='changeTempo()'> change tempo </button>
 		</li>
-		
+	</ul>
+
+	<div id='demo'>
 		<label> demo: </label>
 		<select onchange="getDemo(this)">
 			<option label=""></option>
@@ -188,8 +178,7 @@
 				Intrada-Pezel
 			</option>
 		</select>
-	</ul>
-	
+	</div>
 </div>
 
 <!--
@@ -240,15 +229,19 @@
 // http://stackoverflow.com/questions/14976495/get-selected-option-text-with-javascript
 // http://stackoverflow.com/questions/7346563/loading-local-json-file
 // http://stackoverflow.com/questions/14740927/using-html-5-file-api-to-load-a-json-file
+// https://www.smashingmagazine.com/2012/06/introduction-to-javascript-unit-testing/
+// http://stackoverflow.com/questions/3847121/how-can-i-disable-all-settimeout-events
+// http://stackoverflow.com/questions/3955229/remove-all-child-elements-of-a-dom-node-in-javascript
 
-// ooooh make it recordable!
+// make it recordable!
 // https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createMediaStreamDestination
 
 //TODO:
 /*
--allow color customizations for highlight, note blocks
--legato, staccato toggling for individual notes
--bend notes? :>
+- allow color customizations for highlight, note blocks
+- allow playback at specified measure 
+- allow repeats (add some new attributes to column headers)
+- highlight current eighth note block on playback
 */
 
 // prevent flash of unstylized content 
@@ -267,7 +260,11 @@ $(document).ready(function(){
 
 
 /**** INFORMATION ABOUT THE CURRENT SETUP ****/
-/*** these are also global variables ***/
+/*** 
+
+	these are also global variables 
+	
+***/
 var numberOfMeasures = 4; 	// 4 measures by default
 var subdivision = 8; 		// each measure subdivided by eighth notes
 var timeSignature = "4/4";
@@ -283,9 +280,10 @@ var context = new AudioContext();
 
 // SET UP INITIAL INSTRUMENT
 // this oscillator is used to hear notes when they get clicked on the grid
+// and for the initial instrument 
 var g = initGain();
 var oscillator = initOscillator(g);	
-g.connect(context.destination);		// hook up gain with audio context
+g.connect(context.destination);		
 
 // put initial instrument in instruments object
 var initialInstrument = new Instrument("Instrument 1", oscillator, g, []);
@@ -297,7 +295,6 @@ currentInstrument = instruments[0];
 // dynamically produce piano roll 
 buildGridHeader('columnHeaderRow');
 buildGrid('piano');
-
 
 // allow components like the toolbar to move with the user when scrolling right
 // after more measures are added 
@@ -332,8 +329,6 @@ $(function(){
     $.contextMenu({
         selector: '.context-menu-instrument', 
         callback: function(key, options) {
-            var m = "global: " + key;
-            window.console && console.log(m) || alert(m); 
         },
         items: {
             name: {
@@ -343,6 +338,7 @@ $(function(){
 				events: {
 					keyup: function(e){
 						var node = document.getElementById( e.data.$trigger.attr("id") );
+						// if pressing enter key 
 						if(e.which === 13){
 							node.textContent = this.value;
 							
@@ -418,48 +414,88 @@ $(function(){
 $(function(){
     $.contextMenu({
         selector: '.context-menu-one', 
-        callback: function(key, options) {
-            var m = "global: " + key;
-            window.console && console.log(m) || alert(m); 
-        },
-        items: {
-            "edit": {
-                name: "Edit", 
-                icon: "edit", 
-                // supersedes "global" callback
-                callback: function(key, options) {
-                    // do nothing for now 
-                }
-            },
-            "Subdivide": {
-				name: "Subdivide", 
-				icon: "cut",
-				callback: function(key, options){
-					// get the id of the clicked-on block
-					var id = options.$trigger.attr("id");
-					subdivide(id, false);		
-				}
-			},
-			"Rejoin": {
-				name: "Rejoin",
-				icon: "paste",
-				callback: function(key, options){
-					// if user wants to join two notes, they must be adjacent and the same note!
-					// so check if adjacent 
-					rejoin(options.$trigger.attr("id"), false); // preserve any green notes 
-				}
-			},
-            "Delete": {
-				name: "Delete", 
-				icon: "delete",
-				callback: function(key, options){
-					//console.log(options);
-					//alert(options.$trigger.attr("id") );
-					var block = document.getElementById(options.$trigger.attr("id"));
-					block.style.backgroundColor = "transparent";
+		zIndex: 10,
+		// this build option is especially useful for when you need to 
+		// reference the element this context menu is called on (via e.data.$trigger)
+		// i.e. when I need to show what option is currently selected for an element 
+		build: function($triggerElement, e) {
+			return {
+					items: {
+						"Change volume": {
+							name: "change volume",		
+							type: 'select',
+							options: {1: .01, 2: .05, 3: 0.10, 4: 0.15, 5: 0.20, 6: 0.25, 7: 0.30, 8: 0.35, 9: 0.40, 10: 0.45, 11: 0.50},
+							selected: function(){
+								var currentVolume = document.getElementById( e.data.$trigger.attr("id") ).getAttribute("volume");
+								for(key in this.options){
+									if(this.options[key].textContent === currentVolume){
+										return (parseInt(key) + 1) + "";
+									}
+								}
+							},
+							events: {
+								change: function(e){
+									var selectedNote = document.getElementById( e.data.$trigger.attr("id") );
+									var selectedVolume = this.options[e.target.options[e.target.selectedIndex].value - 1].textContent;
+									
+									// update volume attribute in selected dom element 
+									selectedNote.setAttribute("volume", parseFloat( selectedVolume ) );
+								}
+							}
+						},
+						"sep1": "------------",
+						"Change style": {
+							name: "change style",
+							type: 'select',
+							options: {1: "default", 2: "legato", 3: "staccato", 4: "glide"},
+							selected: function(){
+								var currentStyle= document.getElementById( e.data.$trigger.attr("id") ).getAttribute("type");
+								for(key in this.options){
+									if(this.options[key].textContent === currentStyle){
+										return (parseInt(key) + 1) + "";
+									}
+								}
+							},
+							events: {
+								change: function(e){
+									var selectedNote = document.getElementById( e.data.$trigger.attr("id") );
+									// update the type attribute in selected dom element 
+									selectedNote.setAttribute("type", this.options[e.target.options[e.target.selectedIndex].value - 1].textContent );
+								}
+							}
+						},
+						"sep2": "------------",
+						"Subdivide": {
+							name: "Subdivide", 
+							icon: "cut",
+							callback: function(key, options){
+								// get the id of the clicked-on block
+								var id = options.$trigger.attr("id");
+								subdivide(id, false);		
+							}
+						},
+						"Rejoin": {
+							name: "Rejoin",
+							icon: "paste",
+							callback: function(key, options){
+								// if user wants to join two notes, they must be adjacent and the same note!
+								// so check if adjacent 
+								rejoin(options.$trigger.attr("id"), false); // preserve any green notes when splitting
+							}
+						},
+						"Delete": {
+							name: "Delete", 
+							icon: "delete",
+							callback: function(key, options){
+								//console.log(options);
+								//alert(options.$trigger.attr("id") );
+								var block = document.getElementById(options.$trigger.attr("id"));
+								block.style.backgroundColor = "transparent";
+							}
+						}
+					}
 				}
 			}
-        }
     });
 });
 
@@ -479,12 +515,11 @@ function subdivide(elementId, clearColumn){
 		// this is subdividing a 16th note block! (after 1 subdivision)
 	
 	}else{
-		// this is subdividing an EIGHTH note block (the default one)
-		
+		// this is subdividing an EIGHTH note block (the default one)	
 		var colNum = id.substring(id.indexOf("col"));
 		var column =  $("div[id$='" + colNum + "']").get();
 
-		/* revise column header first */
+		// revise column header first 
 		var colHead = column[0];
 		colHead.id = colHead.id + "-1";
 
@@ -519,7 +554,7 @@ function subdivide(elementId, clearColumn){
 			// if clearColumn is true, make sure all blocks are transparent
 			if(clearColumn){
 				block.style.backgroundColor = "transparent";
-				block.style.background = ""; /* this is in case linear-gradient is applied */
+				block.style.background = ""; // this is in case linear-gradient is applied 
 				block2.style.backgroundColor = "transparent";
 				block2.style.background = "";
 			}
@@ -530,12 +565,16 @@ function subdivide(elementId, clearColumn){
 			block.style.borderRight = "1px solid #000";
 			block.id = block.id + "-1";
 			
+			// these attributes should be the same after a subdivision, since the original block
+			// is still in existence. only block2, which is dynamically created, needs new attributes 
 			//block.addEventListener("click", function(){ addNote(block.id, "selectWave") }); 
 			//block.addEventListener("mouseenter", function(){ highlightRow(block.id, '#FFFF99') });
 			//block.addEventListener("mouseleave", function(){ highlightRow(block.id, 'transparent') });
 			//block.className = "context-menu-one";
 			
 			block2.setAttribute("length", "sixteenth");
+			block2.setAttribute("volume", block.getAttribute("volume"));	// set volume to whatever block's volume is
+			block2.setAttribute("type", block.getAttribute("type")); 		// same for type of note
 			block2.style.width = '20px';
 			block2.id = block2.id + "-2"; // give new id to block2
 			block2.className = "context-menu-one";
@@ -555,6 +594,7 @@ function subdivide(elementId, clearColumn){
 		}
 	}
 }
+
 
 // take an element node id as parameter, and true or false if you want to clear a whole column (no green in any block of the column)
 function rejoin(elementId, clearColumn){
@@ -587,7 +627,6 @@ function rejoin(elementId, clearColumn){
 	if(blockHeader.id.indexOf("-2") < 0){
 		
 		// take care of column header first 
-		// blockHeader.setAttribute("length", "eighth");
 		blockHeader.id = blockHeader.id.substring(0, blockHeader.id.indexOf("-"));
 		
 		// delete adjacent 16th block
@@ -674,12 +713,11 @@ function generateJSON(){
 	
 	var metadata = {};
 	metadata["measures"] = parseInt( document.getElementById('measures').textContent.match(/[0-9]{1,}/g)[0] );
-	// wait! also need to know: tempo!!! 
+	metadata["tempo"] = parseInt( document.getElementById("tempo").textContent );
 	
 	// put in composer info, name of piece 
 	metadata["composer"] = document.getElementById("composer").textContent;
 	metadata["title"] = document.getElementById("pieceTitle").textContent;
-	metadata["tempo"] = parseInt( document.getElementById("tempo").textContent );
 
 	jsonData.push(metadata);
 	
@@ -723,7 +761,7 @@ function getFile(e){
 	var reader = new FileReader();
 	var file = e.target.files[0];
 	
-	/* check for json file? */
+	// check for json file?
 	
 	//when the image loads, put it on the canvas.
 	reader.onload = (function(theFile){
@@ -760,7 +798,6 @@ function getFile(e){
 			instruments = []; // clear instruments array 
 			
 			// clear the current instrument table in the dom
-			// http://stackoverflow.com/questions/3955229/remove-all-child-elements-of-a-dom-node-in-javascript
 			var instrumentsGrid = document.getElementById("instrumentTable");
 			while(instrumentsGrid.firstChild){
 				instrumentsGrid.removeChild(instrumentsGrid.firstChild);
@@ -855,7 +892,6 @@ function getDemo(selectedDemo){
 		var measures = data[0]["measures"];
 		
 		// add new measures first - NEED TO ALSO DELETE IF TOO MANY!!
-		//console.log(measures);
 		if(measures > 4){
 			for(var i = 0; i < measures - 4; i++){
 				addNewMeasure(); // add new measures as needed 
