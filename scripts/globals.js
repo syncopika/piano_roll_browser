@@ -1,7 +1,7 @@
 // global variables
 
 var instruments = [];		// list of instruments will be an array
-var timer;
+var timers = [];			// keep track of setTimeouts so all can be ended at once 
 var currentInstrument; 		// need to keep track of what current instrument is!
 
 // NOTE FREQUENCIES @ 440Hz
@@ -138,7 +138,7 @@ var noteFrequencies = {
 // figure out note lengths using these. 
 // each note length corresponds to a factor which to divide the currentTempo (milliseconds per quarter note) by
 var noteLengths = {
-	"quarter": 1,
+	"quarter": 1, //4 means quarter note 
 	"eighth": 2, //this means divide by a factor of 2 to get milliseconds per eighth note
 	"sixteenth": 4
 }
