@@ -24,9 +24,11 @@ be able to toggle onionskin
 - ability to change color of highlight and color of note blocks, i.e. different for each instrument    
 - be able to make custom sounds!    
 - be able to record playback
+- be able to repeat a section
+- be able to start playback at a certain measure 
     
 other notes:    
-if staccato and legato notes can be implemented, the amount of time a note is heard will be different but the amount of time total for that note (i.e. a staccato note might be 100ms of sound + 300ms of silence -> for 400ms total time per note, while legato might be 400ms of sound with no silence). I think the gliding from one note to another is caused by using a certain oscillator method - check the comments in the source.    
+can my implementation be faster? there is considerable lag when switching instruments. 
 
 ### implementation / design:    
 
