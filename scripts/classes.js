@@ -10,6 +10,7 @@ function Instrument(name, oscillator, gain, notesArray){
 	this.waveType = "sine"; //sine wave by default 
 	
 	// volume property so all notes for a particular instrument can be set to a certain volume
+	// float value!
 	this.volume = .3; // set default volume to .3 (I think that's probably loud enough)
 }
 
@@ -42,4 +43,6 @@ function ElementNode(domElement){
 	this.length = domElement.getAttribute("length");
 	this.volume = domElement.getAttribute("volume");
 	
+	// indicates whether note is regular, legato, staccato, or glide 
+	this.style = domElement.getAttribute("type");
 }
