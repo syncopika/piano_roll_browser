@@ -92,17 +92,25 @@ function readAndPlayNote(array, index, currentInstrument){
 	if(index === array.length){
 		 currentInstrument.gain.gain.value = 0;
 	}else{
-		 currentInstrument.oscillator.type =  currentInstrument.waveType;
-		/* tip! by setting value at a certain time, this prevents the 'gliding' from one freq. to the next */
-		 currentInstrument.oscillator.frequency.setValueAtTime(array[index].freq, 0);
+		 currentInstrument.oscillator.type = currentInstrument.waveType;
+		
+		// tip! by setting value at a certain time, this prevents the 'gliding' from one freq. to the next 
+		// pick either one of the two below based on a certain condition 
+		// by default, use this one 
+		if(array[index].block.style !== "glide"){
+			currentInstrument.oscillator.frequency.setValueAtTime(array[index].freq, 0);
+		}else if(array[index].block.style === "glide"){
+			currentInstrument.oscillator.frequency.value = array[index].freq;
+		}
+		 
 		// by setting gain value here according to the two conditions, this allows for the 'articulation' of notes without 
 		// the 'helicopter' sound when a certain note frequency is 0. 
 		// previously, the gain would have been .3 even for notes with 0 frequency,
 		// which causes some increase in volume in background sound.
 		// it was only detectable when I added the setTimeout below where I set gain to 0.
 		// this is fixed by always setting gain to 0 if a note's frequency is 0.
-		// TODO: make individual notes' volumes changeable! 
-		 currentInstrument.gain.gain.value = array[index].freq > 0 ? parseFloat(currentInstrument.volume) : 0.0;
+		 currentInstrument.gain.gain.value = array[index].freq > 0 ? parseFloat(array[index].block.volume) : 0.0;
+		 
 		if(index < array.length){
 			// hold the current note for whatever duration was specified
 			// in other words, hold this current note for array[index].duration, then move on to the next note.
@@ -111,11 +119,44 @@ function readAndPlayNote(array, index, currentInstrument){
 			var currIndex = index;
 			
 			// change gain to 0 after a really small amount of time to give the impression of articulation
-			// 100 might have to be a better value later to coordinate with when the next note will play
-			setTimeout(function(){  currentInstrument.gain.gain.value = 0.0; }, 100); 
+			// this amount of time will vary with the bpm 
+			// so far it seems that for bpm 120 (500 ms) and below, 95 ms is a good amount of space (not staccato)
+			// for bpm 150 - 185, 70 ms is good, and past that, 50 ms
+			// remember: currentTempo variable is in milliseconds
+			var spacer;
+			if(currentTempo >= 500){
+				spacer = 95;
+			}else if(currentTempo >= 324 && currentTempo < 500){
+				// bpm: 150 - 185
+				spacer = 70;
+			}else{
+				spacer = 50;
+			}
+			
+			// but, if a certain note's style is staccato or legato, spacer will
+			// have to change accordingly as well
+			if(array[index].block.style === "legato"){
+				if(currentTempo >= 500){
+					spacer = 200;
+				}else if(currentTempo >= 324 && currentTempo < 500){
+					spacer = 180;
+				}else{
+					spacer = 160;
+				}
+			}else if(array[index].block.style === "staccato"){
+				if(currentTempo >= 500){
+					spacer = 70;
+				}else if(currentTempo >= 324 && currentTempo < 500){
+					spacer = 50;
+				}else{
+					spacer = 30;
+				}
+			}
+			
+			setTimeout(function(){  currentInstrument.gain.gain.value = 0.0; }, spacer); 
 			
 			// create a new timer and push to timers array 
-			timer = setTimeout(function(){readAndPlayNote(array, ++index, currentInstrument)}, array[currIndex].duration); 
+			timers.push( setTimeout(function(){readAndPlayNote(array, ++index, currentInstrument)}, array[currIndex].duration) ); 
 		}
 	}
 }
@@ -126,7 +167,10 @@ stop playback
 
 ****/
 function stopPlay(){
-	clearTimeout(timer);
+	for(var i = 0; i < timers.length; i++){
+		clearTimeout( timers[i] );
+	}
+	timers = [];
 	for(var i = 0; i < instruments.length; i++){
 		instruments[i].gain.gain.value = 0.0;
 	}
