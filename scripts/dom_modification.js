@@ -37,6 +37,8 @@ make notes clickable / toggle active note (green)
 function addNote(id){
 	if($('#' + id).css("background-color") === "rgb(0, 178, 0)"){
 		$('#' + id).css("background-color", "transparent");
+		//update attributes
+		$('#' + id).attr("volume", 0.0);
 		
 		// change hasNote attribute to false (0) in column header
 		var headerId = id.substring(id.indexOf("col"));
@@ -52,13 +54,15 @@ function addNote(id){
 		
 	}else{
 		$('#' + id).css("background-color", "rgb(0, 178, 0)");
+		// update attributes 
+		$('#' + id).attr("volume", currentInstrument.volume);
 		
 		//change hasNote attribute to true (1) in column header
 		var headerId = id.substring(id.indexOf("col"));
 		var currValue = parseInt(document.getElementById(headerId).getAttribute("hasNote"));
 		document.getElementById(headerId).setAttribute("hasNote", ++currValue);
 	}
-	var waveType = currentInstrument.waveType; //$('#' + type);
+	var waveType = currentInstrument.waveType; 
 	clickNote(id, waveType);
 }
 
@@ -197,9 +201,9 @@ function addNewMeasure(){
 			newColumn.style.verticalAlign = "middle";
 			
 			// IMPORTANT! new attributes for each note
-			newColumn.setAttribute("volume", "");
-			newColumn.setAttribute("length", "eighth"); // length of note (quarter, eighth?)
-			newColumn.setAttribute("type", ""); // type of note - staccato, legato? 
+			newColumn.setAttribute("volume", "0.3");
+			newColumn.setAttribute("length", "eighth"); 
+			newColumn.setAttribute("type", "default"); 
 			newColumn.className = "context-menu-one";
 			
 			if((k + 1) % subdivision == 0){
@@ -224,8 +228,42 @@ function addNewMeasure(){
 
 /****
 
-choose instrument
+delete a measure 
 
+****/
+function deleteMeasure(){
+	
+	// take current number of measures and multiply
+	// by 8 to know how many columns there are 
+	var currColumns = numberOfMeasures * 8;
+	
+	// subtract 8 from currColumns
+	currColumns -= 8;
+	
+	//console.log(currColumns);
+	
+	// so currColumns is now the number of the first 
+	// column to remove 
+	for(var i = currColumns; i < currColumns + 8; i++){
+		// get all the columns that have the current number, i
+		var columns = $("div[id*='" + "col_" + i + "']");
+		//console.log(columns);
+		for(var j = 0; j < columns.length; j++){
+			columns[j].remove();
+		}
+	}
+
+	numberOfMeasures--;
+	// update text
+	var mtext = document.getElementById('measures');
+	mtext.textContent = "number of measures: " + numberOfMeasures;
+}
+
+
+/****
+
+choose instrument
+ 
 ****/
 function chooseInstrument(thisElement){
 	// console.log(thisElement);
@@ -310,6 +348,15 @@ function drawNotes(instrumentObject){
 			
 			// color in note
 			elementExists.style.backgroundColor = "rgb(0, 178, 0)";
+			// fill in attributes 
+			if(notes[i].block.volume === ""){
+				notes[i].block.volume = instrumentObject.volume;
+			}
+			if(notes[i].block.style === "undefined"){
+				notes[i].block.style = "default";
+			}
+			elementExists.setAttribute("volume", notes[i].block.volume);
+			elementExists.setAttribute("type", notes[i].block.style);
 		}
 	}
 }
