@@ -10,7 +10,7 @@ set up grid headers first (the headers for each column)
 
 ****/
 function buildGridHeader( columnHeaderRowId ){
-
+	
 	var columnHeaderRow = $( '#' + columnHeaderRowId );
 
 	// this will provide the headers for each column in the grid (i.e. number for each beat/subbeat) 
@@ -53,8 +53,9 @@ function buildGridHeader( columnHeaderRowId ){
 		
 		columnHeaderRow.append(columnHeader);
 	}
+
 	// can't pass in a jquery selected element
-	appendDummyElement(document.getElementById('columnHeaderRow'));
+	appendDummyElement(document.getElementById(columnHeaderRowId));
 }
 
 
