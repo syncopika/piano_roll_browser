@@ -184,10 +184,6 @@
 	</div>
 </div>
 
-<!--
-<p style="font-size: 14px"> right-click grid blocks to either subdivide to make 16th notes, or rejoin to undo. </p>
-<p style="font-size: 14px"> right-click an instrument block to rename or change the sound! </p>
--->
 
 <div id='instrumentGrid'>
 	<table>
@@ -209,7 +205,7 @@
 
 
 <div class='footer'>
-	<p> c.2017 nch works </p>
+	<p> c.2017 nch works | <a href='https://github.com/syncopika/piano_roll_browser'> source </a> </p>
 </div>
 
 </body>
@@ -235,6 +231,8 @@
 // https://www.smashingmagazine.com/2012/06/introduction-to-javascript-unit-testing/
 // http://stackoverflow.com/questions/3847121/how-can-i-disable-all-settimeout-events
 // http://stackoverflow.com/questions/3955229/remove-all-child-elements-of-a-dom-node-in-javascript
+
+// http://stackoverflow.com/questions/18752925/html5-audio-getting-the-sound-of-piano
 
 // make it recordable!
 // https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createMediaStreamDestination
@@ -263,17 +261,7 @@ $(document).ready(function(){
 
 
 /**** INFORMATION ABOUT THE CURRENT SETUP ****/
-/*** 
-
-	these are also global variables 
-	
-***/
-var numberOfMeasures = 4; 	// 4 measures by default
-var subdivision = 8; 		// each measure subdivided by eighth notes
-var timeSignature = "4/4";
-var currentTempo = 500; 	// hold the current tempo - in milliseconds!! default is 120 bpm
-var jsonData = []; 			// for saving and exporting json data 
-
+// these variables used are in globals.js 
 $('#measures').html("number of measures: " + numberOfMeasures);
 $('#timeSig').html("time signature: " + timeSignature);
 $('#subdiv').html("subdivision: " + subdivision);
