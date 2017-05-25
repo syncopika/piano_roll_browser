@@ -1,0 +1,100 @@
+<!doctype html>
+
+
+<html>
+
+	<head>
+		<meta charset='utf-8'>
+		<title> testing testing testing </title>
+		
+		<link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.3.2.css">
+		<script src="https://code.jquery.com/qunit/qunit-2.3.2.js"></script>
+		
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+		<script src='scripts/classes.js'></script>
+		<script src='scripts/globals.js'></script>
+		<script src='scripts/dom_modification.js'></script>
+		<script src='scripts/grid_builder.js'></script>
+		<script src='scripts/functionality.js'></script>
+		
+		<script>
+			// do tests here!!
+			// https://stackoverflow.com/questions/35506175/how-do-i-know-when-a-dom-element-is-created
+	
+			// we can test some functions that return values first 
+			// 1. make sure the correct length in milliseconds is returned given BPM
+			QUnit.test("check_correct_BPM_to_milliseconds", function( assert ){
+			
+				// this is the value we expect a user to type in
+				// i.e. 120 beats/min, 60, 80, ...
+				var currentTempo;
+				
+				// this operation is done in the changeTempo() function in functionality.js
+				// the purpose of this step is to get the milliseconds for a quarter note at 
+				// the given beats per minute
+				function convertToMs(selectedTempo){
+					return Math.round((60000/selectedTempo) * 1000) / 1000;
+				}
+			
+				currentTempo = convertToMs(60);  
+				
+				// now check if getCorrectLength will properly calculate the 
+				// amount of milliseconds for an eighth and sixteenth note given
+				// the bpm
+				assert.equal(getCorrectLength("eighth", currentTempo), 500);
+				assert.equal(getCorrectLength("sixteenth", currentTempo), 250);
+				
+				currentTempo = convertToMs(120); 
+				assert.equal(getCorrectLength("eighth", currentTempo), 250);
+				assert.equal(getCorrectLength("sixteenth", currentTempo), 125);
+				
+				currentTempo = convertToMs(72); 
+				assert.equal(getCorrectLength("eighth", currentTempo), 417);
+				assert.equal(getCorrectLength("sixteenth", currentTempo), 208);
+				
+				currentTempo = convertToMs(96); 
+				assert.equal(getCorrectLength("eighth", currentTempo), 313);
+				assert.equal(getCorrectLength("sixteenth", currentTempo), 156);
+			});
+			
+			// 2. make sure grid header builder works 
+			// note that the divs for the grid and the headers need to be created first 
+			QUnit.test("build_grid_header", function( assert ){
+				// build the grid header first
+				// 4 measures initially, with 8 subdivisions
+				// there should be 34 headers total (the first one being a blank header, the last one being a dummy element)
+				function calculateHeaders( elementId ){
+					var headerRow = document.getElementById( elementId );
+					var count = 0;
+					// start at 1 because 1st child node is a text node 
+					for(var i = 1; i < headerRow.childNodes.length; i++){
+						count++;
+					}
+					//console.log(headerRow.childNodes)
+					return count;
+				}
+				buildGridHeader('headers');
+				assert.equal(calculateHeaders('headers'), 34);
+			});
+			
+			// 3. make sure grid builder works 
+			
+	
+		</script>
+	</head>
+	
+	
+	<body>
+		<div id="qunit"></div> <!-- need to close qunit div here! -->
+		<div id='qunit-fixture'>
+		
+				<!-- test grid building functions with these -->
+				<div id='grid'>
+					<div id='headers'>
+					</div>
+				</div>
+		
+		</div>
+	</body>
+
+</html>
