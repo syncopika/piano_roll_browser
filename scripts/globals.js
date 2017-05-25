@@ -1,5 +1,11 @@
 // global variables
 
+var numberOfMeasures = 4; 	// 4 measures by default
+var subdivision = 8; 		// each measure subdivided by eighth notes
+var timeSignature = "4/4";
+var currentTempo = 500; 	// hold the current tempo - in milliseconds!! default is 120 bpm
+var jsonData = []; 			// for saving and exporting json data 
+
 var instruments = [];		// list of instruments will be an array
 var timers = [];			// keep track of setTimeouts so all can be ended at once 
 var currentInstrument; 		// need to keep track of what current instrument is!
