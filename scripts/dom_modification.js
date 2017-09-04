@@ -2,23 +2,25 @@
 
 DOM MODIFICATION 
 
+many functions here rely on an instance of
+the PianoRoll class in classes.js 
 
 ***************/
 
 
 /****
 
-plays the corresponding pitch of a block when clicked 
+	plays the corresponding pitch of a block when clicked 
 
 ****/
-function clickNote(id, waveType){
+function clickNote(id, waveType, pianoRollObject){
 
 	var parent = document.getElementById(id).parentNode.id;
 	parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
 	
 	setTimeout(function(){
 		oscillator.type = waveType;
-		oscillator.frequency.setValueAtTime(noteFrequencies[parent], 0);
+		oscillator.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], 0);
 		g.gain.value = .3;
 		// this setTimeout makes sure the oscillator gets silent again
 		setTimeout(function(){
@@ -31,12 +33,17 @@ function clickNote(id, waveType){
 
 /****
 
-make notes clickable / toggle active note (green) 
+	make notes clickable / toggle active note (green) 
 
 ****/
-function addNote(id){
+function addNote(id, pianoRollObject){
+	
+	// if note is already green 
 	if($('#' + id).css("background-color") === "rgb(0, 178, 0)"){
+	
+		// take away green color 
 		$('#' + id).css("background-color", "transparent");
+		
 		//update attributes
 		$('#' + id).attr("volume", 0.0);
 		
@@ -45,32 +52,39 @@ function addNote(id){
 		var currValue = parseInt(document.getElementById(headerId).getAttribute("hasNote"));
 		document.getElementById(headerId).setAttribute("hasNote", --currValue);
 		
+		// remove this note from currentInstrument's activeNotes assoc. array 
+		delete pianoRollObject.currentInstrument.activeNotes[id];
+		
 		// if you choose a same note for the current instrument as another instrument, that will wipe out the 
 		// 'onion-skin' of the other instrument's note. but if you delete that note for
 		// the current instrument later, calling showOnionSkin() here will put back the 'onion-skin' for
 		// the other instrument. there is no static 'onion-skin' layer. 
 		// it's just changing the background-color of note blocks
-		showOnionSkin(); 
+		showOnionSkin(pianoRollObject); 
 		
 	}else{
 		$('#' + id).css("background-color", "rgb(0, 178, 0)");
+		
 		// update attributes 
-		$('#' + id).attr("volume", currentInstrument.volume);
+		$('#' + id).attr("volume", pianoRollObject.currentInstrument.volume);
+		
+		// add the note to the currentInstrument's activeNotes attribute (an associative array)
+		pianoRollObject.currentInstrument.activeNotes[id] = 1;
 		
 		//change hasNote attribute to true (1) in column header
 		var headerId = id.substring(id.indexOf("col"));
 		var currValue = parseInt(document.getElementById(headerId).getAttribute("hasNote"));
 		document.getElementById(headerId).setAttribute("hasNote", ++currValue);
 	}
-	var waveType = currentInstrument.waveType; 
-	clickNote(id, waveType);
+	var waveType = pianoRollObject.currentInstrument.waveType; 
+	clickNote(id, waveType, pianoRollObject);
 }
 
 
 /****
 
-highlight row
--used when mouseover 
+	highlight row
+	-used when mouseover 
 
 ****/
 function highlightRow(id, color){
@@ -82,10 +96,10 @@ function highlightRow(id, color){
 
 /****
 
-delete all notes - clear the grid
-- does not alter subdivisions
-- does not clear onion skin!
-- only clears current instrument's notes 
+	delete all notes - clear the grid
+	- does not alter subdivisions
+	- does not clear onion skin!
+	- only clears current instrument's notes 
 
 ****/
 function clearGrid(){
@@ -111,7 +125,7 @@ function clearGrid(){
 
 /****
 
-like clearGrid, but clears EVERYTHING and rejoins any subdivisions 
+	like clearGrid, but clears EVERYTHING and rejoins any subdivisions 
 
 ****/
 function clearGridAll(){
@@ -141,10 +155,10 @@ function clearGridAll(){
 
 /****
 
-add a new measure
+	add a new measure
 
 ****/
-function addNewMeasure(){
+function addNewMeasure(pianoRollObject){
 
 	// updating the measure count - notice specific id of element! 
 	$('#measures').text( "number of measures: " + (parseInt($('#measures').text().match(/[0-9]{1,}/g)[0]) + 1) );
@@ -155,14 +169,14 @@ function addNewMeasure(){
 	var dummyParent = dummy.parentNode;
 	
 	// new column headers 
-	for(var i = 0; i < subdivision; i++){
+	for(var i = 0; i < pianoRollObject.subdivision; i++){
 		var newHeader = document.createElement('div');
-		newHeader.id = "col_" + (numberOfMeasures * subdivision + i);
+		newHeader.id = "col_" + (pianoRollObject.numberOfMeasures * pianoRollObject.subdivision + i);
 		newHeader.style.margin = "0 auto";
 		newHeader.style.display = 'inline-block';		
 		
 		
-		if(i + 1 === subdivision){
+		if(i + 1 === pianoRollObject.subdivision){
 			newHeader.style.borderRight = "3px solid #000";
 		}else{
 			newHeader.style.borderRight = "1px solid #000";
@@ -188,11 +202,11 @@ function addNewMeasure(){
 	
 	// start at 1 to skip column header row 
 	for(var j = 1; j < noteRows.length; j++){
-		for(var k = 0; k < subdivision; k++){
+		for(var k = 0; k < pianoRollObject.subdivision; k++){
 			// get the dummy element for this row
 			dummy = $("div[id='" + noteRows[j].id + '_dummy' + "']").get()[0];
 			var newColumn = document.createElement("div");
-			newColumn.id = noteRows[j].id + "col_" + ((numberOfMeasures * subdivision) + k);
+			newColumn.id = noteRows[j].id + "col_" + ((pianoRollObject.numberOfMeasures * pianoRollObject.subdivision) + k);
 			// adjust id if needed
 			newColumn.id = replaceSharp(newColumn.id);
 			newColumn.style.display = 'inline-block';
@@ -206,7 +220,7 @@ function addNewMeasure(){
 			newColumn.setAttribute("type", "default"); 
 			newColumn.className = "context-menu-one";
 			
-			if((k + 1) % subdivision == 0){
+			if((k + 1) % pianoRollObject.subdivision == 0){
 				newColumn.style.borderRight = "3px solid #000";
 			}else{
 				newColumn.style.borderRight = "1px solid #000";
@@ -214,7 +228,7 @@ function addNewMeasure(){
 
 			// hook up an event listener to allow for selecting notes on the grid!
 			//notice passing in id of option/select element for picking wave type. 
-			newColumn.addEventListener("click", function(){ addNote(this.id) }); 
+			newColumn.addEventListener("click", function(){ addNote(this.id, pianoRollObject) }); 
 			// allow for highlighting to make it clear which note a block is
 			newColumn.addEventListener("mouseenter", function(){ highlightRow(this.id, '#FFFF99') });
 			newColumn.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
@@ -223,19 +237,19 @@ function addNewMeasure(){
 		// adjust width of row 
 		noteRows[j].style.width = parseInt(noteRows[j].style.width) + 20 + "%";
 	}
-	numberOfMeasures++; // increment measure variable
+	pianoRollObject.numberOfMeasures++; // increment measure variable
 }
 
 /****
 
-delete a measure 
+	delete a measure 
 
 ****/
-function deleteMeasure(){
+function deleteMeasure(pianoRollObject){
 	
 	// take current number of measures and multiply
 	// by 8 to know how many columns there are 
-	var currColumns = numberOfMeasures * 8;
+	var currColumns = pianoRollObject.numberOfMeasures * 8;
 	
 	// subtract 8 from currColumns
 	currColumns -= 8;
@@ -253,23 +267,23 @@ function deleteMeasure(){
 		}
 	}
 
-	numberOfMeasures--;
+	pianoRollObject.numberOfMeasures--;
 	// update text
 	var mtext = document.getElementById('measures');
-	mtext.textContent = "number of measures: " + numberOfMeasures;
+	mtext.textContent = "number of measures: " + pianoRollObject.numberOfMeasures;
 }
 
 
 /****
 
-choose instrument
+	choose instrument
  
 ****/
-function chooseInstrument(thisElement){
+function chooseInstrument(thisElement, pianoRollObject){
 	// console.log(thisElement);
 	// look at grid, collect the notes, save them to the current instrument, and
 	// move on to the clicked-on instrument
-	currentInstrument.notes = readInNotes();
+	pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
 	
 	// instrumentTable is specific to my implementation
 	var instrumentsView = document.getElementById('instrumentTable').children;
@@ -288,17 +302,22 @@ function chooseInstrument(thisElement){
 	// account for 0-index when we use it to look in the global variable 'instruments' 
 	// array for the corresponding instrument object
 	var index = parseInt(thisElement) - 1;
-	clearGrid();
+
+	// change current instrument's notes to onion skin 
+	for(activeNote in pianoRollObject.currentInstrument.activeNotes){
+		document.getElementById(activeNote).style.backgroundColor = "rgba(0, 178, 0, 0.2)";
+	}
 	
-	currentInstrument = instruments[index]; // this is the new instrument
+	// then change current instrument to the one clicked on 
+	pianoRollObject.currentInstrument = pianoRollObject.instruments[index];
 	
 	// attach new context menu only to current instrument via class name
 	document.getElementById('instrumentTable').children[index].classList.add("context-menu-instrument");
 	
 	// then draw the previously-saved notes, if any, onto the grid of the clicked-on instrument
-	drawNotes(currentInstrument); 
+	drawNotes(pianoRollObject.currentInstrument, pianoRollObject); 
 	
-	showOnionSkin();
+	showOnionSkin(pianoRollObject);
 	
 	$('#' + thisElement).css('background-color', 'rgb(188,223,70)');
 	
@@ -306,15 +325,21 @@ function chooseInstrument(thisElement){
 
 /****
 
-draw notes back on to grid
+	draw notes back on to grid
 
 ****/
 // takes an instrument object and uses its notes array data to draw back the notes
-function drawNotes(instrumentObject){
+function drawNotes(instrumentObject, pianoRollObject){
+	
 	var notes = instrumentObject.notes;
+	
+	// reset headers first 
+	resetHeaders();
+	
 	for(var i = 0; i < notes.length; i++){
 		
-		if(notes[i].block.id === null){
+		// if the frequency of a note is 0, it's a rest and so nothing needs to be drawn
+		if(notes[i].freq === 0){
 			continue;
 		}
 		
@@ -336,7 +361,7 @@ function drawNotes(instrumentObject){
 				// now if the note to draw in is a 16th note and there's no place to put it, create the subdivision
 				var blockId = notes[i].block.id;
 				var columnToFind = blockId.substring(0, blockId.indexOf("-"));
-				subdivide(columnToFind, true);
+				subdivide(columnToFind, true, pianoRollObject);
 				
 				elementExists = document.getElementById( notes[i].block.id );
 			}
@@ -363,26 +388,46 @@ function drawNotes(instrumentObject){
 
 /****
 
-Onion skin feature
+	function to reset "hasnote" attribute for column headers 
+	necessary for when changing instruments, because 'hasnote' should  
+	reflect whether a note exists in a column for only the current instrument 
+	
+*****/
+function resetHeaders(){
+	var columnHeaders = document.getElementById("columnHeaderRow").children;
+	
+	for(var k = 0; k < columnHeaders.length; k++){
+		columnHeaders[k].setAttribute('hasnote', 0);
+	}
+}
+
+/****
+
+	Onion skin feature
 
 ****/
 // see where the other instruments' notes are 
-function showOnionSkin(){
-	for(var i = 0; i < instruments.length; i++){
-		if(instruments[i] !== currentInstrument){
-			// go through each instrument's notes
-			for(var j = 0; j < instruments[i].notes.length; j++){
+function showOnionSkin(pianoRollObject){
 	
-				if(instruments[i].notes[j].block.id === null){
-					continue;
-				}
-				
+	for(var i = 0; i < pianoRollObject.instruments.length; i++){
+		
+		if(pianoRollObject.instruments[i] !== pianoRollObject.currentInstrument){
+			
+			// go through each instrument's activeNotes
+			for(activeNote in pianoRollObject.instruments[i].activeNotes){
+	
 				// get note id 
-				var noteId = instruments[i].notes[j].block.id;
+				var noteId = activeNote;
+				
 				// get location of each note
 				var location = document.getElementById(noteId);
-		
-				if(!location){
+				
+				if(location){
+					// set background color for that location a very light shade of green
+					if(location.style.backgroundColor === "transparent"){
+						location.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
+					}
+				}else if(!location){
 					// if not present, it's either because there's no 16th measure or 8th measure
 					if(noteId.indexOf("-1") < 0 && noteId.indexOf("-2") < 0){
 						
@@ -411,9 +456,6 @@ function showOnionSkin(){
 							subdiv.style.background = "linear-gradient(90deg, rgba(0, 178, 0, 0.2) 50%, transparent 50%)";
 						}
 					}else if(noteId.indexOf("-2") > 0){
-						// make a temporary div that will be inserted into the corresponding eighth note column
-						// make a special class for this div. remove it when switching instruments 
-						// but then would I have to take care of it on playback? no because it doesn't even have "hasnote" attribute!
 						var findId = noteId.substring(0, noteId.indexOf("-"));
 						var subdiv = document.getElementById(findId);
 						if(subdiv.style.backgroundColor !== "rgb(0, 178, 0)"){
@@ -422,12 +464,6 @@ function showOnionSkin(){
 					}
 				}
 				
-				if(location && instruments[i].notes[j].freq > 1){
-					// set background color for that location a very light shade of green
-					if(location.style.backgroundColor === "transparent"){
-						location.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
-					}
-				}
 			}
 		}
 	}

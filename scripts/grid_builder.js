@@ -7,14 +7,16 @@ build the grid
 /****
 
 set up grid headers first (the headers for each column)
+@param columnHeaderRowId = a dom element ID 
+@param pianoRollObject = a PianoRoll object 
 
 ****/
-function buildGridHeader( columnHeaderRowId ){
+function buildGridHeader( columnHeaderRowId, pianoRollObject ){
 	
 	var columnHeaderRow = $( '#' + columnHeaderRowId );
 
 	// this will provide the headers for each column in the grid (i.e. number for each beat/subbeat) 
-	for(var i = 0; i < numberOfMeasures * subdivision + 1; i++){
+	for(var i = 0; i < pianoRollObject.numberOfMeasures * pianoRollObject.subdivision + 1; i++){
 		var columnHeader = document.createElement('div');
 		columnHeader.id = "col_" + (i - 1); // the - 1 here is important! 
 		columnHeader.style.display = "inline-block";
@@ -23,15 +25,15 @@ function buildGridHeader( columnHeaderRowId ){
 			columnHeader.style.borderRight = "1px solid #000";
 			columnHeader.style.textAlign = "center";
 			
-			if(i < subdivision + 1){
-				if(i === subdivision){
+			if(i < pianoRollObject.subdivision + 1){
+				if(i === pianoRollObject.subdivision){
 					columnHeader.style.borderRight = '3px solid #000';
 				}
 				columnHeader.textContent = i;
-			}else if(i !== numberOfMeasures * subdivision + 1){
+			}else if(i !== pianoRollObject.numberOfMeasures * pianoRollObject.subdivision + 1){
 				// subdiv goes from 1 to 16. if more than 16, start at 1 again. 
-				var subdiv = (i % subdivision) === 0 ? subdivision : (i % subdivision);
-				if(subdivision === subdiv){
+				var subdiv = (i % pianoRollObject.subdivision) === 0 ? pianoRollObject.subdivision : (i % pianoRollObject.subdivision);
+				if(pianoRollObject.subdivision === subdiv){
 					columnHeader.style.borderRight = '3px solid #000';
 				}
 				columnHeader.textContent = subdiv; 
@@ -64,7 +66,7 @@ function buildGridHeader( columnHeaderRowId ){
 set up rest of grid 
 
 ****/
-function buildGrid( gridDivId ){
+function buildGrid( gridDivId, pianoRollObject ){
 
 	var thePiano = $('#' + gridDivId);
 	
@@ -73,7 +75,7 @@ function buildGrid( gridDivId ){
 	
 	var note;
 	
-	for(note in noteFrequencies){
+	for(note in pianoRollObject.noteFrequencies){
 		
 		note = note;
 		
@@ -107,11 +109,10 @@ function buildGrid( gridDivId ){
 		pianoNotes.append(newRowClone);
 		
 		// append columns to each row 
-		for(var j = 0; j < numberOfMeasures * subdivision; j++){
+		for(var j = 0; j < pianoRollObject.numberOfMeasures * pianoRollObject.subdivision; j++){
 			var column = document.createElement("div");
 			column.id = replaceSharp(note) + "col_" + j;
 			column.style.display = 'inline-block';
-			//column.style.cssFloat = "left";
 			column.style.width = "40px";
 			column.style.height = "15px";
 			column.style.verticalAlign = "middle";
@@ -122,14 +123,14 @@ function buildGrid( gridDivId ){
 			column.setAttribute("type", "default"); 	// type of note - set to default initially 
 			column.className = "context-menu-one";
 			
-			if((j + 1) % subdivision == 0){
+			if((j + 1) % pianoRollObject.subdivision == 0){
 				column.style.borderRight = "3px solid #000";
 			}else{
 				column.style.borderRight = "1px solid #000";
 			}
 
 			// hook up an event listener to allow for picking notes on the grid!
-			column.addEventListener("click", function(){ addNote(this.id, "selectWave") });
+			column.addEventListener("click", function(){ addNote(this.id, pianoRollObject) });
 			// allow for highlighting to make it clear which note a block is
 			column.addEventListener("mouseenter", function(){ highlightRow(this.id, '#FFFF99') });
 			column.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });

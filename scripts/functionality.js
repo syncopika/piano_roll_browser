@@ -7,6 +7,8 @@ these functions control functionality such as:
 - play/stop 
 - adding / creating new instruments
 
+relies on PianoRoll object in classes.js 
+
 ************/
 
 
@@ -31,63 +33,69 @@ function initOscillator(gain){
 
 /****
 
-this will read all the notes, put them in an array and returns the array 
+	this will read all the notes, put them in an array and returns the array 
 
 ****/
-function readInNotes(){
-	var notes = []; // don't worry about what was in notes previously. 
+function readInNotes(pianoRollObject){
+	
+	var notes = []; // creating a new list of notes based on what's on the grid currently  
+	var tempo = pianoRollObject.currentTempo;
 	
 	// first find what the last column with a note (hasnote === 1) is 
 	// this will aid performance and prevent unnecessary column look-throughs 
 	var columnHeaders = document.getElementById("columnHeaderRow").children;
 	var lastColumn = -1;
+	var columnsWithNotes = [];
+	
 	for(var k = 0; k < columnHeaders.length; k++){
 		if(columnHeaders[k].getAttribute('hasnote') === '1'){
 			lastColumn = k;
+			columnsWithNotes.push(1);
+		}else{
+			columnsWithNotes.push(0);
 		}
 	}
-
+	
 	// start at 1 to skip 0th index, which is not a valid note column
 	for(var i = 1; i <= lastColumn; i++){
-
-		var column = $("div[id$='" + columnHeaders[i].id + "']").get(); //get all the blocks in each column
-		var found = 0;
-		
-		// go down each column and look for green. if found, stop and add to array. then move on.
-		for(var j = 0; j < column.length; j++){
-			// look for green background! 
-			if(column[j].style.backgroundColor === "rgb(0, 178, 0)"){
-				found = 1;
-				// make any corrections to id string before matching with freq key
-				var freq = noteFrequencies[ (column[j].parentNode.id).replace('s', '#') ];
-				// add note to array
-				notes.push(new Note(freq, getCorrectLength(column[j].getAttribute("length"), currentTempo), column[j]));
-				// note found, stop 
-				break;
-			}
-		}		
-		// if found === 0, then add a rest. need to know what kind of note this current column represents first.
-		if(found === 0){
+		if(columnsWithNotes[i] === 1){
+			var column = $("div[id$='" + columnHeaders[i].id + "']").get(); //get all the blocks in each column
+			
+			// go down each column and look for green. if found, stop and add to array. then move on.
+			for(var j = 0; j < column.length; j++){
+				// look for green background! 
+				if(column[j].style.backgroundColor === "rgb(0, 178, 0)"){
+					found = 1;
+					// make any corrections to id string before matching with freq key
+					var freq = pianoRollObject.noteFrequencies[ (column[j].parentNode.id).replace('s', '#') ];
+					// add note to array
+					notes.push(new Note(freq, getCorrectLength(column[j].getAttribute("length"), pianoRollObject), column[j]));
+					// note found, stop 
+					break;
+				}
+			}		
+		}else{
 			if(columnHeaders[i].id.indexOf("-1") > 0 || columnHeaders[i].id.indexOf("-2") > 0){
 				// doesn't really matter which block element (i.e. C1, C7, F3, ...) we look at since the whole
 				// column has no note. just use the 2nd element in the column array. (the first one is the header)
-				notes.push(new Note(0.0,  Math.round(currentTempo / noteLengths["sixteenth"]), column[1]));
+				notes.push(new Note(0.0,  Math.round(tempo / pianoRollObject.noteLengths["sixteenth"]), document.getElementById('C3' + columnHeaders[i].id)));
 			}else{
-				notes.push(new Note(0.0,  Math.round(currentTempo / noteLengths["eighth"]), column[1]));
+				notes.push(new Note(0.0,  Math.round(tempo / pianoRollObject.noteLengths["eighth"]), document.getElementById('C3' + columnHeaders[i].id)));
 			}
 		}
 	}
+	
 	return notes;
 }
 
 
 /****
 
-this function takes an array of notes, an index, and an oscillator and plays the note at that index 
-with a specific duration with the passed-in oscillator.
+	this function takes an array of notes, an index, and an oscillator and plays the note at that index 
+	with a specific duration with the passed-in oscillator.
 
 ****/
-function readAndPlayNote(array, index, currentInstrument){  
+function readAndPlayNote(array, index, currentInstrument, pianoRollObject){  
 	// when to stop playing 
 	if(index === array.length){
 		 currentInstrument.gain.gain.value = 0;
@@ -124,9 +132,9 @@ function readAndPlayNote(array, index, currentInstrument){
 			// for bpm 150 - 185, 70 ms is good, and past that, 50 ms
 			// remember: currentTempo variable is in milliseconds
 			var spacer;
-			if(currentTempo >= 500){
+			if(pianoRollObject.currentTempo >= 500){
 				spacer = 95;
-			}else if(currentTempo >= 324 && currentTempo < 500){
+			}else if(pianoRollObject.currentTempo >= 324 && pianoRollObject.currentTempo < 500){
 				// bpm: 150 - 185
 				spacer = 70;
 			}else{
@@ -136,17 +144,17 @@ function readAndPlayNote(array, index, currentInstrument){
 			// but, if a certain note's style is staccato or legato, spacer will
 			// have to change accordingly as well
 			if(array[index].block.style === "legato"){
-				if(currentTempo >= 500){
+				if(pianoRollObject.currentTempo >= 500){
 					spacer = 200;
-				}else if(currentTempo >= 324 && currentTempo < 500){
+				}else if(pianoRollObject.currentTempo >= 324 && pianoRollObject.currentTempo < 500){
 					spacer = 180;
 				}else{
 					spacer = 160;
 				}
 			}else if(array[index].block.style === "staccato"){
-				if(currentTempo >= 500){
+				if(pianoRollObject.currentTempo >= 500){
 					spacer = 70;
-				}else if(currentTempo >= 324 && currentTempo < 500){
+				}else if(pianoRollObject.currentTempo >= 324 && pianoRollObject.currentTempo < 500){
 					spacer = 50;
 				}else{
 					spacer = 30;
@@ -156,55 +164,59 @@ function readAndPlayNote(array, index, currentInstrument){
 			setTimeout(function(){  currentInstrument.gain.gain.value = 0.0; }, spacer); 
 			
 			// create a new timer and push to timers array 
-			timers.push( setTimeout(function(){readAndPlayNote(array, ++index, currentInstrument)}, array[currIndex].duration) ); 
+			pianoRollObject.timers.push( setTimeout(function(){readAndPlayNote(array, ++index, currentInstrument, pianoRollObject)}, array[currIndex].duration) ); 
 		}
 	}
 }
 
 /****
 
-stop playback
+	stop playback
 
 ****/
-function stopPlay(){
-	for(var i = 0; i < timers.length; i++){
-		clearTimeout( timers[i] );
+function stopPlay(pianoRollObject){
+	for(var i = 0; i < pianoRollObject.timers.length; i++){
+		clearTimeout( pianoRollObject.timers[i] );
 	}
-	timers = [];
-	for(var i = 0; i < instruments.length; i++){
-		instruments[i].gain.gain.value = 0.0;
+	pianoRollObject.timers = [];
+	for(var i = 0; i < pianoRollObject.instruments.length; i++){
+		pianoRollObject.instruments[i].gain.gain.value = 0.0;
 	}
 }
 
 /****
 
-play notes for current instrument
+	play notes for current instrument
 
 ****/
-function play(){
-	readAndPlayNote(readInNotes(), 0, currentInstrument);
+function play(pianoRollObject){
+	readAndPlayNote(readInNotes(pianoRollObject), 0, pianoRollObject.currentInstrument, pianoRollObject);
 }
 
 /****
 
-play all instruments
+	play all instruments
 
 ****/
-function playAll(){
-	currentInstrument.notes = readInNotes();
-	for(var i = 0; i < instruments.length; i++){
-		readAndPlayNote(instruments[i].notes, 0, instruments[i]);
+function playAll(pianoRollObject){
+	
+	pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
+	
+	for(var i = 0; i < pianoRollObject.instruments.length; i++){
+		var instrument = pianoRollObject.instruments[i];
+		var notesArray = pianoRollObject.instruments[i].notes;
+		readAndPlayNote(notesArray, 0, instrument, pianoRollObject);
 	}
 }
 
 /***
 
-change tempo 
+	change tempo 
 
-this function relies on an INPUT box's ID to get the user-inputted tempo
+	this function relies on an INPUT box's ID to get the user-inputted tempo
 
 ***/
-function changeTempo(){
+function changeTempo(pianoRollObject){
 	var tempoInput = document.getElementById("changeTempo");
 	var selectedTempo = parseInt(tempoInput.value);
 	var tempoText = document.getElementById("tempo")
@@ -212,16 +224,16 @@ function changeTempo(){
 	
 	// initially getting milliseconds FOR QUARTER NOTES (that's 2 blocks on the grid)
 	// note that currentTempo needs to be rounded before use
-	currentTempo = ((Math.round((60000/selectedTempo) * 1000)) / 1000 );
+	currentTempo = ((Math.round((60000 / selectedTempo) * 1000)) / 1000 );
 	
 	// go through all instruments and adjust duration of each note in their note arrays
 	// according to new current tempo
-	for(var i = 0; i < instruments.length; i++){
-		if(instruments[i] != currentInstrument){
-			var noteArray = instruments[i].notes;
+	for(var i = 0; i < pianoRollObject.instruments.length; i++){
+		if(pianoRollObject.instruments[i] != pianoRollObject.currentInstrument){
+			var noteArray = pianoRollObject.instruments[i].notes;
 			for(var j = 0; j < noteArray.length; j++){
 				if(noteArray[j].duration > 1){
-					noteArray[j].duration = getCorrectLength(noteArray[j].block.length, currentTempo);
+					noteArray[j].duration = getCorrectLength(noteArray[j].block.length, pianoRollObject);
 				}
 			}
 		}
@@ -230,31 +242,32 @@ function changeTempo(){
 
 /***
 
-calculate length of note in milliseconds
+	calculate length of note in milliseconds
 
 ***/
-function getCorrectLength(length, currentTempo){
+function getCorrectLength(length, pianoRollObject){
+	var currentTempo = pianoRollObject.currentTempo;
 	if(length === "quarter"){
 		return Math.round(currentTempo);
 	}else if(length === "eighth"){
-		return Math.round(currentTempo / noteLengths["eighth"]);
+		return Math.round(currentTempo / pianoRollObject.noteLengths["eighth"]);
 	}else if(length === "sixteenth"){
-		return Math.round(currentTempo / noteLengths["sixteenth"]);
+		return Math.round(currentTempo / pianoRollObject.noteLengths["sixteenth"]);
 	}
 }
 
 
 /****
 
-add a new instrument 
+	add a new instrument 
 
 ****/
-function addNewInstrument(name, bool){
+function addNewInstrument(name, bool, pianoRollObject){
 	var instrumentTable = document.getElementById("instrumentTable");
 	var newInstrument = document.createElement('td');
 	
 	// we want to be able to access the instruments in sequential order
-	newInstrument.id = "" + (instruments.length + 1); 
+	newInstrument.id = "" + (pianoRollObject.instruments.length + 1); 
 	newInstrument.setAttribute("selected", "0");
 	newInstrument.style.backgroundColor = "transparent";
 	
@@ -265,7 +278,7 @@ function addNewInstrument(name, bool){
 	}
 	newInstrument.addEventListener('click', function(event){
 		// pass the event target's id to chooseInstrument()
-		chooseInstrument(event.target.id);
+		chooseInstrument(event.target.id, pianoRollObject);
 	});
 	
 	instrumentTable.appendChild(newInstrument);
@@ -273,16 +286,16 @@ function addNewInstrument(name, bool){
 	// bool is not false - if a new instrument needs to be created
 	// - when importing data, this createNewInstrument step is not needed
 	if(bool !== false){
-		createNewInstrument("new_instrument");
+		createNewInstrument("new_instrument", pianoRollObject);
 	}
 }
 
 /****
 
-create a new instrument 
+	create a new instrument 
 
 ****/
-function createNewInstrument(name){
+function createNewInstrument(name, pianoRollObject){
 	// make new oscillator and gain nodes
 	var newGain = new initGain();
 	var newOscillator = new initOscillator(newGain);
@@ -290,7 +303,7 @@ function createNewInstrument(name){
 	
 	// create new instrument with oscillator
 	var newInstrument = new Instrument("new_instrument", newOscillator, newGain, []);
-	instruments.push(newInstrument);
+	pianoRollObject.instruments.push(newInstrument);
 }
 
 function deleteInstrument(){

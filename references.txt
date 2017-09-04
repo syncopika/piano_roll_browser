@@ -1,0 +1,25 @@
+// references:
+// http://www.phy.mtu.edu/~suits/notefreqs.html
+// http://jsfiddle.net/remotesynth/73cD5/?utm_source=website&utm_medium=embed&utm_campaign=73cD5
+// https://modernweb.com/creating-sound-with-the-web-audio-api-and-oscillators/
+// http://stackoverflow.com/questions/1114024/constructors-in-javascript-objects
+// http://stackoverflow.com/questions/32239560/web-audio-oscillators-unexpectedly-glide-from-one-frequency-to-another-in-chrome
+// http://stackoverflow.com/questions/15261030/web-audio-start-and-stop-oscillator-then-start-it-again
+// http://stackoverflow.com/questions/18785951/how-to-get-width-of-a-div-in-percentage-using-jquery
+// http://alemangui.github.io/blog//2015/12/26/ramp-to-value.html
+// http://stackoverflow.com/questions/4909167/how-to-add-a-custom-right-click-menu-to-a-webpage
+// https://swisnl.github.io/jQuery-contextMenu/docs.html
+// http://stackoverflow.com/questions/11950811/get-id-of-clicked-element-which-opened-context-menu-using-jquery-contextmenu-plu
+// http://stackoverflow.com/questions/22550424/how-can-i-change-the-background-color-of-multiple-divs-by-dragging-over-them-wit
+// http://www.sengpielaudio.com/calculator-bpmtempotime.htm
+// http://stackoverflow.com/questions/14976495/get-selected-option-text-with-javascript
+// http://stackoverflow.com/questions/7346563/loading-local-json-file
+// http://stackoverflow.com/questions/14740927/using-html-5-file-api-to-load-a-json-file
+// https://www.smashingmagazine.com/2012/06/introduction-to-javascript-unit-testing/
+// http://stackoverflow.com/questions/3847121/how-can-i-disable-all-settimeout-events
+// http://stackoverflow.com/questions/3955229/remove-all-child-elements-of-a-dom-node-in-javascript
+
+// http://stackoverflow.com/questions/18752925/html5-audio-getting-the-sound-of-piano
+
+// make it recordable!
+// https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createMediaStreamDestination
