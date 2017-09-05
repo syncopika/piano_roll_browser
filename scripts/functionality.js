@@ -224,7 +224,7 @@ function changeTempo(pianoRollObject){
 	
 	// initially getting milliseconds FOR QUARTER NOTES (that's 2 blocks on the grid)
 	// note that currentTempo needs to be rounded before use
-	currentTempo = ((Math.round((60000 / selectedTempo) * 1000)) / 1000 );
+	pianoRollObject.currentTempo = ((Math.round((60000 / selectedTempo) * 1000)) / 1000 );
 	
 	// go through all instruments and adjust duration of each note in their note arrays
 	// according to new current tempo

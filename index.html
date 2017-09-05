@@ -166,7 +166,7 @@
 			</label>
 		</li>
 		<li>
-			<button class='btn' onclick='changeTempo()'> change tempo </button>
+			<button class='btn' id='changeTempoBtn'> change tempo </button>
 		</li>
 	</ul>
 
@@ -321,6 +321,10 @@ function bindButtons(pianoRollObject){
 	
 	document.getElementById('stopPlay').addEventListener('click', function(){
 		stopPlay(pianoRoll);
+	});
+	
+	document.getElementById('changeTempoBtn').addEventListener('click', function(){
+		changeTempo(pianoRoll);
 	});
 	
 	// be able to change name of piece and composer 
