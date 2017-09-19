@@ -217,7 +217,18 @@ function subdivide(elementId, clearColumn, pianoRollObject){
 		columnHalf.style.borderRight = "";
 		columnHalf.id = colNum + "-2";
 		colHead.parentNode.insertBefore(columnHalf, colHead.nextSibling);
-
+		
+		/*
+			important! check to see if the element clicked on is green. if it is, that means it was a green eight note before this subdivision,
+			which means that its first and second half needs to be added to activeNotes of the current instrument 
+		*/
+		var thisElementIsGreen = document.getElementById(elementId).style.backgroundColor === 'rgb(0, 178, 0)';
+		if(thisElementIsGreen){
+			pianoRollObject.currentInstrument.activeNotes[elementId + '-1'] = 1;
+			pianoRollObject.currentInstrument.activeNotes[elementId + '-2'] = 1;
+			delete pianoRollObject.currentInstrument.activeNotes[elementId];
+		}
+		
 		for(var i = 1; i < column.length; i++){
 
 			// then split the block into 2 
@@ -333,14 +344,17 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 			blockHeader.parentNode.removeChild(blockHeader.nextSibling);
 		}
 		
-		// add renamed note to activeNotes, delete old ones 
-		var originalBlock = elementId.substring(0, elementId.indexOf("-"));
-		pianoRollObject.currentInstrument.activeNotes[originalBlock] = 1;
-		
-		// also remove from active notes 
-		for(note in pianoRollObject.currentInstrument.activeNotes){
-			if(!document.getElementById(note)){
-				delete pianoRollObject.currentInstrument.activeNotes[note];
+		// if a PianoRoll object is passed in, do some changes for the current instrument here 
+		if(pianoRollObject){
+			// add renamed note to activeNotes, delete old ones 
+			var originalBlock = elementId.substring(0, elementId.indexOf("-"));
+			pianoRollObject.currentInstrument.activeNotes[originalBlock] = 1;
+			
+			// also remove from active notes 
+			for(note in pianoRollObject.currentInstrument.activeNotes){
+				if(!document.getElementById(note)){
+					delete pianoRollObject.currentInstrument.activeNotes[note];
+				}
 			}
 		}
 		

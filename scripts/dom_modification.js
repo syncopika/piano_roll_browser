@@ -148,7 +148,7 @@ function clearGridAll(){
 		}
 		
 		if(columns[i].id.indexOf("-1") > 0){
-			rejoin(columns[i].id, false);
+			rejoin(columns[i].id, false, null);
 		}
 	}
 }
