@@ -166,7 +166,7 @@ function makeNoteContextMenu(pianoRollObject){
 								callback: function(key, options){
 									// if user wants to join two notes, they must be adjacent and the same note!
 									// so check if adjacent 
-									rejoin(options.$trigger.attr("id"), false); // preserve any green notes when splitting
+									rejoin(options.$trigger.attr("id"), false, pianoRollObject); // preserve any green notes when splitting
 								}
 							},
 							"Delete": {
@@ -277,7 +277,7 @@ function subdivide(elementId, clearColumn, pianoRollObject){
 
 
 // take an element node id as parameter, and true or false if you want to clear a whole column (no green in any block of the column)
-function rejoin(elementId, clearColumn){
+function rejoin(elementId, clearColumn, pianoRollObject){
 
 	var block = elementId;
 	
@@ -307,9 +307,10 @@ function rejoin(elementId, clearColumn){
 	if(blockHeader.id.indexOf("-2") < 0){
 		
 		// take care of column header first 
+		// this renames the 1st half of the block (i.e. col_1-1) back to the original (i.e. col_1)
 		blockHeader.id = blockHeader.id.substring(0, blockHeader.id.indexOf("-"));
 		
-		// delete adjacent 16th block
+		// delete adjacent 16th block header
 		blockHeader.parentNode.removeChild(blockHeader.nextSibling);
 		
 		// then take care rest of column
@@ -326,9 +327,23 @@ function rejoin(elementId, clearColumn){
 				blockHeader.style.backgroundColor = "transparent";
 			}
 			
+			// this renames the 1st half of the block (i.e. C3col_1-1) back to the original (i.e. C3col_1)
 			blockHeader.id = blockHeader.id.substring(0, blockHeader.id.indexOf("-"));
+			
 			blockHeader.parentNode.removeChild(blockHeader.nextSibling);
 		}
+		
+		// add renamed note to activeNotes, delete old ones 
+		var originalBlock = elementId.substring(0, elementId.indexOf("-"));
+		pianoRollObject.currentInstrument.activeNotes[originalBlock] = 1;
+		
+		// also remove from active notes 
+		for(note in pianoRollObject.currentInstrument.activeNotes){
+			if(!document.getElementById(note)){
+				delete pianoRollObject.currentInstrument.activeNotes[note];
+			}
+		}
+		
 	}
 	
 	

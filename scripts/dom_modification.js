@@ -251,7 +251,7 @@ function deleteMeasure(pianoRollObject){
 	// by 8 to know how many columns there are 
 	var currColumns = pianoRollObject.numberOfMeasures * 8;
 	
-	// subtract 8 from currColumns
+	// subtract 8 from currColumns - because 8 eighth notes per measure (4 quarter notes)
 	currColumns -= 8;
 	
 	//console.log(currColumns);
@@ -299,12 +299,18 @@ function chooseInstrument(thisElement, pianoRollObject){
 	}
 	
 	// get index of clicked-on instrument in instrumentTable and subtract 1 to
-	// account for 0-index when we use it to look in the global variable 'instruments' 
+	// account for 0-index when we use it to look in pianoRoll object 'instruments' 
 	// array for the corresponding instrument object
 	var index = parseInt(thisElement) - 1;
 
 	// change current instrument's notes to onion skin 
 	for(activeNote in pianoRollObject.currentInstrument.activeNotes){
+		// ok problem here: when switching instruments, subdivided blocks may not exist for the instrument being switched to! 
+		// console.log(activeNote);
+		// for now (temporarily) as a quick fix, just skip null elements (WILL LEAVE EMPTY SPACES THOUGH)
+		if(!document.getElementById(activeNote)){
+			continue;
+		}
 		document.getElementById(activeNote).style.backgroundColor = "rgba(0, 178, 0, 0.2)";
 	}
 	
@@ -352,7 +358,7 @@ function drawNotes(instrumentObject, pianoRollObject){
 				
 				var blockId = notes[i].block.id;
 				
-				rejoin(blockId, true);
+				rejoin(blockId, true, pianoRollObject);
 		
 				// now that the correct column should be in place, assign elementExists the id of the note we need to draw in 
 				elementExists = document.getElementById( notes[i].block.id );
