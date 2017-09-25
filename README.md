@@ -2,17 +2,19 @@
 a music sequencer inspired by LMMS, one of the best software applications ever!    
 also carries a bit of influence from PxTone Collage, another great application!    
     
-This project is currently still an early prototype. more to come hopefully! (^_^\)    
+This project is currently still a prototype. more to come hopefully! (^_^\)    
      
 ### instructions:    
 to change the name of the piece or the composer, double click on 'title' or 'composer', just above the buttons.     
-left-click a block in the grid to place a note; click again to remove.   
+left-click a block on the grid to place a note; click again to remove.   
 right-click blocks on the grid to create 16th notes (subdivide), or rejoin 16th notes to revert back to 8th notes. You can also change a note's properties, such as volume and style.    
-right-click an instrument to modify its sound, name, and volume.    
+right-click an instrument block to modify its sound, name, and volume.    
 check out a demo! see the demo dropdown box.    
     
 ### known problems:  
 can get pretty slow when changing instruments.    
+performance seems slower and the audio clicks in Firefox (the workaround I used seems to just work in Chrome)    
+can be used in Edge, but loading the demos completely fails and stalls the page :<    
     
 ### current next steps:    
 still need to delete instruments.    
