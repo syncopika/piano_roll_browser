@@ -453,8 +453,9 @@ function getFile(e){
 			var measures = data[0]["measures"];
 			
 			// add new measures first - NEED TO ALSO DELETE IF TOO MANY!!
-			if(measures > 4){
-				for(var i = 0; i < measures - 4; i++){
+			var measuresToAdd = measures - pianoRoll.numberOfMeasures;
+			if(measures > pianoRoll.numberOfMeasures){
+				for(var i = 0; i < measuresToAdd; i++){
 					addNewMeasure(pianoRoll); // add new measures as needed 
 				}
 			}
@@ -496,7 +497,7 @@ function getFile(e){
 			instrument1.classList.add("context-menu-instrument");
 			
 			pianoRoll.currentInstrument = pianoRoll.instruments[0];
-			drawNotes(pianoRoll.currentInstrument);
+			drawNotes(pianoRoll.currentInstrument, pianoRoll);
 			showOnionSkin(pianoRoll);
 			
 		}
@@ -557,12 +558,16 @@ function getDemo(selectedDemo){
 		var measures = data[0]["measures"];
 		
 		// add new measures first - NEED TO ALSO DELETE IF TOO MANY!!
-		if(measures > 4){
-			for(var i = 0; i < measures - 4; i++){
+		if(measures > pianoRoll.numberOfMeasures){
+			var measuresToAdd = measures - pianoRoll.numberOfMeasures;
+			for(var j = 0; j < measuresToAdd; j++){
 				addNewMeasure(pianoRoll); // add new measures as needed 
 			}
 		}
 		
+		// update num of measures 
+		$('#measures').text( "number of measures: " + pianoRoll.numberOfMeasures );
+
 		// then assign instruments array the data 
 		pianoRoll.instruments = []; // clear instruments array 
 
@@ -596,7 +601,7 @@ function getDemo(selectedDemo){
 		instrument1.classList.add("context-menu-instrument");
 		
 		pianoRoll.currentInstrument = pianoRoll.instruments[0];
-		drawNotes(pianoRoll.currentInstrument);
+		drawNotes(pianoRoll.currentInstrument, pianoRoll);
 		showOnionSkin(pianoRoll);
 	}
 	
