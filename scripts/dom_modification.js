@@ -133,19 +133,19 @@ function clearGridAll(){
 
 	// start at 1 to ignore the column before 1 (the blank one)
 	for(var i = 1; i < columns.length; i++){
-		if(columns[i].getAttribute("hasnote") !== "0"){
-			// change hasnote attribute back to 0!
-			columns[i].setAttribute("hasnote", "0");
-			var columnToCheck = $("div[id$='" + columns[i].id + "']").get();
-			for(var j = 0; j < columnToCheck.length; j++){
-				if(columnToCheck[j].style.backgroundColor !== "transparent"){
-					columnToCheck[j].style.backgroundColor = "transparent";
-				}
-				if(columnToCheck[j].style.background !== ""){
-					columnToCheck[j].style.background = "";
-				}
+
+		// change hasnote attribute back to 0!
+		columns[i].setAttribute("hasnote", "0");
+		var columnToCheck = $("div[id$='" + columns[i].id + "']").get();
+		for(var j = 0; j < columnToCheck.length; j++){
+			if(columnToCheck[j].style.backgroundColor !== "transparent"){
+				columnToCheck[j].style.backgroundColor = "transparent";
+			}
+			if(columnToCheck[j].style.background !== ""){
+				columnToCheck[j].style.background = "";
 			}
 		}
+		
 		
 		if(columns[i].id.indexOf("-1") > 0){
 			rejoin(columns[i].id, false, null);
