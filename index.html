@@ -579,7 +579,7 @@ function getDemo(selectedDemo){
 		for(var i = 1; i < data.length; i++){
 			// put each instrument into the instrument grid 
 			addNewInstrument(data[i][0].name, false, pianoRoll);
-			
+
 			// set up a fresh new oscillator and gain node for each instrument 
 			var newGain = initGain();
 			var newOscillator = initOscillator(newGain);

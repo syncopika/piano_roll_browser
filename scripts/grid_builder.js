@@ -116,6 +116,7 @@ function buildGrid( gridDivId, pianoRollObject ){
 			column.style.width = "40px";
 			column.style.height = "15px";
 			column.style.verticalAlign = "middle";
+			column.style.backgroundColor = "transparent";
 		
 			// IMPORTANT! new attributes for each note
 			column.setAttribute("volume", 0.3);		 	// set volume to 0.3 initially

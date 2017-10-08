@@ -60,16 +60,24 @@ function readInNotes(pianoRollObject){
 	for(var i = 1; i <= lastColumn; i++){
 		if(columnsWithNotes[i] === 1){
 			var column = $("div[id$='" + columnHeaders[i].id + "']").get(); //get all the blocks in each column
-			
 			// go down each column and look for green. if found, stop and add to array. then move on.
 			for(var j = 0; j < column.length; j++){
 				// look for green background! 
 				if(column[j].style.backgroundColor === "rgb(0, 178, 0)"){
-					found = 1;
 					// make any corrections to id string before matching with freq key
 					var freq = pianoRollObject.noteFrequencies[ (column[j].parentNode.id).replace('s', '#') ];
 					// add note to array
 					notes.push(new Note(freq, getCorrectLength(column[j].getAttribute("length"), pianoRollObject), column[j]));
+					
+					/* there's a weird bug(?) that I haven't figured out yet - for instrument 2 of the intrada demo, if you switch from instrument 2 to 3, some of the notes
+						from instrument 2 show up with instrument 3's notes (should be just instrument 3's notes). then if you check instrument 2's activeNotes, you'll see that 
+						the 2nd note (G5_col5) is somehow removed (along with some other notes presumably). really weird. for now I'll just ensure that activeNotes reflects 
+						the current notes by adding them here if they're not in activeNotes (although I'm pretty sure I shouldn't have to do this).
+					*/
+					if(pianoRollObject.currentInstrument.activeNotes[column[j].id] === undefined){
+						pianoRollObject.currentInstrument.activeNotes[column[j].id] = 1;
+					}
+					
 					// note found, stop 
 					break;
 				}
@@ -85,6 +93,7 @@ function readInNotes(pianoRollObject){
 		}
 	}
 	
+	// update active notes
 	return notes;
 }
 

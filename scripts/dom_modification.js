@@ -244,6 +244,8 @@ function addNewMeasure(pianoRollObject){
 
 	delete a measure 
 
+	WHAT IF THERE ARE NOTES IN IT??
+	
 ****/
 function deleteMeasure(pianoRollObject){
 	
@@ -280,7 +282,7 @@ function deleteMeasure(pianoRollObject){
  
 ****/
 function chooseInstrument(thisElement, pianoRollObject){
-	// console.log(thisElement);
+	
 	// look at grid, collect the notes, save them to the current instrument, and
 	// move on to the clicked-on instrument
 	pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
@@ -338,8 +340,8 @@ function chooseInstrument(thisElement, pianoRollObject){
 function drawNotes(instrumentObject, pianoRollObject){
 	
 	var notes = instrumentObject.notes;
-	
-	// reset headers first 
+
+	// reset headers first (i.e. clear columns with hasnote === 1)
 	resetHeaders();
 	
 	for(var i = 0; i < notes.length; i++){
@@ -350,7 +352,7 @@ function drawNotes(instrumentObject, pianoRollObject){
 		}
 		
 		// only notes have a valid id (rests have null for id field)
-		if(notes[i].block.id){		
+		if(notes[i].block.id !== null){		
 			var elementExists = document.getElementById( notes[i].block.id );
 	
 			// if we need to paint in an eighth note, but the column is currently subdivided 
@@ -417,7 +419,7 @@ function showOnionSkin(pianoRollObject){
 	
 	for(var i = 0; i < pianoRollObject.instruments.length; i++){
 		
-		if(pianoRollObject.instruments[i] !== pianoRollObject.currentInstrument){
+		if(pianoRollObject.instruments[i].name !== pianoRollObject.currentInstrument.name){
 			
 			// go through each instrument's activeNotes
 			for(activeNote in pianoRollObject.instruments[i].activeNotes){
@@ -428,12 +430,12 @@ function showOnionSkin(pianoRollObject){
 				// get location of each note
 				var location = document.getElementById(noteId);
 				
-				if(location){
+				if(location !== null){
 					// set background color for that location a very light shade of green
-					if(location.style.backgroundColor === "transparent"){
+					if(location.style.backgroundColor === 'transparent'){
 						location.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
 					}
-				}else if(!location){
+				}else if(location === null){
 					// if not present, it's either because there's no 16th measure or 8th measure
 					if(noteId.indexOf("-1") < 0 && noteId.indexOf("-2") < 0){
 						
@@ -441,12 +443,13 @@ function showOnionSkin(pianoRollObject){
 						// there's only the 16th note subdivisions available on the grid. 
 						// so we'll find those subdivisions and just color them
 						var subdiv = document.getElementById( noteId + "-1" );
-						
+						var subdiv2 = document.getElementById( noteId + "-2" );
+
 						// color the subdiv AND its right sibling 
-						if(subdiv.style.backgroundColor !== "rgb(0, 178, 0)"){
+						if(subdiv.style.backgroundColor === "transparent"){
 							subdiv.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
-							if(subdiv.nextSibling.style.backgroundColor !== "rgb(0, 178, 0)"){
-								subdiv.nextSibling.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
+							if(subdiv2.style.backgroundColor === "transparent"){
+								subdiv2.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
 							}
 						}
 						
@@ -456,20 +459,20 @@ function showOnionSkin(pianoRollObject){
 						how many sibling elements to color!
 						***/
 					}else if(noteId.indexOf("-1") > 0){
+						// if we see a 16th note but there's only an 8th note div available, just color in that 8th note 
 						var findId = noteId.substring(0, noteId.indexOf("-"));
 						var subdiv = document.getElementById(findId);
-						if(subdiv.style.backgroundColor !== "rgb(0, 178, 0)"){
+						if(subdiv.style.backgroundColor === "transparent"){
 							subdiv.style.background = "linear-gradient(90deg, rgba(0, 178, 0, 0.2) 50%, transparent 50%)";
 						}
 					}else if(noteId.indexOf("-2") > 0){
 						var findId = noteId.substring(0, noteId.indexOf("-"));
 						var subdiv = document.getElementById(findId);
-						if(subdiv.style.backgroundColor !== "rgb(0, 178, 0)"){
+						if(subdiv.style.backgroundColor === "transparent"){
 							subdiv.style.background = "linear-gradient(90deg, transparent 50%, rgba(0, 178, 0, 0.2) 50%)";
 						}
 					}
 				}
-				
 			}
 		}
 	}

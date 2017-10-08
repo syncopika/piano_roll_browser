@@ -2754,7 +2754,8 @@
 "volume":"0.3",
 "style":"default"}}],
 "waveType":"triangle",
-"activeNotes":{"G5col_4":1,
+"activeNotes":{
+"G5col_4":1,
 "G5col_5":1,
 "A5col_6":1,
 "A5col_7":1,

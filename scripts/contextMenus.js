@@ -270,6 +270,11 @@ function subdivide(elementId, clearColumn, pianoRollObject){
 			block2.id = block2.id + "-2"; // give new id to block2
 			block2.className = "context-menu-one";
 			
+			// check if block 2 is green
+			if(block2.style.backgroundColor !== 'rgb(0, 178, 0)'){
+				block2.style.backgroundColor = 'transparent';
+			}
+			
 			// notice how this.id must be used. this is because using block2.id doesn't actually pass the current block2.id 
 			// string as an argument. I think it has something to do with block2 changing every iteration of this for-loop,
 			// and because we're attaching an event listener that all block2 elements will use. at the very end of the loop,
