@@ -445,12 +445,13 @@ function showOnionSkin(pianoRollObject){
 						var subdiv = document.getElementById( noteId + "-1" );
 						var subdiv2 = document.getElementById( noteId + "-2" );
 
-						// color the subdiv AND its right sibling 
-						if(subdiv.style.backgroundColor === "transparent"){
+						// color the subdiv AND its right sibling if there is no current note in that spot 
+						if(subdiv.style.backgroundColor !== 'rgb(0, 178, 0)'){
 							subdiv.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
-							if(subdiv2.style.backgroundColor === "transparent"){
-								subdiv2.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
-							}
+						}
+						
+						if(subdiv2.style.backgroundColor !== 'rgb(0, 178, 0)'){
+							subdiv2.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
 						}
 						
 						/****

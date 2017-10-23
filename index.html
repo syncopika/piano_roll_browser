@@ -130,7 +130,7 @@
 
 <div id='toolbar'>
 
-	<h2 id='title'> piano roll fun! ʕ•ᴥ•ʔ </h2>
+	<h2 id='title'> piano roll fun! &#127929;</h2>
 
 	<ul id='metadata'>
 		<li><h2 id='measures'></h2></li>
@@ -218,6 +218,7 @@
 - allow playback at specified measure 
 - allow repeats (add some new attributes to column headers)?
 - highlight current eighth note block on playback
+- please please please implement 32nd notes and ability to join 8th notes!
 */
 
 // prevent flash of unstylized content 
@@ -333,6 +334,10 @@ function bindButtons(pianoRollObject){
 		var title = document.getElementById('pieceTitle');
 		var userInput = prompt('new title name:');
 		
+		if(userInput === null){
+			return;
+		}
+		
 		title.textContent = userInput;
 	});
 	
@@ -340,6 +345,10 @@ function bindButtons(pianoRollObject){
 
 		var name = document.getElementById('composer');
 		var userInput = prompt('new composer name:');
+		
+		if(userInput === null){
+			return;
+		}
 		
 		name.textContent = userInput;
 	});
@@ -372,25 +381,11 @@ function generateJSON(){
 	metadata["title"] = document.getElementById("pieceTitle").textContent;
 
 	jsonData.push(metadata);
-	
-	/* get the activeNotes - this is temporary - activeNotes property not yet implemented 
-	for(var i = 0; i < pianoRoll.instruments.length; i++){
-		var newActiveNotes = {};
-		for(var j = 0; j < pianoRoll.instruments[i].notes.length; j++){
-			if(pianoRoll.instruments[i].notes[j].freq > 0){
-				newActiveNotes[pianoRoll.instruments[i].notes[j].block.id] = 1;
-			}
-		}
-		pianoRoll.instruments[i].activeNotes = newActiveNotes;
-		jsonData.push( [ pianoRoll.instruments[i] ] );
-	}
-	*/
 
 	for(var i = 0; i < pianoRoll.instruments.length; i++){
 		jsonData.push( [ pianoRoll.instruments[i] ] );
 	}
 
-	
 	jsonData = JSON.stringify(jsonData);
 	jsonData = jsonData.replace(/,/g, ',\n'); // replace all commas with a comma + newline 
 	
