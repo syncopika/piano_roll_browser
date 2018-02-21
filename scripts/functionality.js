@@ -110,8 +110,8 @@ function readAndPlayNote(array, index, currentInstrument, pianoRollObject){
 		currentInstrument.gain.gain.setTargetAtTime(0, 0, 0.010);
 		//currentInstrument.gain.gain.value = 0;
 	}else{
-		 currentInstrument.oscillator.type = currentInstrument.waveType;
-		
+		currentInstrument.oscillator.type = currentInstrument.waveType;
+
 		// tip! by setting value at a certain time, this prevents the 'gliding' from one freq. to the next 
 		// pick either one of the two below based on a certain condition 
 		// by default, use this one - NO MORE GLIDING because the 'de-zippering' was removed from the web audio spec for Chrome.

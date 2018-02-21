@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 
 <head>
 	<meta charset='utf-8'>
@@ -19,112 +19,113 @@
     <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
     <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.ui.position.min.js" type="text/javascript"></script>
     <script src="https://swisnl.github.io/jQuery-contextMenu/js/main.js" type="text/javascript"></script>
+
+	<style>
+		html{
+			font-family: Arial;
+		}
+		
+		/* override padding-bottom from contextMenu/css/screen.css */
+		html body{
+			padding-bottom: 0;
+		}
+		
+		body, #pianoNotes{
+			display: none;
+		}
+		
+		table, tr, td{
+			border: 1px solid #000;
+		}
+
+		#piano{
+			display: inline-block;
+			
+			/* this is important for letting the grid expand horizontally */
+			white-space: nowrap;
+		}
+		
+		#wavetypeLabel, #tempoLabel{
+			font-family: 'arial', 'gothic ms';
+			font-size: 14px;
+			padding-left: 10px;
+		}
+		
+		#changeTempo{
+			width: 40px;
+		}
+		
+		#title{
+			margin: 0 auto;
+			text-align: center;
+		}
+		
+		#toolbar{
+			/* border: 1px solid #000; */
+			position: relative;
+			width: 60%;
+			margin: 0 auto;
+			text-align: center;
+		}
+		
+		#toolbar ul{
+			text-align: center;
+			margin-top: 0;
+			margin-bottom: 0;
+			padding-bottom: 0;
+		}
+		
+		#toolbar li{
+			list-style-type: none;
+			display: inline-block; 
+		}
+		
+		#toolbar li h2{
+			font-size: 12px;
+		}
+		
+		#pianoNotes{
+			position: absolute;
+			width: 50px;
+			z-index: 100;
+			background-color: #fff;
+		}
+		
+		#instrumentGrid{
+			position: relative;
+		}
+		
+		#demo{
+			margin-top: 10px;
+		}
+		
+		.footer{
+			position: relative;
+			text-align: center;
+			margin-top: 3%;
+			font-size: 12px;
+			font-family: 'arial';
+			border-top: 1px solid #000;
+		}
+		
+		.btn{
+			border: 1px solid #000;
+			border-radius: 2px;
+			padding: 4px;
+			box-shadow: .1em .1em #d3d3d3;
+		}
+		
+		.btn:hover{
+			background-color: #d0d0d0;
+		}
+		
+		select, option{
+			height: 24px;
+		}
+	</style>
 	
 </head>
 
-<style>
-	html{
-		font-family: Arial;
-	}
-	
-	/* override padding-bottom from contextMenu/css/screen.css */
-	html body{
-		padding-bottom: 0;
-	}
-	
-	body, #pianoNotes{
-		display: none;
-	}
-	
-	table, tr, td{
-		border: 1px solid #000;
-	}
-
-	#piano{
-		display: inline-block;
-		
-		/* this is important for letting the grid expand horizontally */
-		white-space: nowrap;
-	}
-	
-	#wavetypeLabel, #tempoLabel{
-		font-family: 'arial', 'gothic ms';
-		font-size: 14px;
-		padding-left: 10px;
-	}
-	
-	#changeTempo{
-		width: 40px;
-	}
-	
-	#title{
-		margin: 0 auto;
-		text-align: center;
-	}
-	
-	#toolbar{
-		/* border: 1px solid #000; */
-		position: relative;
-		width: 60%;
-		margin: 0 auto;
-		text-align: center;
-	}
-	
-	#toolbar ul{
-		text-align: center;
-		margin-top: 0;
-		margin-bottom: 0;
-		padding-bottom: 0;
-	}
-	
-	#toolbar li{
-		list-style-type: none;
-		display: inline-block; 
-	}
-	
-	#toolbar li h2{
-		font-size: 12px;
-	}
-	
-	#pianoNotes{
-		position: absolute;
-		width: 50px;
-		z-index: 100;
-		background-color: #fff;
-	}
-	
-	#instrumentGrid{
-		position: relative;
-	}
-	
-	#demo{
-		margin-top: 10px;
-	}
-	
-	.footer{
-		position: relative;
-		text-align: center;
-		margin-top: 3%;
-		font-size: 12px;
-		font-family: 'arial';
-		border-top: 1px solid #000;
-	}
-	
-	.btn{
-		border: 1px solid #000;
-		border-radius: 2px;
-		padding: 4px;
-		box-shadow: .1em .1em #d3d3d3;
-	}
-	
-	.btn:hover{
-		background-color: #d0d0d0;
-	}
-	
-	select, option{
-		height: 24px;
-	}
-</style>
 
 <body>
 
@@ -162,7 +163,7 @@
 		
 		<li>
 			<label id='tempoLabel'> tempo: 
-				<input id='changeTempo' type='text'></input>
+				<input id='changeTempo' type='text'>
 			</label>
 		</li>
 		<li>
@@ -208,7 +209,6 @@
 	<p> 2017-2018 nch works | <a href='https://github.com/syncopika/piano_roll_browser'> source </a> </p>
 </div>
 
-</body>
 
 <script>
 
@@ -619,6 +619,8 @@ function getDemo(selectedDemo){
 }
 
 </script>
+
+</body>
 
 
 </html>
