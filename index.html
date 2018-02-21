@@ -304,7 +304,7 @@ function bindButtons(pianoRollObject){
 	});
 	
 	document.getElementById('clearGrid').addEventListener('click', function(){
-		clearGrid();
+		clearGrid(pianoRollObject);
 		showOnionSkin(pianoRollObject);
 	});
 	
@@ -438,7 +438,8 @@ function getFile(e){
 		return function(e){
 		
 			// clear grid first
-			clearGridAll();
+			// note that I'm relying on my pianoRoll variable
+			clearGridAll(pianoRoll);
 		
 			// parse JSON using JSON.parse 
 			var data = JSON.parse(e.target.result);
@@ -549,7 +550,7 @@ function getDemo(selectedDemo){
 		// request was successful. process json data now.
 	
 		// clear grid first
-		clearGridAll();
+		clearGridAll(pianoRoll);
 	
 		var data = JSON.parse(httpRequest.responseText);
 		

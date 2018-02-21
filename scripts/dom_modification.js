@@ -99,9 +99,9 @@ function highlightRow(id, color){
 	- does not alter subdivisions
 	- does not clear onion skin!
 	- only clears current instrument's notes 
-
+    - don't forget active notes of current instrument!
 ****/
-function clearGrid(){
+function clearGrid(pianoRollObject){
 	var columns = document.getElementById("columnHeaderRow").children;
 
 	// start at 1 to ignore the column before 1 (the blank one)
@@ -120,6 +120,10 @@ function clearGrid(){
 			}
 		}
 	}
+	
+	// reset activeNotes for current instrument
+	pianoRollObject.currentInstrument.activeNotes = {};
+	
 }
 
 /****
@@ -127,7 +131,7 @@ function clearGrid(){
 	like clearGrid, but clears EVERYTHING and rejoins any subdivisions 
 
 ****/
-function clearGridAll(){
+function clearGridAll(pianoRollObject){
 	var columns = document.getElementById("columnHeaderRow").children;
 
 	// start at 1 to ignore the column before 1 (the blank one)
@@ -149,6 +153,11 @@ function clearGridAll(){
 		if(columns[i].id.indexOf("-1") > 0){
 			rejoin(columns[i].id, false, null);
 		}
+	}
+	
+	// reset activeNotes for all instruments
+	for(var j = 0; j < pianoRollObject.instruments.length; j++){
+		pianoRollObject.instruments[j].activeNotes = {};
 	}
 }
 
@@ -298,11 +307,6 @@ function chooseInstrument(thisElement, pianoRollObject){
 			instrumentsView[i].classList.remove("context-menu-instrument");
 		}
 	}
-	
-	// get index of clicked-on instrument in instrumentTable and subtract 1 to
-	// account for 0-index when we use it to look in pianoRoll object 'instruments' 
-	// array for the corresponding instrument object
-	var index = parseInt(thisElement) - 1;
 
 	// change current instrument's notes to onion skin 
 	for(activeNote in pianoRollObject.currentInstrument.activeNotes){
@@ -314,6 +318,11 @@ function chooseInstrument(thisElement, pianoRollObject){
 		}
 		document.getElementById(activeNote).style.backgroundColor = "rgba(0, 178, 0, 0.2)";
 	}
+
+	// get index of clicked-on instrument in instrumentTable and subtract 1 to
+	// account for 0-index when we use it to look in pianoRoll object 'instruments' 
+	// array for the corresponding instrument object
+	var index = parseInt(thisElement) - 1;
 	
 	// then change current instrument to the one clicked on 
 	pianoRollObject.currentInstrument = pianoRollObject.instruments[index];
