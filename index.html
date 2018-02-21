@@ -106,7 +106,7 @@
 		text-align: center;
 		margin-top: 3%;
 		font-size: 12px;
-		font-family: 'ms gothic';
+		font-family: 'arial';
 		border-top: 1px solid #000;
 	}
 	
@@ -205,7 +205,7 @@
 
 
 <div class='footer'>
-	<p> c.2017 nch works | <a href='https://github.com/syncopika/piano_roll_browser'> source </a> </p>
+	<p> 2017-2018 nch works | <a href='https://github.com/syncopika/piano_roll_browser'> source </a> </p>
 </div>
 
 </body>
@@ -387,7 +387,16 @@ function generateJSON(){
 	}
 
 	jsonData = JSON.stringify(jsonData);
-	jsonData = jsonData.replace(/,/g, ',\n'); // replace all commas with a comma + newline 
+	
+	// for all commas preceded by 2 curly brackets, add a newline 
+	jsonData = jsonData.replace(/}},/g, '}},\n'); 
+	// also add a line break after opening left square brackets 
+	jsonData = jsonData.replace(/\[/g, '[\n'); 
+	// for closing square bracket as well
+	jsonData = jsonData.replace(/\],/g, '],\n'); 
+	
+	// also add an extra line to separate instruments 
+	jsonData = jsonData.replace(/\[\n{"name"/g, '\n[{"name"');
 	
 	var blob = new Blob([jsonData], {type: "application/json"});
 	var url = URL.createObjectURL(blob);
@@ -520,8 +529,12 @@ function getDemo(selectedDemo){
 
 	// get the selected demo from the dropbox
 	// selectedDemo is the path to the demo to load 
+	if(selectedDemo.options[selectedDemo.selectedIndex].text === ""){
+		return;
+	}
+
 	var selectedDemo = "demos/" + selectedDemo.options[selectedDemo.selectedIndex].text + ".json"; 
-	//console.log(selectedDemo);
+
 	var httpRequest = new XMLHttpRequest();
 
 	if(!httpRequest){

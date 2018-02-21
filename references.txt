@@ -19,7 +19,12 @@
 // http://stackoverflow.com/questions/3847121/how-can-i-disable-all-settimeout-events
 // http://stackoverflow.com/questions/3955229/remove-all-child-elements-of-a-dom-node-in-javascript
 
+
+// super, super important!
+// https://github.com/WebAudio/web-audio-api/issues/76#issuecomment-107679878
+
+
 // http://stackoverflow.com/questions/18752925/html5-audio-getting-the-sound-of-piano
 
-// make it recordable!
+// make it recordable?
 // https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createMediaStreamDestination

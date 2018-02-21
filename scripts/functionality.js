@@ -17,7 +17,7 @@ relies on PianoRoll object in classes.js
 function initGain(){
 	var newGain = context.createGain();
 	// set gain to 0 initially so no sound will be heard 
-	newGain.gain.value = 0.0;
+	newGain.gain.setValueAtTime(0, 0);
 	return newGain;
 }
 
@@ -107,26 +107,25 @@ function readInNotes(pianoRollObject){
 function readAndPlayNote(array, index, currentInstrument, pianoRollObject){  
 	// when to stop playing 
 	if(index === array.length){
-		 currentInstrument.gain.gain.value = 0;
+		currentInstrument.gain.gain.setTargetAtTime(0, 0, 0.010);
+		//currentInstrument.gain.gain.value = 0;
 	}else{
 		 currentInstrument.oscillator.type = currentInstrument.waveType;
 		
 		// tip! by setting value at a certain time, this prevents the 'gliding' from one freq. to the next 
 		// pick either one of the two below based on a certain condition 
-		// by default, use this one 
-		if(array[index].block.style !== "glide"){
-			currentInstrument.oscillator.frequency.setValueAtTime(array[index].freq, 0);
-		}else if(array[index].block.style === "glide"){
-			currentInstrument.oscillator.frequency.value = array[index].freq;
-		}
-		 
+		// by default, use this one - NO MORE GLIDING because the 'de-zippering' was removed from the web audio spec for Chrome.
+		// that was a unique feature in Chrome I really liked. too bad :< 
+		currentInstrument.oscillator.frequency.setValueAtTime(array[index].freq, 0)
+
 		// by setting gain value here according to the two conditions, this allows for the 'articulation' of notes without 
 		// the 'helicopter' sound when a certain note frequency is 0. 
 		// previously, the gain would have been .3 even for notes with 0 frequency,
 		// which causes some increase in volume in background sound.
 		// it was only detectable when I added the setTimeout below where I set gain to 0.
 		// this is fixed by always setting gain to 0 if a note's frequency is 0.
-		 currentInstrument.gain.gain.value = array[index].freq > 0 ? parseFloat(array[index].block.volume) : 0.0;
+		var val = array[index].freq > 0 ? parseFloat(array[index].block.volume) : 0.0;
+		currentInstrument.gain.gain.setTargetAtTime(val, 0, 0.010);
 		 
 		if(index < array.length){
 			// hold the current note for whatever duration was specified
@@ -170,7 +169,7 @@ function readAndPlayNote(array, index, currentInstrument, pianoRollObject){
 				}
 			}
 			
-			setTimeout(function(){  currentInstrument.gain.gain.value = 0.0; }, spacer); 
+			setTimeout(function(){  currentInstrument.gain.gain.setTargetAtTime(0, 0, 0.010); }, spacer); 
 			
 			// create a new timer and push to timers array 
 			pianoRollObject.timers.push( setTimeout(function(){readAndPlayNote(array, ++index, currentInstrument, pianoRollObject)}, array[currIndex].duration) ); 
@@ -189,7 +188,7 @@ function stopPlay(pianoRollObject){
 	}
 	pianoRollObject.timers = [];
 	for(var i = 0; i < pianoRollObject.instruments.length; i++){
-		pianoRollObject.instruments[i].gain.gain.value = 0.0;
+		pianoRollObject.instruments[i].gain.gain.setValueAtTime(0, 0);
 	}
 }
 

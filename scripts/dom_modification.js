@@ -18,16 +18,15 @@ function clickNote(id, waveType, pianoRollObject){
 	var parent = document.getElementById(id).parentNode.id;
 	parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
 	
+	oscillator.type = waveType;
+	oscillator.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], 0);
+	g.gain.setTargetAtTime(.3, context.currentTime, 0.015);
+	
+	// this setTimeout makes sure the oscillator gets silent again
 	setTimeout(function(){
-		oscillator.type = waveType;
-		oscillator.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], 0);
-		g.gain.value = .3;
-		// this setTimeout makes sure the oscillator gets silent again
-		setTimeout(function(){
-			oscillator.frequency.value = 0.0;
-			g.gain.value = 0;
-		}, 100);
-	}, 10); // use a small value like 10 so it starts "immediately"
+		g.gain.setTargetAtTime(0, context.currentTime, 0.010);
+	}, 100);
+
 }
 
 

@@ -133,7 +133,10 @@ function makeNoteContextMenu(pianoRollObject){
 							"Change style": {
 								name: "change style",
 								type: 'select',
-								options: {1: "default", 2: "legato", 3: "staccato", 4: "glide"},
+								// sadly, Chrome has decided to remove audio dezippering from their web audio implementation, thus rendering a neat 'glide' effect when changing notes to be gone. 
+								// see: https://www.chromestatus.com/features/5287995770929152
+								// as a result, just setting audio values is not okay anymore and you need to use setTargetAtTime instead. :(
+								options: {1: "default", 2: "legato", 3: "staccato"},
 								selected: function(){
 									var currentStyle = document.getElementById( e.data.$trigger.attr("id") ).getAttribute("type");
 									for(key in this.options){

@@ -1,8 +1,8 @@
 # piano_roll_browser    
 a music sequencer inspired by LMMS, one of the best software applications ever!    
-also carries a bit of influence from PxTone Collage, another great application!    
+also carries a bit of influence from PxTone Collage, another great application!      
     
-This project is currently still a prototype. more to come hopefully! (^_^\)    
+This project is ongoing.          
      
 ### instructions:    
 to change the name of the piece or the composer, double click on 'title' or 'composer', just above the buttons.     
