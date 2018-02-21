@@ -62,18 +62,22 @@ function addNote(id, pianoRollObject){
 		showOnionSkin(pianoRollObject); 
 		
 	}else{
-		$('#' + id).css("background-color", "rgb(0, 178, 0)");
-		
 		// update attributes 
 		$('#' + id).attr("volume", pianoRollObject.currentInstrument.volume);
 		
-		// add the note to the currentInstrument's activeNotes attribute (an associative array)
-		pianoRollObject.currentInstrument.activeNotes[id] = 1;
-		
-		//change hasNote attribute to true (1) in column header
+		// what if the user wants to add more than 1 note in a column? we can allow that, but extra notes will be discarded (can't do polyphony with same oscillator?)
 		var headerId = id.substring(id.indexOf("col"));
 		var currValue = parseInt(document.getElementById(headerId).getAttribute("hasNote"));
-		document.getElementById(headerId).setAttribute("hasNote", ++currValue);
+		if(currValue !== 1){
+			// if no note added to this column yet
+			$('#' + id).css("background-color", "rgb(0, 178, 0)");
+			
+			// add the note to the currentInstrument's activeNotes attribute (an associative array)
+			pianoRollObject.currentInstrument.activeNotes[id] = 1;
+		
+			//change hasNote attribute to true (1) in column header
+			document.getElementById(headerId).setAttribute("hasNote", 1); // set it to 1, no matter how many notes are added to the column 
+		}
 	}
 	var waveType = pianoRollObject.currentInstrument.waveType; 
 	clickNote(id, waveType, pianoRollObject);

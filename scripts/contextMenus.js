@@ -353,8 +353,9 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 		}
 		
 		// if a PianoRoll object is passed in, do some changes for the current instrument here 
-		if(pianoRollObject){
-			// add renamed note to activeNotes, delete old ones 
+		if(pianoRollObject && $('#' + elementId).css("background-color") === "rgb(0, 178, 0)"){
+			
+			// add renamed note to activeNotes, delete old ones only if notes being rejoined are green (i.e. belong to this instrument; not onion-skin)
 			var originalBlock = elementId.substring(0, elementId.indexOf("-"));
 			pianoRollObject.currentInstrument.activeNotes[originalBlock] = 1;
 			

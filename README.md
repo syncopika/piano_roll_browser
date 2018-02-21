@@ -9,6 +9,7 @@ to change the name of the piece or the composer, double click on 'title' or 'com
 left-click a block on the grid to place a note; click again to remove.   
 right-click blocks on the grid to create 16th notes (subdivide), or rejoin 16th notes to revert back to 8th notes. You can also change a note's properties, such as volume and style.    
 right-click an instrument block to modify its sound, name, and volume.    
+please note: each column can only have 1 note per instrument.    
 check out a demo! see the demo dropdown box.    
     
 ### known problems:  
