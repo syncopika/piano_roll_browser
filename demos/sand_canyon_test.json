@@ -6,7 +6,7 @@
 {"freq":523.25,"duration":100,"block":{"id":"C5col_1-2","length":"sixteenth","volume":"0.2","style":"default"}},
 {"freq":493.88,"duration":200,"block":{"id":"B4col_2","length":"eighth","volume":"0.2","style":"default"}},
 {"freq":523.25,"duration":200,"block":{"id":"C5col_3","length":"eighth","volume":"0.2","style":"default"}},
-{"freq":698.46,"duration":200,"block":{"id":"F5col_4","length":"eighth","volume":"0.2","style":"default"}},
+{"freq":698.46,"duration":200,"block":{"id":"F5col_4","length":"eighth","volume":"0.2","style":"glide"}},
 {"freq":622.25,"duration":200,"block":{"id":"Eb5col_5","length":"eighth","volume":"0.2","style":"default"}},
 {"freq":587.33,"duration":200,"block":{"id":"D5col_6","length":"eighth","volume":"0.2","style":"default"}},
 {"freq":523.25,"duration":200,"block":{"id":"C5col_7","length":"eighth","volume":"0.2","style":"default"}},

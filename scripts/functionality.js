@@ -114,10 +114,12 @@ function readAndPlayNote(array, index, currentInstrument, pianoRollObject){
 
 		// tip! by setting value at a certain time, this prevents the 'gliding' from one freq. to the next 
 		// pick either one of the two below based on a certain condition 
-		// by default, use this one - NO MORE GLIDING because the 'de-zippering' was removed from the web audio spec for Chrome.
-		// that was a unique feature in Chrome I really liked. too bad :< 
-		currentInstrument.oscillator.frequency.setValueAtTime(array[index].freq, 0)
-
+		if(array[index].block.style === "glide"){
+			currentInstrument.oscillator.frequency.setTargetAtTime(array[index].freq, 0.1, 0.04);
+		}else{
+			currentInstrument.oscillator.frequency.setValueAtTime(array[index].freq, 0);
+		}
+		
 		// by setting gain value here according to the two conditions, this allows for the 'articulation' of notes without 
 		// the 'helicopter' sound when a certain note frequency is 0. 
 		// previously, the gain would have been .3 even for notes with 0 frequency,
