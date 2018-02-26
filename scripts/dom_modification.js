@@ -440,7 +440,8 @@ function drawNotes(instrumentObject, pianoRollObject){
 			var elementExists = document.getElementById( notes[i].block.id );
 	
 			// if we need to paint in an eighth note, but the column is currently subdivided 
-			if(!elementExists && notes[i].block.length === "eighth"){
+			var elementLength = notes[i].block.length.split('-');
+			if(!elementExists && elementLength[0] === "eighth"){
 				
 				var blockId = notes[i].block.id;
 				
@@ -449,7 +450,7 @@ function drawNotes(instrumentObject, pianoRollObject){
 				// now that the correct column should be in place, assign elementExists the id of the note we need to draw in 
 				elementExists = document.getElementById( notes[i].block.id );
 			
-			}else if(!elementExists && notes[i].block.length === "sixteenth"){
+			}else if(!elementExists && elementLength[0] === "sixteenth"){
 
 				// now if the note to draw in is a 16th note and there's no place to put it, create the subdivision
 				var blockId = notes[i].block.id;
