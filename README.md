@@ -2,13 +2,14 @@
 a music sequencer inspired by LMMS, one of the best software applications ever!    
 also carries a bit of influence from PxTone Collage, another great application!      
     
-This project is ongoing.          
+This project is ongoing. Please use on Google Chrome for best results.           
      
 ### instructions:    
-to change the name of the piece or the composer, double click on 'title' or 'composer', just above the buttons.     
-left-click a block on the grid to place a note; click again to remove.   
-right-click blocks on the grid to create 16th notes (subdivide), or rejoin 16th notes to revert back to 8th notes. You can also change a note's properties, such as volume and style.    
-right-click an instrument block to modify its sound, name, and volume.    
+- to change the name of the piece or the composer, double click on 'title' or 'composer', just above the buttons.     
+- left-click a block on the grid to place a note; click again to remove.   
+- right-click a block on the grid to create 16th notes (subdivide), or rejoin 16th notes to revert back to 8th notes. You can also change a note's properties, such as volume and style.    
+- right-click an instrument block to modify its sound, name, and volume.    
+    
 please note: each column can only have 1 note per instrument.    
 check out a demo! see the demo dropdown box.    
     
@@ -19,7 +20,6 @@ can be used in Edge, but loading the demos completely fails and stalls the page 
     
 ### current next steps:    
 still need to delete instruments.    
-still need to be able to join notes.    
 still need to subdivide 16th notes for 32nd notes.     
 be able to toggle onion skin?    
     

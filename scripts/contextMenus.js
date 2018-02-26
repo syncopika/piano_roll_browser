@@ -160,28 +160,51 @@ function makeNoteContextMenu(pianoRollObject){
 								callback: function(key, options){
 									// get the id of the clicked-on block
 									var id = options.$trigger.attr("id");
+									
+									// need to check if column hasnote attribute is -1.
+									// if so, don't do anything!
+									var blockHeader = document.getElementById( id.substring(id.indexOf("col_")) );
+									if(blockHeader.getAttribute("hasnote") == -1){
+										return;
+									}
+									
 									subdivide(id, false, pianoRollObject);		
 								}
 							},
-							"Rejoin": {
-								name: "Rejoin",
+							"Join": {
+								name: "Join",
 								icon: "paste",
 								callback: function(key, options){
 									// if user wants to join two notes, they must be adjacent and the same note!
-									// so check if adjacent 
+									// also need to check if attempting to call rejoin on concatenated note block! if so, don't do anything! 
+									var id = options.$trigger.attr("id");
+									var blockHeader = document.getElementById( id.substring(id.indexOf("col_")) );
+									if(blockHeader.getAttribute("hasnote") == -1){
+										return;
+									}
+
 									rejoin(options.$trigger.attr("id"), false, pianoRollObject); // preserve any green notes when splitting
 								}
-							},
+							}
+							/*
 							"Delete": {
 								name: "Delete", 
 								icon: "delete",
 								callback: function(key, options){
 									//console.log(options);
 									//alert(options.$trigger.attr("id") );
+									
+									// need to check if attempting to call delete on concatenated note block! if so, don't do anything! 
+									var id = options.$trigger.attr("id");
+									var blockHeader = document.getElementById( id.substring(id.indexOf("col_")) );
+									if(blockHeader.getAttribute("hasnote") == -1){
+										return;
+									}
+									
 									var block = document.getElementById(options.$trigger.attr("id"));
 									block.style.backgroundColor = "transparent";
 								}
-							}
+							}*/
 						}
 					}
 				}
@@ -266,7 +289,6 @@ function subdivide(elementId, clearColumn, pianoRollObject){
 			block.style.borderRight = "1px solid #000";
 			block.id = block.id + "-1";
 			
-			block2.setAttribute("length", "sixteenth");
 			block2.setAttribute("volume", block.getAttribute("volume"));	// set volume to whatever block's volume is
 			block2.setAttribute("type", block.getAttribute("type")); 		// same for type of note
 			block2.style.width = '20px';
@@ -289,7 +311,19 @@ function subdivide(elementId, clearColumn, pianoRollObject){
 			block2.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
 			
 			// then put block2 after block1 in DOM
-			block.parentNode.insertBefore(block2, block.nextSibling);		
+			block.parentNode.insertBefore(block2, block.nextSibling);	
+
+			// special case here.
+			// what if the note being subdivided is a concatenated note block (i.e. length = 'eighth-eighth')
+			// then block2 will need to adopt the original note's neighbor's length, but with 'sixteenth' prepended
+			// since block2 will be the new head for that concatenated block 
+			// check for the hyphen, which is indicative of a concatenated block
+			if(block2.getAttribute("length").indexOf("-") > 0){
+				var neighborLength = block2.nextSibling.getAttribute("length");
+				block2.setAttribute("length", "sixteenth-" + neighborLength);
+			}else{
+				block2.setAttribute("length", "sixteenth");
+			}
 		}
 	}
 }
@@ -298,18 +332,19 @@ function subdivide(elementId, clearColumn, pianoRollObject){
 // take an element node id as parameter, and true or false if you want to clear a whole column (no green in any block of the column)
 function rejoin(elementId, clearColumn, pianoRollObject){
 
-	var block = elementId;
+	block = document.getElementById(elementId);
 	
-	if(elementId.indexOf("-1") < 0){
-		// the elementId passed should always have a -1 appended for the left 16th note column. 
-		// because we're rejoining, we have to look for a column with "-1" in the id 
-		// this becomes useful when we're switching between instruments and one has an eighth
-		// in the same location where currently it's split into two 16ths. there's no proper id 
-		// for an eighth note, but the 16th is there, so we have to get that one by appending "-1".
-		block = block + "-1";
+	// if block is null, it doesn't exist. it might be a 16th note that should be an 8th note 
+	// or vice versa	
+	if(block === null){
+		// is elementId referring to a 16th note?
+		if(document.getElementById(elementId + '-1') !== null){
+			block = document.getElementById(elementId + '-1');
+		}else{
+			block = document.getElementById(elementId.substring(0, elementId.indexOf('-')));
+		}
 	}
 	
-	block = document.getElementById(block);
 	var adjacentBlock = block.nextSibling; 
 	var blockHeader = block.id.substring(block.id.indexOf("col_"));
 	
@@ -323,7 +358,7 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 	blockHeader = column[0];
 	
 	// join two 16th note columns - must join from left!!!
-	if(blockHeader.id.indexOf("-2") < 0){
+	if(block.id.indexOf("-1") > 0 && blockHeader.id.indexOf("-2") < 0){
 		
 		// take care of column header first 
 		// this renames the 1st half of the block (i.e. col_1-1) back to the original (i.e. col_1)
@@ -352,12 +387,30 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 			blockHeader.parentNode.removeChild(blockHeader.nextSibling);
 		}
 		
-		// if a PianoRoll object is passed in, do some changes for the current instrument here 
+		// if a PianoRoll object is passed in, do some changes for the current instrument here
 		if(pianoRollObject && $('#' + elementId).css("background-color") === "rgb(0, 178, 0)"){
 			
+			// what if the right 16th note is actually a concatenated note block!?
+			// need to keep track of its current length to add to this new eighth note being reformed 
+			var rightLength = adjacentBlock.getAttribute("length");
+			rightLength = rightLength.substring(rightLength.indexOf('-') + 1);
+			var newLength = "eighth-" + rightLength;
+			
+			// update new eighth note block after rejoinment 
+			var oBlock = document.getElementById(elementId);
+			oBlock.setAttribute("length", newLength);
+			
+			// remove right border 
+			var boldBorder = parseInt(elementId.match(/[0-9]{1,}/g)[0]) + 1;
+			if(boldBorder % 8 === 0){
+				$('#' + elementId).css("border-right", "3px solid transparent");
+			}else{
+				$('#' + elementId).css("border-right", "1px solid transparent");
+			}
+			
 			// add renamed note to activeNotes, delete old ones only if notes being rejoined are green (i.e. belong to this instrument; not onion-skin)
-			var originalBlock = elementId.substring(0, elementId.indexOf("-"));
-			pianoRollObject.currentInstrument.activeNotes[originalBlock] = 1;
+			// because sometimes you might want to rejoin empty columns, in which you don't need to do any of this stuff here 
+			pianoRollObject.currentInstrument.activeNotes[elementId] = oBlock.getAttribute("length").split('-').length;
 			
 			// also remove from active notes 
 			for(note in pianoRollObject.currentInstrument.activeNotes){
@@ -367,26 +420,41 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 			}
 		}
 		
+		// done here 
+		return;
 	}
 	
-	
+	// joining an arbitrary number of notes 
+	// btw, check out adjBlockHeader.getAttribute("hasnote") == 1 in the if statement. this is a good lesson in === vs ==.
+	// even though I set the value of "hasnote" to a number, it gets stored as a string. using === will yield 
+	// the wrong behavior because it won't implicitly convert types, and I'm comparing it with a number.
+	var adjBlockHeader = document.getElementById( adjacentBlock.id.substring(adjacentBlock.id.indexOf("col_")) );
+
 	if(block.style.backgroundColor === "rgb(0, 178, 0)" && 
-	   adjacentBlock.style.backgroundColor === "rgb(0, 178, 0)"){
+	   adjacentBlock.style.backgroundColor === "rgb(0, 178, 0)" && 
+	   adjBlockHeader.getAttribute("hasnote") == 1){
 	
-	
-		//console.log("ok to rejoin");
 		// take the length of the adjacent block and add it to the current block
 		// i.e. if current block is an eighth, and the adjacent is sixteenth, 
 		// change the current block length attribute to "eighth-sixteenth"
 		// (make sure to add 'eighth-sixteenth' as a length option in the length object in globals)
+		var newLength = block.getAttribute('length') + '-' + adjacentBlock.getAttribute('length');
+		block.setAttribute('length', newLength); 
+		
+		// for this note's entry in activeNotes, increment it based on the number of notes that are 
+		// concatenated in it 
+		var numNotes = newLength.split('-').length;
+		pianoRollObject.currentInstrument.activeNotes[block.id] = numNotes;
 		
 		// then remove the right border from the current block so the note looks elongated appropriately
+		block.style.borderRight = "1px solid transparent"; 
 		
-		// important! change the current block's COLUMN HEADER's attribute "hasNote" to "1.5" !!!
-		// then in the readInNotes function, when you loop through the headers, if it sees 1.5, this means
-		// the current column has an eighth note joined with a sixteenth! so make sure to skip the next column.
-		// this way, no additional unnecessary notes will get added to the notes array.  
-		// additionally, add support for "hasNote === 2, 2.5, 3, 3.5, 4, ..."
+		// change adjacent block column header's hasnote attribute to -1 since it got concatenated with the current block
+        // using -1 will be helpful in identifying concatenated blocks 		
+		adjBlockHeader.setAttribute('hasnote', -1);
+		
+		// remove the adjacent note from activeNotes 
+		delete pianoRollObject.currentInstrument.activeNotes[adjacentBlock.id];
 		
 		// ok, but how about deleting different length notes? 
 		// how about this - keep a "head" reference attribute to an adjoined note. i.e. 
@@ -404,10 +472,7 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 		// also, need to think about this 
 		// when switching instruments, you need to also go through each note block's length attribute 
 		// in the notes array to determine if any changes need to be made to any note block borders and
-		// background color. have to consider eighth-sixteenth notes and different lengths 
-		// need to make sure whatever lengths are given to each note in the notes array is REFLECTED WHEN
-		// SWITCHING INSTRUMENTS! this means when switching, loop through notes array, look at length of each note,
-		// and then doing the subdivide or rejoin as needed. therefore, subdivide and rejoin should be separate, standalone functions!
+		// background color.
 		
 	}
 

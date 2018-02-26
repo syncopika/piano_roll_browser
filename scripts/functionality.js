@@ -69,13 +69,24 @@ function readInNotes(pianoRollObject){
 					// add note to array
 					notes.push(new Note(freq, getCorrectLength(column[j].getAttribute("length"), pianoRollObject), column[j]));
 					
-					/* there's a weird bug(?) that I haven't figured out yet - for instrument 2 of the intrada demo, if you switch from instrument 2 to 3, some of the notes
+					/* 
+					    there's a weird bug(?) that I haven't figured out yet - for instrument 2 of the intrada demo, if you switch from instrument 2 to 3, some of the notes
 						from instrument 2 show up with instrument 3's notes (should be just instrument 3's notes). then if you check instrument 2's activeNotes, you'll see that 
 						the 2nd note (G5_col5) is somehow removed (along with some other notes presumably). really weird. for now I'll just ensure that activeNotes reflects 
 						the current notes by adding them here if they're not in activeNotes (although I'm pretty sure I shouldn't have to do this).
 					*/
 					if(pianoRollObject.currentInstrument.activeNotes[column[j].id] === undefined){
 						pianoRollObject.currentInstrument.activeNotes[column[j].id] = 1;
+					}
+					
+					// important! since an arbitrary number of notes can be rejoined, remember that notes that get joined have their column header's hasnote attribute set to -1.
+					// but, we need to ignore those columns and not count them as rests (as we would do normally)
+					// for this current note, we need to know how many notes have been concatenated. then take that number and add to i, the counter. that way those concatenated notes 
+					// won't be treated as rests and added to the notes array. 
+					if(column[j].getAttribute("length").indexOf("-") > 0){
+						// the presence of the hyphen indicates a concatenation of multiple notes 
+						var numNotes = (column[j].getAttribute("length")).split('-').length;
+						i += numNotes - 1; // increment i 
 					}
 					
 					// note found, stop 
@@ -108,8 +119,8 @@ function readAndPlayNote(array, index, currentInstrument, pianoRollObject){
 	// when to stop playing 
 	if(index === array.length){
 		currentInstrument.gain.gain.setTargetAtTime(0, 0, 0.010);
-		//currentInstrument.gain.gain.value = 0;
 	}else{
+		
 		currentInstrument.oscillator.type = currentInstrument.waveType;
 
 		// tip! by setting value at a certain time, this prevents the 'gliding' from one freq. to the next 
@@ -127,54 +138,43 @@ function readAndPlayNote(array, index, currentInstrument, pianoRollObject){
 		// it was only detectable when I added the setTimeout below where I set gain to 0.
 		// this is fixed by always setting gain to 0 if a note's frequency is 0.
 		var val = array[index].freq > 0 ? parseFloat(array[index].block.volume) : 0.0;
-		currentInstrument.gain.gain.setTargetAtTime(val, 0, 0.010);
+		currentInstrument.gain.gain.setTargetAtTime(val, 0, 0.010); // start the note
 		 
 		if(index < array.length){
-			// hold the current note for whatever duration was specified
-			// in other words, hold this current note for array[index].duration, then move on to the next note.
+			// hold this current note for array[index].duration, then move on to the next note.
 			// note that index is pre-incremented for the next note, but we also need the duration for this current index!
 			// therefore, currIndex will hold the current note's index.
 			var currIndex = index;
 			
 			// change gain to 0 after a really small amount of time to give the impression of articulation
 			// this amount of time will vary with the bpm 
-			// so far it seems that for bpm 120 (500 ms) and below, 95 ms is a good amount of space (not staccato)
-			// for bpm 150 - 185, 70 ms is good, and past that, 50 ms
 			// remember: currentTempo variable is in milliseconds
 			var spacer;
-			if(pianoRollObject.currentTempo >= 500){
-				spacer = 95;
-			}else if(pianoRollObject.currentTempo >= 324 && pianoRollObject.currentTempo < 500){
-				// bpm: 150 - 185
-				spacer = 70;
+			
+			// by default, ~70% of the note duration should be played 
+			// the rest of the time can be devoted to the spacer 
+			var realDuration;
+			
+			if(array[currIndex].block.style === "staccato"){
+				realDuration = Math.round(0.55 * array[currIndex].duration);
+			}else if(array[currIndex].block.style === "legato"){
+				realDuration = Math.round(0.85 * array[currIndex].duration);
 			}else{
-				spacer = 50;
+				realDuration = Math.round(0.70 * array[currIndex].duration);
 			}
+			spacer = array[currIndex].duration - realDuration;
+
+			pianoRollObject.timers.push(setTimeout(function(){  
 			
-			// but, if a certain note's style is staccato or legato, spacer will
-			// have to change accordingly as well
-			if(array[index].block.style === "legato"){
-				if(pianoRollObject.currentTempo >= 500){
-					spacer = 200;
-				}else if(pianoRollObject.currentTempo >= 324 && pianoRollObject.currentTempo < 500){
-					spacer = 180;
-				}else{
-					spacer = 160;
-				}
-			}else if(array[index].block.style === "staccato"){
-				if(pianoRollObject.currentTempo >= 500){
-					spacer = 70;
-				}else if(pianoRollObject.currentTempo >= 324 && pianoRollObject.currentTempo < 500){
-					spacer = 50;
-				}else{
-					spacer = 30;
-				}
-			}
+			    // silence the note
+				currentInstrument.gain.gain.setTargetAtTime(0, 0, 0.010);
 			
-			setTimeout(function(){  currentInstrument.gain.gain.setTargetAtTime(0, 0, 0.010); }, spacer); 
+			    // move on to next note
+				// create a new timer and push to timers array 
+				pianoRollObject.timers.push( setTimeout(function(){readAndPlayNote(array, ++index, currentInstrument, pianoRollObject)}, spacer) ); 
 			
-			// create a new timer and push to timers array 
-			pianoRollObject.timers.push( setTimeout(function(){readAndPlayNote(array, ++index, currentInstrument, pianoRollObject)}, array[currIndex].duration) ); 
+			}, realDuration)
+			);
 		}
 	}
 }
@@ -190,7 +190,7 @@ function stopPlay(pianoRollObject){
 	}
 	pianoRollObject.timers = [];
 	for(var i = 0; i < pianoRollObject.instruments.length; i++){
-		pianoRollObject.instruments[i].gain.gain.setValueAtTime(0, 0);
+		pianoRollObject.instruments[i].gain.gain.setTargetAtTime(0, 0, 0.010);
 	}
 }
 
@@ -259,6 +259,29 @@ function getCorrectLength(length, pianoRollObject){
 	var currentTempo = pianoRollObject.currentTempo;
 	if(length === "quarter"){
 		return Math.round(currentTempo);
+	}else if(length.indexOf('-') > 0){
+		
+		// in this case if there's a hyphen, the length is a concatenation of multiple lengths,
+		// i.e. 'eighth-eighth' or 'eighth-sixteenth' 
+		var splitLength = length.split('-');
+	    
+		// keep a count of how many eighth and sixteenth notes are part of this note
+		var lengths = {'eighth': 0, 'sixteenth': 0};
+		
+		splitLength.forEach(function(aLength){
+			if(aLength === 'eighth'){
+				lengths['eighth'] = ++lengths['eighth']; 
+			}else if(aLength === 'sixteenth'){
+				lengths['sixteenth'] = ++lengths['sixteenth']; 
+			}
+		});
+		
+		// calculate the length of this note depending on how many eighths and sixteenths
+		// add the number of eighth notes divided by 2, the number of sixteenth notes divided by 4
+		var total = (lengths['eighth'] / pianoRollObject.noteLengths["eighth"]) + (lengths['sixteenth'] / pianoRollObject.noteLengths["sixteenth"]);
+		
+		return Math.round(currentTempo * total);
+		
 	}else if(length === "eighth"){
 		return Math.round(currentTempo / pianoRollObject.noteLengths["eighth"]);
 	}else if(length === "sixteenth"){
