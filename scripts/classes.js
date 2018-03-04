@@ -141,17 +141,13 @@ function Instrument(name, gain, notesArray){
 
 /*****  NOTE CLASS ******/
 // this class will hold a note's frequency, duration, and div element
-// duration is in miliseconds (i.e. 600, 300, 1000) - because using setTimeout to play notes for specified duration
+// duration is in milliseconds (i.e. 600, 300, 1000)
 function Note(freq, duration, block){
 
 	this.freq = freq;
 	this.duration = duration;
 	this.block = new ElementNode(block);
 
-	// if the note block passed in is supposed to be a rest
-	if(freq === 0){
-		this.block.id = block.id; // the id will be the column header id  
-	}
 }
 
 /****** CUSTOM DOM ELEMENT NODE CLASS *********/

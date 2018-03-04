@@ -94,10 +94,10 @@ function readInNotes(pianoRollObject){
 			}		
 		}else{
 			if(columnHeaders[i].id.indexOf("-1") > 0 || columnHeaders[i].id.indexOf("-2") > 0){
-				// just pass in the column header id for rests 
-				notes.push(new Note(0.0,  Math.round(tempo / pianoRollObject.noteLengths["sixteenth"]), document.getElementById( columnHeaders[i].id )));
+				// just pass in the C7 note of the column id for rests 
+				notes.push(new Note(0.0,  Math.round(tempo / pianoRollObject.noteLengths["sixteenth"]), document.getElementById( 'C7' + columnHeaders[i].id )));
 			}else{
-				notes.push(new Note(0.0,  Math.round(tempo / pianoRollObject.noteLengths["eighth"]), document.getElementById( columnHeaders[i].id )));
+				notes.push(new Note(0.0,  Math.round(tempo / pianoRollObject.noteLengths["eighth"]), document.getElementById( 'C7' + columnHeaders[i].id )));
 			}
 		}
 	}
@@ -217,7 +217,7 @@ function scheduler(pianoRoll, allInstruments){
 			// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
 			// this is fixed by always setting gain to 0 if a note's frequency is 0.
 			var val = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
-			oscGainNode.gain.setTargetAtTime(val, nextTime[i], 0.001); 
+			oscGainNode.gain.setTargetAtTime(val, nextTime[i], 0.0020); 
 			
 			// by default, ~70% of the note duration should be played 
 			// the rest of the time can be devoted to the spacer 
@@ -236,7 +236,7 @@ function scheduler(pianoRoll, allInstruments){
 			pianoRoll.lastTime = nextTime[i];
 			
 			// change gain to 0 after a really small amount of time to give the impression of articulation
-			oscGainNode.gain.setTargetAtTime(0, nextTime[i] + (realDuration / 1000) - .002, 0.001);
+			oscGainNode.gain.setTargetAtTime(0, nextTime[i] + (realDuration / 1000) - .002, 0.0010);
 			osc.stop( nextTime[i] + (realDuration / 1000) );
 			
 			// update nextTime 
@@ -333,7 +333,7 @@ function changeTempo(pianoRollObject){
 	// go through all instruments and adjust duration of each note in their note arrays
 	// according to new current tempo
 	for(var i = 0; i < pianoRollObject.instruments.length; i++){
-		if(pianoRollObject.instruments[i] != pianoRollObject.currentInstrument){
+		if(pianoRollObject.instruments[i] !== pianoRollObject.currentInstrument){
 			var noteArray = pianoRollObject.instruments[i].notes;
 			for(var j = 0; j < noteArray.length; j++){
 				if(noteArray[j].duration > 1){
@@ -353,6 +353,10 @@ function getCorrectLength(length, pianoRollObject){
 	var currentTempo = pianoRollObject.currentTempo;
 	if(length === "quarter"){
 		return Math.round(currentTempo);
+	}else if(length === "eighth"){
+		return Math.round(currentTempo / pianoRollObject.noteLengths["eighth"]);
+	}else if(length === "sixteenth"){
+		return Math.round(currentTempo / pianoRollObject.noteLengths["sixteenth"]);
 	}else if(length.indexOf('-') > 0){
 		
 		// in this case if there's a hyphen, the length is a concatenation of multiple lengths,
@@ -376,10 +380,6 @@ function getCorrectLength(length, pianoRollObject){
 		
 		return Math.round(currentTempo * total);
 		
-	}else if(length === "eighth"){
-		return Math.round(currentTempo / pianoRollObject.noteLengths["eighth"]);
-	}else if(length === "sixteenth"){
-		return Math.round(currentTempo / pianoRollObject.noteLengths["sixteenth"]);
 	}
 }
 
