@@ -18,14 +18,21 @@ function clickNote(id, waveType, pianoRollObject){
 	var parent = document.getElementById(id).parentNode.id;
 	parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
 	
-	oscillator.type = waveType;
-	oscillator.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], 0);
-	g.gain.setTargetAtTime(.3, context.currentTime, 0.015);
+	// create a new oscillator just for this note 
+	var osc = pianoRollObject.audioContext.createOscillator();
+	osc.type = waveType;
+	osc.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], 0);
+	
+	// borrow the currentInstrument's gain node 
+	var gain = pianoRollObject.currentInstrument.gain;
+	osc.connect(gain);
+	
+	gain.gain.setTargetAtTime(.3, pianoRollObject.audioContext.currentTime, 0.002);
+	osc.start(0);
 	
 	// this setTimeout makes sure the oscillator gets silent again
-	setTimeout(function(){
-		g.gain.setTargetAtTime(0, context.currentTime, 0.010);
-	}, 100);
+	gain.gain.setTargetAtTime(0, pianoRollObject.audioContext.currentTime + 0.080, 0.002);
+	osc.stop(pianoRollObject.audioContext.currentTime + .100);
 
 }
 
@@ -59,12 +66,14 @@ function addNote(id, pianoRollObject){
 		document.getElementById(headerId).setAttribute("hasNote", 0);
 		
 		// update right border (this is only really needed for concatenated note blocks i.e. length = eighth-eighth)
-		var blockHeaderId = id.substring(id.indexOf("col_"));
-		var boldBorder = parseInt(blockHeaderId.substring(blockHeaderId.indexOf("_") + 1).match(/[0-9]{1,}/g)[0]) + 1;
-		if(boldBorder % 8 === 0){
-			$('#' + id).css("border-right", "3px solid #000");
-		}else{
-			$('#' + id).css("border-right", "1px solid #000");
+		// make sure it's not a left 16th block (i.e. like col_32-1)
+		if(headerId.indexOf('-') < 0){
+			var boldBorder = parseInt(headerId.substring(headerId.indexOf("_") + 1).match(/[0-9]{1,}/g)[0]) + 1;
+			if(boldBorder % 8 === 0){
+				$('#' + id).css("border-right", "3px solid #000");
+			}else{
+				$('#' + id).css("border-right", "1px solid #000");
+			}
 		}
 		
 		// if neighbor is green, make sure their column's hasnote is 1!
@@ -228,7 +237,6 @@ function addNewMeasure(pianoRollObject){
 		newHeader.style.margin = "0 auto";
 		newHeader.style.display = 'inline-block';		
 		
-		
 		if(i + 1 === pianoRollObject.subdivision){
 			newHeader.style.borderRight = "3px solid #000";
 		}else{
@@ -244,9 +252,22 @@ function addNewMeasure(pianoRollObject){
 		// this attribute should help optimize performance a bit
 		newHeader.setAttribute("hasNote", 0); 
 		
-		newHeader.textContent =  i + 1;
+		if(i !== 0){
+			// don't label the first header column since that's the measure number 
+			newHeader.textContent =  i + 1;
+		}
 		
 		dummyParent.insertBefore(newHeader, dummy);
+		
+		// mark the measure number 
+		if(i === 0){
+			var measureNumber = document.createElement("h2");
+			measureNumber.innerHTML = (pianoRollObject.numberOfMeasures + 1);
+			measureNumber.style.margin = '0 0 0 0';
+			measureNumber.style.color = '#2980B9';
+			newHeader.appendChild(measureNumber);
+			newHeader.style.borderRight = "1px solid transparent";
+		}
 	}
 	
 	// now add new columns for each note
@@ -266,6 +287,7 @@ function addNewMeasure(pianoRollObject){
 			newColumn.style.width = '40px';
 			newColumn.style.height = '15px';
 			newColumn.style.verticalAlign = "middle";
+			newColumn.style.backgroundColor = "transparent";
 			
 			// IMPORTANT! new attributes for each note
 			newColumn.setAttribute("volume", "0.3");
@@ -435,137 +457,134 @@ function drawNotes(instrumentObject, pianoRollObject){
 			continue;
 		}
 		
-		// only notes have a valid id (rests have null for id field)
-		if(notes[i].block.id !== null){		
-			var elementExists = document.getElementById( notes[i].block.id );
-	
-			// if we need to paint in an eighth note, but the column is currently subdivided 
-			var elementLength = notes[i].block.length.split('-');
-			if(!elementExists && elementLength[0] === "eighth"){
-				
-				var blockId = notes[i].block.id;
-				
-				rejoin(blockId, true, pianoRollObject);
-		
-				// now that the correct column should be in place, assign elementExists the id of the note we need to draw in 
-				elementExists = document.getElementById( notes[i].block.id );
-			
-			}else if(!elementExists && elementLength[0] === "sixteenth"){
+		var elementExists = document.getElementById( notes[i].block.id );
 
-				// now if the note to draw in is a 16th note and there's no place to put it, create the subdivision
-				var blockId = notes[i].block.id;
-				var columnToFind = blockId.substring(0, blockId.indexOf("-"));
-				subdivide(columnToFind, true, pianoRollObject);
-				
-				elementExists = document.getElementById( notes[i].block.id );
-				
-			}
+		// if we need to paint in an eighth note, but the column is currently subdivided 
+		var elementLength = notes[i].block.length.split('-');
+		if(!elementExists && elementLength[0] === "eighth"){
 			
-			// make sure to set column header attr "hasNote" to 1!!!
-			var columnHeader = elementExists.id.substring(elementExists.id.indexOf("col_"));
-			columnHeader = document.getElementById(columnHeader);
-			columnHeader.setAttribute("hasnote", "1");
+			var blockId = notes[i].block.id;
 			
-			// color in note
-			elementExists.style.backgroundColor = "rgb(0, 178, 0)";
-			// fill in attributes 
-			if(notes[i].block.volume === ""){
-				notes[i].block.volume = instrumentObject.volume;
-			}
-			if(notes[i].block.style === "undefined"){
-				notes[i].block.style = "default";
-			}
-			elementExists.setAttribute("volume", notes[i].block.volume);
-			elementExists.setAttribute("type", notes[i].block.style);
-			elementExists.setAttribute("length", notes[i].block.length);
-			
-			// special case for concatenated note block.
-			if(elementExists.getAttribute("length").indexOf('-') > 0){
-				
-				// remove right border - REALLY NEED TO MAKE A FUNCTION FOR THIS!!!
-				// make sure to use the column header to extract column number, not the acutal note block!!
-				var boldBorder = parseInt(columnHeader.id.match(/[0-9]{1,}/g)[0]) + 1;
-				if(boldBorder % 8 === 0){
-					$('#' + elementExists.id).css("border-right", "3px solid transparent");
-				}else{
-					$('#' + elementExists.id).css("border-right", "1px solid transparent");
-				}
-				
-				// need to draw in rest of note block. 
-				var noteHead = elementExists.getAttribute("length").split('-').shift(); // get the head (i.e. is the beginning a 16th or 8th note)
-				
-				// subtract the value of noteHead (can only be 8th or 16th) from the current duration 
-				var currDuration = notes[i].duration - (pianoRollObject.currentTempo / pianoRollObject.noteLengths[noteHead]);
-				
-				// the rest of the concatenated note block. ignore first note since we just drew it in
-				var restOfNote = elementExists.getAttribute("length").split('-').slice(1);
-				
-				// currNote is the next neighbor
-				var currNote = elementExists.nextSibling;
-				
-				for(var j = 0; j < restOfNote.length; j++){
-					// figure out what kind of note the next one is by doing some math given the note's duration
-					var currLength = restOfNote[j];
-					
-					// get the column header 
-					var colHeader = document.getElementById( currNote.id.substring(currNote.id.indexOf("col_")) );
-					
-					if(currLength === "eighth"){
-						// check if currNote.length is an eighth note. if not, rejoin and color in 
-						if(currNote.getAttribute("length") === "eighth"){
-							currNote.style.backgroundColor = "rgb(0, 178, 0)";
-						}else{
-							rejoin(currNote.id, true, pianoRollObject);
+			rejoin(blockId, true, pianoRollObject);
+	
+			// now that the correct column should be in place, assign elementExists the id of the note we need to draw in 
+			elementExists = document.getElementById( notes[i].block.id );
 		
-							// now that the correct column should be in place, get the sibling again of elementExists 
-							currNote = elementExists.nextSibling;
-							currNote.style.backgroundColor = "rgb(0, 178, 0)";
-							
-							// make sure to update the column header's hasnote to -1 as well!
-							colHeader = document.getElementById( currNote.id.substring(currNote.id.indexOf("col_")) );
-						}
-					}else{
-						// check if neighbor is a 16th note. if not, subdivide and color 
-						if(currNote.getAttribute("length") === "sixteenth"){
-							currNote.style.backgroundColor = "rgb(0, 178, 0)";
-						}else{
-							subdivide(currNote.id, true, pianoRollObject);
-		
-							// now that the correct column should be in place, get the sibling again of elementExists 
-							currNote = elementExists.nextSibling;
-							currNote.style.backgroundColor = "rgb(0, 178, 0)";
-							
-							document.getElementById( currNote.id.substring(currNote.id.indexOf("col_")) );
-						}
-					}
-					
-					// change hasnote to -1 
-					colHeader.setAttribute("hasnote", -1);
-					
-					if(j < restOfNote.length - 1){
-						boldBorder = parseInt(colHeader.id.match(/[0-9]{1,}/g)[0]) + 1;
-						if(boldBorder % 8 === 0){
-							$('#' + currNote.id).css("border-right", "3px solid transparent");
-						}else{
-							$('#' + currNote.id).css("border-right", "1px solid transparent");
-						}
-					}
-					
-					currNote = currNote.nextSibling;
-				}
-				
-				// after for loop, make sure to give border on last segment of concatenated note block
-				currNote = currNote.previousSibling;
-				columnHeader = currNote.id.substring(elementExists.id.indexOf("col_"));
-				var boldBorder = parseInt(columnHeader.match(/[0-9]{1,}/g)[0]) + 1;
-				if(boldBorder % 8 === 0){
-					$('#' + currNote.id).css("border-right", "3px solid #000");
-				}else{
-					$('#' + currNote.id).css("border-right", "1px solid #000");
-				}
-			}
+		}else if(!elementExists && elementLength[0] === "sixteenth"){
+
+			// now if the note to draw in is a 16th note and there's no place to put it, create the subdivision
+			var blockId = notes[i].block.id;
+			var columnToFind = blockId.substring(0, blockId.indexOf("-"));
+			subdivide(columnToFind, true, pianoRollObject);
+			
+			elementExists = document.getElementById( notes[i].block.id );
 			
 		}
+		
+		// make sure to set column header attr "hasNote" to 1!!!
+		var columnHeader = elementExists.id.substring(elementExists.id.indexOf("col_"));
+		columnHeader = document.getElementById(columnHeader);
+		columnHeader.setAttribute("hasnote", "1");
+		
+		// color in note
+		elementExists.style.backgroundColor = "rgb(0, 178, 0)";
+		// fill in attributes 
+		if(notes[i].block.volume === ""){
+			notes[i].block.volume = instrumentObject.volume;
+		}
+		if(notes[i].block.style === "undefined"){
+			notes[i].block.style = "default";
+		}
+		elementExists.setAttribute("volume", notes[i].block.volume);
+		elementExists.setAttribute("type", notes[i].block.style);
+		elementExists.setAttribute("length", notes[i].block.length);
+		
+		// special case for concatenated note block.
+		if(elementExists.getAttribute("length").indexOf('-') > 0){
+			
+			// remove right border - REALLY NEED TO MAKE A FUNCTION FOR THIS!!!
+			// make sure to use the column header to extract column number, not the acutal note block!!
+			var boldBorder = parseInt(columnHeader.id.match(/[0-9]{1,}/g)[0]) + 1;
+			if(boldBorder % 8 === 0){
+				$('#' + elementExists.id).css("border-right", "3px solid transparent");
+			}else{
+				$('#' + elementExists.id).css("border-right", "1px solid transparent");
+			}
+			
+			// need to draw in rest of note block. 
+			var noteHead = elementExists.getAttribute("length").split('-').shift(); // get the head (i.e. is the beginning a 16th or 8th note)
+			
+			// subtract the value of noteHead (can only be 8th or 16th) from the current duration 
+			var currDuration = notes[i].duration - (pianoRollObject.currentTempo / pianoRollObject.noteLengths[noteHead]);
+			
+			// the rest of the concatenated note block. ignore first note since we just drew it in
+			var restOfNote = elementExists.getAttribute("length").split('-').slice(1);
+			
+			// currNote is the next neighbor
+			var currNote = elementExists.nextSibling;
+			
+			for(var j = 0; j < restOfNote.length; j++){
+				// figure out what kind of note the next one is by doing some math given the note's duration
+				var currLength = restOfNote[j];
+				
+				// get the column header 
+				var colHeader = document.getElementById( currNote.id.substring(currNote.id.indexOf("col_")) );
+				
+				if(currLength === "eighth"){
+					// check if currNote.length is an eighth note. if not, rejoin and color in 
+					if(currNote.getAttribute("length") === "eighth"){
+						currNote.style.backgroundColor = "rgb(0, 178, 0)";
+					}else{
+						rejoin(currNote.id, true, pianoRollObject);
+	
+						// now that the correct column should be in place, get the sibling again of elementExists 
+						currNote = elementExists.nextSibling;
+						currNote.style.backgroundColor = "rgb(0, 178, 0)";
+						
+						// make sure to update the column header's hasnote to -1 as well!
+						colHeader = document.getElementById( currNote.id.substring(currNote.id.indexOf("col_")) );
+					}
+				}else{
+					// check if neighbor is a 16th note. if not, subdivide and color 
+					if(currNote.getAttribute("length") === "sixteenth"){
+						currNote.style.backgroundColor = "rgb(0, 178, 0)";
+					}else{
+						subdivide(currNote.id, true, pianoRollObject);
+	
+						// now that the correct column should be in place, get the sibling again of elementExists 
+						currNote = elementExists.nextSibling;
+						currNote.style.backgroundColor = "rgb(0, 178, 0)";
+						
+						document.getElementById( currNote.id.substring(currNote.id.indexOf("col_")) );
+					}
+				}
+				
+				// change hasnote to -1 
+				colHeader.setAttribute("hasnote", -1);
+				
+				if(j < restOfNote.length - 1){
+					boldBorder = parseInt(colHeader.id.match(/[0-9]{1,}/g)[0]) + 1;
+					if(boldBorder % 8 === 0){
+						$('#' + currNote.id).css("border-right", "3px solid transparent");
+					}else{
+						$('#' + currNote.id).css("border-right", "1px solid transparent");
+					}
+				}
+				
+				currNote = currNote.nextSibling;
+			}
+			
+			// after for loop, make sure to give border on last segment of concatenated note block
+			currNote = currNote.previousSibling;
+			columnHeader = currNote.id.substring(elementExists.id.indexOf("col_"));
+			var boldBorder = parseInt(columnHeader.match(/[0-9]{1,}/g)[0]) + 1;
+			if(boldBorder % 8 === 0){
+				$('#' + currNote.id).css("border-right", "3px solid #000");
+			}else{
+				$('#' + currNote.id).css("border-right", "1px solid #000");
+			}
+		}
+
 	}
 	
 	

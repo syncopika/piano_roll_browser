@@ -114,7 +114,7 @@ function makeNoteContextMenu(pianoRollObject){
 								selected: function(){
 									var currentVolume = document.getElementById( e.data.$trigger.attr("id") ).getAttribute("volume");
 									for(key in this.options){
-										if(this.options[key].textContent === pianoRollObject.currentVolume){
+										if(this.options[key].textContent === currentVolume){
 											return (parseInt(key) + 1) + "";
 										}
 									}
@@ -133,9 +133,6 @@ function makeNoteContextMenu(pianoRollObject){
 							"Change style": {
 								name: "change style",
 								type: 'select',
-								// sadly, Chrome has decided to remove audio dezippering from their web audio implementation, thus rendering a neat 'glide' effect when changing notes to be gone. 
-								// see: https://www.chromestatus.com/features/5287995770929152
-								// however, the effect can still be achieved with setTargetAtTime - just requires a bit of experimentation to get the right values 
 								options: {1: "default", 2: "legato", 3: "staccato", 4: "glide"},
 								selected: function(){
 									var currentStyle = document.getElementById( e.data.$trigger.attr("id") ).getAttribute("type");
@@ -154,6 +151,22 @@ function makeNoteContextMenu(pianoRollObject){
 								}
 							},
 							"sep2": "------------",
+							"Join": {
+								name: "Join",
+								icon: "paste",
+								callback: function(key, options){
+									// if user wants to join two notes, they must be adjacent and the same note!
+									// also need to check if attempting to call rejoin on concatenated note block! if so, don't do anything! 
+									var id = options.$trigger.attr("id");
+									var blockHeader = document.getElementById( id.substring(id.indexOf("col_")) );
+									if(blockHeader.getAttribute("hasnote") == -1){
+										return;
+									}
+
+									rejoin(options.$trigger.attr("id"), false, pianoRollObject); // preserve any green notes when splitting
+								}
+							},
+							"sep3": "------------",
 							"Subdivide": {
 								name: "Subdivide", 
 								icon: "cut",
@@ -169,21 +182,6 @@ function makeNoteContextMenu(pianoRollObject){
 									}
 									
 									subdivide(id, false, pianoRollObject);		
-								}
-							},
-							"Join": {
-								name: "Join",
-								icon: "paste",
-								callback: function(key, options){
-									// if user wants to join two notes, they must be adjacent and the same note!
-									// also need to check if attempting to call rejoin on concatenated note block! if so, don't do anything! 
-									var id = options.$trigger.attr("id");
-									var blockHeader = document.getElementById( id.substring(id.indexOf("col_")) );
-									if(blockHeader.getAttribute("hasnote") == -1){
-										return;
-									}
-
-									rejoin(options.$trigger.attr("id"), false, pianoRollObject); // preserve any green notes when splitting
 								}
 							}
 							/*
@@ -401,7 +399,7 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 			oBlock.setAttribute("length", newLength);
 			
 			// remove right border 
-			var boldBorder = parseInt(elementId.match(/[0-9]{1,}/g)[0]) + 1;
+			var boldBorder = parseInt(blockHeader.match(/[0-9]{1,}/g)[0]) + 1;
 			if(boldBorder % 8 === 0){
 				$('#' + elementId).css("border-right", "3px solid transparent");
 			}else{
@@ -424,7 +422,7 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 		return;
 	}
 	
-	// joining an arbitrary number of notes 
+	// joining an arbitrary number of notes (including 2 8th notes)
 	// btw, check out adjBlockHeader.getAttribute("hasnote") == 1 in the if statement. this is a good lesson in === vs ==.
 	// even though I set the value of "hasnote" to a number, it gets stored as a string. using === will yield 
 	// the wrong behavior because it won't implicitly convert types, and I'm comparing it with a number.
@@ -447,7 +445,12 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 		pianoRollObject.currentInstrument.activeNotes[block.id] = numNotes;
 		
 		// then remove the right border from the current block so the note looks elongated appropriately
-		block.style.borderRight = "1px solid transparent"; 
+		var boldBorder = parseInt(blockHeader.id.match(/[0-9]{1,}/g)[0]) + 1;
+		if(boldBorder % 8 === 0){
+			$('#' + block.id).css("border-right", "3px solid transparent");
+		}else{
+			$('#' + block.id).css("border-right", "1px solid transparent");
+		}
 		
 		// change adjacent block column header's hasnote attribute to -1 since it got concatenated with the current block
         // using -1 will be helpful in identifying concatenated blocks 		

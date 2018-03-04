@@ -217,8 +217,8 @@
 - allow color customizations for highlight, note blocks
 - allow playback at specified measure 
 - allow repeats (add some new attributes to column headers)?
-- highlight current eighth note block on playback
-- please please please implement 32nd notes and ability to join 8th notes!
+- highlight current note column on playback
+- 32nd notes? mayyyybe
 */
 
 // prevent flash of unstylized content 
@@ -248,16 +248,14 @@ $('#subdiv').html("subdivision: " + pianoRoll.subdivision);
 
 /**** SET UP AUDIO CONTEXT *****/
 var context = new AudioContext();
+pianoRoll.audioContext = context;
 
 // SET UP INITIAL INSTRUMENT
-// this oscillator is used to hear notes when they get clicked on the grid
-// and for the initial instrument 
-var g = initGain();
-var oscillator = initOscillator(g);	
-g.connect(context.destination);		
+var g = initGain(context);	
+g.connect(context.destination);
 
 // put initial instrument in instruments object
-var initialInstrument = new Instrument("Instrument 1", oscillator, g, []);
+var initialInstrument = new Instrument("Instrument 1", g, []);
 pianoRoll.instruments.push(initialInstrument);
 pianoRoll.currentInstrument = pianoRoll.instruments[0];
 
@@ -368,6 +366,11 @@ http://stackoverflow.com/questions/728360/how-do-i-correctly-clone-a-javascript-
 ****/
 function generateJSON(){
 
+	var nameOfFile = prompt("please enter name: ");
+	if(nameOfFile === null){
+		return;
+	}
+
 	var jsonData = [];
 
 	pianoRoll.currentInstrument.notes = readInNotes(pianoRoll);
@@ -404,7 +407,6 @@ function generateJSON(){
 	var link = document.createElement('a');
 	link.href = url;
 	
-	var nameOfFile = prompt("please enter name: ");
 	link.download = nameOfFile + ".json";
 	
 	link.click();
@@ -478,15 +480,13 @@ function getFile(e){
 				// put each instrument into the instrument grid 
 				addNewInstrument(data[i][0].name, false, pianoRoll);
 				
-				// set up a fresh new oscillator and gain node for each instrument 
-				var newGain = initGain();
-				var newOscillator = initOscillator(newGain);
+				// set up a fresh new gain node for each instrument 
+				var newGain = initGain(context);
 				
 				var newInstrument = data[i][0];
 				newInstrument.gain = newGain;
-				newInstrument.oscillator = newOscillator;
 				
-				// connect gain and oscillator to audio context 
+				// connect gain to audio context 
 				// note that this context here has been declared at the very beginning!
 				// only one context per program 
 				newGain.connect(context.destination);
@@ -589,13 +589,11 @@ function getDemo(selectedDemo){
 			// put each instrument into the instrument grid 
 			addNewInstrument(data[i][0].name, false, pianoRoll);
 
-			// set up a fresh new oscillator and gain node for each instrument 
-			var newGain = initGain();
-			var newOscillator = initOscillator(newGain);
+			// set up a fresh new gain node for each instrument 
+			var newGain = initGain(pianoRoll.audioContext);
 			
 			var newInstrument = data[i][0];
 			newInstrument.gain = newGain;
-			newInstrument.oscillator = newOscillator;
 			
 			newGain.connect(context.destination);
 			

@@ -40,7 +40,7 @@
 {"freq":493.88,"duration":100,"block":{"id":"B4col_30-2","length":"sixteenth","volume":"0.2","style":"default"}},
 {"freq":523.25,"duration":100,"block":{"id":"C5col_31-1","length":"sixteenth","volume":"0.2","style":"default"}},
 {"freq":659.25,"duration":100,"block":{"id":"E5col_31-2","length":"sixteenth","volume":"0.2","style":"default"}},
-{"freq":698.46,"duration":200,"block":{"id":"F5col_32","length":"eighth","volume":"0.4","style":"glide"}},
+{"freq":698.46,"duration":200,"block":{"id":"F5col_32","length":"eighth","volume":"0.3","style":"glide"}},
 {"freq":622.25,"duration":200,"block":{"id":"Eb5col_33","length":"eighth","volume":"0.2","style":"default"}},
 {"freq":587.33,"duration":200,"block":{"id":"D5col_34","length":"eighth","volume":"0.2","style":"default"}},
 {"freq":523.25,"duration":200,"block":{"id":"C5col_35","length":"eighth","volume":"0.2","style":"default"}},

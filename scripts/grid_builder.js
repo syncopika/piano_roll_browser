@@ -14,6 +14,10 @@ set up grid headers first (the headers for each column)
 function buildGridHeader( columnHeaderRowId, pianoRollObject ){
 	
 	var columnHeaderRow = $( '#' + columnHeaderRowId );
+	
+	// wherever each new measure starts, mark it
+	// start at 2 (1 is implicit)
+	var measureCounter = 2; 
 
 	// this will provide the headers for each column in the grid (i.e. number for each beat/subbeat) 
 	for(var i = 0; i < pianoRollObject.numberOfMeasures * pianoRollObject.subdivision + 1; i++){
@@ -33,10 +37,22 @@ function buildGridHeader( columnHeaderRowId, pianoRollObject ){
 			}else if(i !== pianoRollObject.numberOfMeasures * pianoRollObject.subdivision + 1){
 				// subdiv goes from 1 to 16. if more than 16, start at 1 again. 
 				var subdiv = (i % pianoRollObject.subdivision) === 0 ? pianoRollObject.subdivision : (i % pianoRollObject.subdivision);
-				if(pianoRollObject.subdivision === subdiv){
-					columnHeader.style.borderRight = '3px solid #000';
+				
+				// mark the measure number 
+				if(subdiv === 1){
+					var measureNumber = document.createElement("h2");
+					measureNumber.innerHTML = measureCounter;
+					measureNumber.style.margin = '0 0 0 0';
+					measureNumber.style.color = '#2980B9';
+					columnHeader.appendChild(measureNumber);
+					measureCounter++;
+					columnHeader.style.borderRight = "1px solid transparent";
+				}else{
+					if(pianoRollObject.subdivision === subdiv){
+						columnHeader.style.borderRight = '3px solid #000';
+					}
+					columnHeader.textContent = subdiv; 
 				}
-				columnHeader.textContent = subdiv; 
 			}
 		}
 		

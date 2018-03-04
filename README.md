@@ -1,8 +1,8 @@
 # piano_roll_browser    
 a music sequencer inspired by LMMS, one of the best software applications ever!    
-also carries a bit of influence from PxTone Collage, another great application!      
+also influenced a bit by PxTone Collage, another great application!      
     
-This project is ongoing. Please use on Google Chrome for best results.           
+This project is a work-in-progress.            
      
 ### instructions:    
 - to change the name of the piece or the composer, double click on 'title' or 'composer', just above the buttons.     
@@ -13,10 +13,9 @@ This project is ongoing. Please use on Google Chrome for best results.
 please note: each column can only have 1 note per instrument.    
 check out a demo! see the demo dropdown box.    
     
-### known problems:  
+### current problems:  
 can get pretty slow when changing instruments.    
-performance seems slower and the audio clicks in Firefox (the workaround I used seems to just work in Chrome)    
-can be used in Edge, but loading the demos completely fails and stalls the page :<    
+json loading seems a lot slower in Firefox compared to Chrome?     
     
 ### current next steps:    
 still need to delete instruments.    
@@ -32,7 +31,7 @@ be able to toggle onion skin?
     
 ### implementation / design:    
 
-There aren't too many purely HTML piano rolls out there, but from the ones I've seen, it appears that utilizing the canvas element
+There aren't too many purely HTML piano rolls out there (I think?), but from the ones I've seen, it appears that utilizing the canvas element
 is very effective.    
     
 My implementation does not use the canvas element and instead relies on just DOM manipulation of a grid to manipulate notes. 

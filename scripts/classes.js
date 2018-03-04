@@ -14,7 +14,10 @@ function PianoRoll(){
 	this.currentTempo = 500; 	// hold the current tempo - in milliseconds!! default is 120 bpm
 	this.instruments = [];		// list of instruments will be an array
 	this.timers = [];			// keep track of setTimeouts so all can be ended at once 
-	this.currentInstrument; 		// need to keep track of what current instrument is!
+	this.currentInstrument; 	// need to keep track of what current instrument is!
+	this.audioContext;			// associate an AudioContext with this PianoRoll
+	this.isPlaying;				// a boolean flag to easily quit playing
+	this.lastTime; 				// the time the last note was supposed to be played
 
 	// NOTE FREQUENCIES @ 440Hz
 	this.noteFrequencies = {
@@ -123,10 +126,9 @@ function PianoRoll(){
 
 
 /****** INSTRUMENT CLASS ********/
-function Instrument(name, oscillator, gain, notesArray){
+function Instrument(name, gain, notesArray){
 
 	this.name = name;
-	this.oscillator = oscillator; 	// assign an oscillator node object 
 	this.gain = gain; 				// assign a gain node object
 	this.notes = notesArray;		// array of Note objects
 	this.activeNotes = {};			// this hash will keep track of the current green notes, by grid element ID only!
@@ -148,7 +150,7 @@ function Note(freq, duration, block){
 
 	// if the note block passed in is supposed to be a rest
 	if(freq === 0){
-		this.block.id = null; // can use note.block.id null check 
+		this.block.id = block.id; // the id will be the column header id  
 	}
 }
 
