@@ -66,15 +66,8 @@ function addNote(id, pianoRollObject){
 		document.getElementById(headerId).setAttribute("hasNote", 0);
 		
 		// update right border (this is only really needed for concatenated note blocks i.e. length = eighth-eighth)
-		// make sure it's not a left 16th block (i.e. like col_32-1)
-		if(headerId.indexOf('-') < 0){
-			var boldBorder = parseInt(headerId.substring(headerId.indexOf("_") + 1).match(/[0-9]{1,}/g)[0]) + 1;
-			if(boldBorder % 8 === 0){
-				$('#' + id).css("border-right", "3px solid #000");
-			}else{
-				$('#' + id).css("border-right", "1px solid #000");
-			}
-		}
+		// NOTE: the method changeRightBorder is defined in context_menus.js!!
+		changeRightBorder(id, "add");
 		
 		// if neighbor is green, make sure their column's hasnote is 1!
 		// again, this is important only for concatenated note blocks 
@@ -401,14 +394,8 @@ function chooseInstrument(thisElement, pianoRollObject){
 					currNote.setAttribute("length", currLength.substring(0, currLength.indexOf('-')));
 				}
 				
-				// fix border also - DON'T FORGET TO MAKE A FUNCTION FOR THIS! ;)
-				var colHeader = currNote.id.substring(currNote.id.indexOf("col_"));
-				var boldBorder = parseInt(colHeader.match(/[0-9]{1,}/g)[0]) + 1;
-				if(boldBorder % 8 === 0){
-					$('#' + currNote.id).css("border-right", "3px solid #000");
-				}else{
-					$('#' + currNote.id).css("border-right", "1px solid #000");
-				}		
+				// fix border (note that changeRightBorder is defined in context_menus.js)
+				changeRightBorder(currNote.id, "add");	
 				currNote = currNote.nextSibling;
 			}		
 		}else{
@@ -502,14 +489,9 @@ function drawNotes(instrumentObject, pianoRollObject){
 		// special case for concatenated note block.
 		if(elementExists.getAttribute("length").indexOf('-') > 0){
 			
-			// remove right border - REALLY NEED TO MAKE A FUNCTION FOR THIS!!!
-			// make sure to use the column header to extract column number, not the acutal note block!!
-			var boldBorder = parseInt(columnHeader.id.match(/[0-9]{1,}/g)[0]) + 1;
-			if(boldBorder % 8 === 0){
-				$('#' + elementExists.id).css("border-right", "3px solid transparent");
-			}else{
-				$('#' + elementExists.id).css("border-right", "1px solid transparent");
-			}
+			// remove right border
+			// NOTE: changeRightBorder is defined in context_menus.js!
+			changeRightBorder(elementExists.id, "remove");
 			
 			// need to draw in rest of note block. 
 			var noteHead = elementExists.getAttribute("length").split('-').shift(); // get the head (i.e. is the beginning a 16th or 8th note)
@@ -576,17 +558,10 @@ function drawNotes(instrumentObject, pianoRollObject){
 			
 			// after for loop, make sure to give border on last segment of concatenated note block
 			currNote = currNote.previousSibling;
-			columnHeader = currNote.id.substring(elementExists.id.indexOf("col_"));
-			var boldBorder = parseInt(columnHeader.match(/[0-9]{1,}/g)[0]) + 1;
-			if(boldBorder % 8 === 0){
-				$('#' + currNote.id).css("border-right", "3px solid #000");
-			}else{
-				$('#' + currNote.id).css("border-right", "1px solid #000");
-			}
+			changeRightBorder(currNote.id, "add");
 		}
 
 	}
-	
 	
 }
 

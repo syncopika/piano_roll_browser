@@ -151,22 +151,6 @@ function makeNoteContextMenu(pianoRollObject){
 								}
 							},
 							"sep2": "------------",
-							"Join": {
-								name: "Join",
-								icon: "paste",
-								callback: function(key, options){
-									// if user wants to join two notes, they must be adjacent and the same note!
-									// also need to check if attempting to call rejoin on concatenated note block! if so, don't do anything! 
-									var id = options.$trigger.attr("id");
-									var blockHeader = document.getElementById( id.substring(id.indexOf("col_")) );
-									if(blockHeader.getAttribute("hasnote") == -1){
-										return;
-									}
-
-									rejoin(options.$trigger.attr("id"), false, pianoRollObject); // preserve any green notes when splitting
-								}
-							},
-							"sep3": "------------",
 							"Subdivide": {
 								name: "Subdivide", 
 								icon: "cut",
@@ -182,6 +166,22 @@ function makeNoteContextMenu(pianoRollObject){
 									}
 									
 									subdivide(id, false, pianoRollObject);		
+								}
+							},
+							"sep3": "------------",
+							"Join": {
+								name: "Join",
+								icon: "paste",
+								callback: function(key, options){
+									// if user wants to join two notes, they must be adjacent and the same note!
+									// also need to check if attempting to call rejoin on concatenated note block! if so, don't do anything! 
+									var id = options.$trigger.attr("id");
+									var blockHeader = document.getElementById( id.substring(id.indexOf("col_")) );
+									if(blockHeader.getAttribute("hasnote") == -1){
+										return;
+									}
+
+									rejoin(options.$trigger.attr("id"), false, pianoRollObject); // preserve any green notes when splitting
 								}
 							}
 							/*
@@ -332,7 +332,7 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 
 	block = document.getElementById(elementId);
 	
-	// if block is null, it doesn't exist. it might be a 16th note that should be an 8th note 
+	// if block is null, it doesn't exist in the grid. it might be a 16th note currently that should be an 8th note 
 	// or vice versa	
 	if(block === null){
 		// is elementId referring to a 16th note?
@@ -386,6 +386,7 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 		}
 		
 		// if a PianoRoll object is passed in, do some changes for the current instrument here
+		// why wouldn't it be passed in?? 
 		if(pianoRollObject && $('#' + elementId).css("background-color") === "rgb(0, 178, 0)"){
 			
 			// what if the right 16th note is actually a concatenated note block!?
@@ -399,12 +400,7 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 			oBlock.setAttribute("length", newLength);
 			
 			// remove right border 
-			var boldBorder = parseInt(blockHeader.match(/[0-9]{1,}/g)[0]) + 1;
-			if(boldBorder % 8 === 0){
-				$('#' + elementId).css("border-right", "3px solid transparent");
-			}else{
-				$('#' + elementId).css("border-right", "1px solid transparent");
-			}
+			changeRightBorder(elementId, "remove");
 			
 			// add renamed note to activeNotes, delete old ones only if notes being rejoined are green (i.e. belong to this instrument; not onion-skin)
 			// because sometimes you might want to rejoin empty columns, in which you don't need to do any of this stuff here 
@@ -445,12 +441,7 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 		pianoRollObject.currentInstrument.activeNotes[block.id] = numNotes;
 		
 		// then remove the right border from the current block so the note looks elongated appropriately
-		var boldBorder = parseInt(blockHeader.id.match(/[0-9]{1,}/g)[0]) + 1;
-		if(boldBorder % 8 === 0){
-			$('#' + block.id).css("border-right", "3px solid transparent");
-		}else{
-			$('#' + block.id).css("border-right", "1px solid transparent");
-		}
+		changeRightBorder(block.id, "remove");
 		
 		// change adjacent block column header's hasnote attribute to -1 since it got concatenated with the current block
         // using -1 will be helpful in identifying concatenated blocks 		
@@ -478,5 +469,37 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 		// background color.
 		
 	}
+}
 
+// function for removing/putting back right border after subdivide, join
+// second arg = if "remove", make right border transparent. if "add", make it #000.
+function changeRightBorder(columnBlockId, type){
+	
+	// if the target element is the first 16th note of a subdivided eighth note, 
+	// don't mess with the right border 
+	if(columnBlockId.indexOf('-1') > 0){
+		return;
+	}
+	
+	var headerId = columnBlockId.substring(columnBlockId.indexOf("col_"));
+	if(columnBlockId.indexOf('-') > 0){
+		headerId = headerId.substring(0, headerId.indexOf('-'));
+	}
+	
+	var boldBorder = parseInt(headerId.match(/[0-9]{1,}/g)[0]) + 1;
+
+	if(type === "remove"){
+		if(boldBorder % 8 === 0){
+			$('#' + columnBlockId).css("border-right", "3px solid transparent");
+		}else{
+			$('#' + columnBlockId).css("border-right", "1px solid transparent");
+		}
+	}else if(type === "add"){
+		if(boldBorder % 8 === 0){
+			$('#' + columnBlockId).css("border-right", "3px solid #000");
+		}else{
+			$('#' + columnBlockId).css("border-right", "1px solid #000");
+		}
+	}
+	
 }

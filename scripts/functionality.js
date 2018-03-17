@@ -26,7 +26,7 @@ http://sriku.org/blog/2013/01/30/taming-the-scriptprocessornode/#replacing-oscil
 function initGain(context){
 	var newGain = context.createGain();
 	// set gain to 0 initially so no sound will be heard 
-	newGain.gain.setTargetAtTime(0, 0, 0);
+	newGain.gain.setValueAtTime(0.0, 0.0);
 	return newGain;
 }
 
@@ -131,6 +131,11 @@ function scheduler(pianoRoll, allInstruments){
 	// each number will be the current note index of each instrument 
 	var instrumentNotePointers = [];
 	
+	// in the case where the user specified a measure to start playing at 
+	for(var k = 0; k < pianoRoll.instruments.length; k++){
+		//instrumentNotePointers[k] = 5;
+	}
+	
 	// keep another array holding the next time the next note should play for each instrument
 	var nextTime = [];
 	
@@ -150,6 +155,7 @@ function scheduler(pianoRoll, allInstruments){
 
 	var instruments;
 	if(!allInstruments){
+		// if only playing the current instrument 
 		instruments = [pianoRoll.instruments[currentInstrumentIndex]];
 		instrumentNotePointers.push(0);
 		nextTime.push(0);
