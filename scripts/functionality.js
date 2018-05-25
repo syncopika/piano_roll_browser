@@ -215,7 +215,8 @@ function scheduler(pianoRoll, allInstruments){
 			if(notesArr[currIndex].block.style === "glide"){
 				osc.frequency.setTargetAtTime(thisNote.freq, nextTime[i], 0.025);
 			}else{
-				osc.frequency.setTargetAtTime(thisNote.freq, nextTime[i], 0);
+				//osc.frequency.setTargetAtTime(thisNote.freq, nextTime[i], 0);
+				osc.frequency.setValueAtTime(thisNote.freq, nextTime[i]);
 			}
 			
 			// check volume 
