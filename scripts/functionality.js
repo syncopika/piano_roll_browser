@@ -139,11 +139,6 @@ function scheduler(pianoRoll, allInstruments){
 	// keep another array holding the next time the next note should play for each instrument
 	var nextTime = [];
 	
-	// keep a queue to hold notes to play only for the current instrument!!
-	// this way we can highlight measures where the current note is being played.
-	// how to deal with the case when the user switches instruments though while the piece is being played?
-	var currentInstrumentNoteQueue = [];
-	
 	// keep a counter that counts the number of instruments that have finished playing all their notes  
 	var stillNotesToPlay = 0;
 	
@@ -258,7 +253,7 @@ function scheduler(pianoRoll, allInstruments){
 			instrumentNotePointers[i]++;
 			
 			// add note to play into currentInstrumentNoteQueue
-			if(i === currentInstrumentIndex){
+			if(instruments[i] === pianoRoll.currentInstrument){
 				pianoRoll.currentInstrumentNoteQueue.push({"note": thisNote.block.id, "time": nextTime[i]});
 			}
 		}
@@ -382,7 +377,7 @@ function stopPlay(pianoRollObject){
 	}
 	lastNote = null;
 	currNote = null;
-	pianoRoll.currentInstrumentNoteQueue = [];
+	pianoRollObject.currentInstrumentNoteQueue = [];
 }
 
 /***
