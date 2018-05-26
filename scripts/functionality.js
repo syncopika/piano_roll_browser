@@ -131,13 +131,18 @@ function scheduler(pianoRoll, allInstruments){
 	// each number will be the current note index of each instrument 
 	var instrumentNotePointers = [];
 	
-	// in the case where the user specified a measure to start playing at 
+	// in the case where the user specified a measure to start playing at - NOT YET IMPLEMENTED
 	for(var k = 0; k < pianoRoll.instruments.length; k++){
 		//instrumentNotePointers[k] = 5;
 	}
 	
 	// keep another array holding the next time the next note should play for each instrument
 	var nextTime = [];
+	
+	// keep a queue to hold notes to play only for the current instrument!!
+	// this way we can highlight measures where the current note is being played.
+	// how to deal with the case when the user switches instruments though while the piece is being played?
+	var currentInstrumentNoteQueue = [];
 	
 	// keep a counter that counts the number of instruments that have finished playing all their notes  
 	var stillNotesToPlay = 0;
@@ -224,7 +229,7 @@ function scheduler(pianoRoll, allInstruments){
 			// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
 			// this is fixed by always setting gain to 0 if a note's frequency is 0.
 			var val = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
-			oscGainNode.gain.setTargetAtTime(val, nextTime[i], 0.0020); 
+			oscGainNode.gain.setTargetAtTime(val, nextTime[i] + .25, 0.0045); 
 			
 			// by default, ~70% of the note duration should be played 
 			// the rest of the time can be devoted to the spacer 
@@ -239,21 +244,72 @@ function scheduler(pianoRoll, allInstruments){
 			}
 			
 			pianoRoll.timers.push(osc);
-			osc.start( nextTime[i] );
-			pianoRoll.lastTime = nextTime[i];
+			osc.start( nextTime[i] + .25 ); // + .25 is added lookahead time (see link to scheduling below). it helps showCurrentNote catch up 
+			pianoRoll.lastTime = nextTime[i] + .25;
 			
 			// change gain to 0 after a really small amount of time to give the impression of articulation
-			oscGainNode.gain.setTargetAtTime(0, nextTime[i] + (realDuration / 1000) - .002, 0.0010);
-			osc.stop( nextTime[i] + (realDuration / 1000) );
+			oscGainNode.gain.setTargetAtTime(0, (nextTime[i] + .25) + (realDuration / 1000) - .002, 0.0010);
+			osc.stop( nextTime[i] + (realDuration / 1000) + .25 );
 			
 			// update nextTime 
 			nextTime[i] += (thisNote.duration / 1000);
 			
 			// increment the note pointer for this instrument 
 			instrumentNotePointers[i]++;
+			
+			// add note to play into currentInstrumentNoteQueue
+			if(i === currentInstrumentIndex){
+				pianoRoll.currentInstrumentNoteQueue.push({"note": thisNote.block.id, "time": nextTime[i]});
+			}
 		}
 	}
+	
+}
 
+// show what note is currently playing (only the current instrument's)
+// https://www.html5rocks.com/en/tutorials/audio/scheduling/
+// go through the queue and for each note dequeued, highlight the column it's in to 
+// show where the current note is being played 
+var lastNote = null; 
+var currNote = null;
+function showCurrentNote(pianoRoll){
+	
+	//var currTime = pianoRoll.audioContext.currentTime;
+	var queue = pianoRoll.currentInstrumentNoteQueue;
+	
+	while(queue.length > 0 && queue[0].time <= pianoRoll.audioContext.currentTime && pianoRoll.isPlaying){
+		
+		currNote = queue.splice(0,1)[0];
+
+		// ok, reached the note 
+		// highlight the column of the note
+		if(lastNote !== null){
+			lastNote.style.backgroundColor = '#fff';
+		}
+		
+		// color current note's column header background color
+		var column = currNote.note.substring(currNote.note.indexOf('col'));
+		
+		if(document.getElementById(column) === null){
+			// i.e. if user switches instruments, the note that is supposed to be shown (from the previous instrument) might not exist on the grid 
+			// so the note that's not existing might be subdivided or not 
+
+			if(column.indexOf("-") < 0){
+				// get first subdivision
+				column = currNote.note.substring(currNote.note.indexOf('col')) + "-1";
+			}else{
+				column = currNote.note.substring(currNote.note.indexOf('col'), currNote.note.indexOf('-'));
+			}
+
+		}
+		
+		document.getElementById(column).style.backgroundColor = '#709be0'; // nice light blue color 
+		
+		lastNote = document.getElementById(column);
+		
+	}
+
+	requestAnimationFrame(function(){ showCurrentNote(pianoRoll); });
 }
 
 
@@ -269,7 +325,7 @@ function play(pianoRollObject){
 		pianoRoll.isPlaying = true;
 		
 		// get the current notes 
-		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject)
+		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
 		
 		scheduler(pianoRollObject, false);
 	}
@@ -318,6 +374,15 @@ function stopPlay(pianoRollObject){
 
 	// clear out timers array (which is actually filled with oscillator nodes)
 	pianoRollObject.timers = [];
+	
+	// this is a cheap hack for now (for dealing with showCurrentNote)
+	// notice it uses the global variables lastNote and currNote 
+	if(lastNote){
+		lastNote.style.backgroundColor = '#fff';
+	}
+	lastNote = null;
+	currNote = null;
+	pianoRoll.currentInstrumentNoteQueue = [];
 }
 
 /***
@@ -330,7 +395,7 @@ function stopPlay(pianoRollObject){
 function changeTempo(pianoRollObject){
 	var tempoInput = document.getElementById("changeTempo");
 	var selectedTempo = parseInt(tempoInput.value);
-	var tempoText = document.getElementById("tempo")
+	var tempoText = document.getElementById("tempo");
 	tempoText.innerHTML = selectedTempo + " bpm";
 	
 	// initially getting milliseconds FOR QUARTER NOTES (that's 2 blocks on the grid)

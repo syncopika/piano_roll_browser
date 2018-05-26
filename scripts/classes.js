@@ -18,6 +18,7 @@ function PianoRoll(){
 	this.audioContext;			// associate an AudioContext with this PianoRoll
 	this.isPlaying;				// a boolean flag to easily quit playing
 	this.lastTime; 				// the time the last note was supposed to be played
+	this.currentInstrumentNoteQueue = []; // keep track of the current instrument' scheduled notes. use this for showing what note is currently playing
 
 	// NOTE FREQUENCIES @ 440Hz
 	this.noteFrequencies = {

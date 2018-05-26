@@ -246,11 +246,11 @@ $('#measures').html("number of measures: " + pianoRoll.numberOfMeasures);
 $('#timeSig').html("time signature: " + pianoRoll.timeSignature);
 $('#subdiv').html("subdivision: " + pianoRoll.subdivision);
 
-/**** SET UP AUDIO CONTEXT *****/
+/**** SET UP AUDIO CONTEXT ****/
 var context = new AudioContext();
 pianoRoll.audioContext = context;
 
-// SET UP INITIAL INSTRUMENT
+/**** SET UP INITIAL INSTRUMENT ****/
 var g = initGain(context);	
 g.connect(context.destination);
 
@@ -615,6 +615,9 @@ function getDemo(selectedDemo){
 	httpRequest.send();
 
 }
+
+// on document load 
+requestAnimationFrame( function(){ showCurrentNote(pianoRoll) });
 
 </script>
 
