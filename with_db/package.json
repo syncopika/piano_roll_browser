@@ -1,0 +1,25 @@
+{
+  "name": "piano_roll_app",
+  "version": "0.0.1",
+  "description": "make music with a piano roll and share with the world!",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "^1.17.2",
+    "connect-flash": "^0.1.1",
+    "connect-mongo": "^1.3.2",
+    "cookie-parser": "^1.4.3",
+    "ejs": "^2.5.6",
+    "express": "^4.15.2",
+    "express-session": "^1.15.5",
+    "mongodb": "^3.1.0-beta4",
+    "mongoose": "^5.0.0",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0"
+  }
+}

@@ -122,6 +122,41 @@ function readInNotes(pianoRollObject){
 	- false for just the current instrument 
 	
 ****/
+
+// https://www.html5rocks.com/en/tutorials/audio/scheduling/
+// trying to sync visual (show currently playing note) with audio...
+// right now I'm using the oscillator node's onended function to 
+// highlight where the current note playing is. obviously, since it's
+// onended it's a bit laggy... but it gives a good idea of where the piece is 
+// and it works just the same on low and high tempi 
+
+var lastNote = null;
+
+var onendFunc = function(x){ 
+	return function(){
+		// take away highlight of previous note 
+		if(lastNote !== null){
+			lastNote.style.backgroundColor = '#fff';
+		}
+		
+		var column = x.substring(x.indexOf('col'));
+		
+		if(document.getElementById(column) === null){
+			if(column.indexOf("-") < 0){
+				// get first subdivision
+				column = x.substring(x.indexOf('col')) + "-1";
+			}else{
+				column = x.substring(x.indexOf('col'), x.indexOf('-'));
+			}
+		}
+		
+		//console.log(column);
+		document.getElementById(column).style.backgroundColor = '#709be0'; // nice light blue color 
+
+		lastNote = document.getElementById(column);
+	}
+};
+
 function scheduler(pianoRoll, allInstruments){
 	
 	var ctx = pianoRoll.audioContext;
@@ -224,7 +259,7 @@ function scheduler(pianoRoll, allInstruments){
 			// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
 			// this is fixed by always setting gain to 0 if a note's frequency is 0.
 			var val = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
-			oscGainNode.gain.setTargetAtTime(val, nextTime[i] + .25, 0.0045); 
+			oscGainNode.gain.setTargetAtTime(val, nextTime[i], 0.0045); 
 			
 			// by default, ~70% of the note duration should be played 
 			// the rest of the time can be devoted to the spacer 
@@ -239,21 +274,26 @@ function scheduler(pianoRoll, allInstruments){
 			}
 			
 			pianoRoll.timers.push(osc);
-			osc.start( nextTime[i] + .25 ); // + .25 is added lookahead time (see link to scheduling below). it helps showCurrentNote catch up 
-			pianoRoll.lastTime = nextTime[i] + .25;
+			
+			osc.start( nextTime[i]);
+			pianoRoll.lastTime = nextTime[i];
 			
 			// change gain to 0 after a really small amount of time to give the impression of articulation
-			oscGainNode.gain.setTargetAtTime(0, (nextTime[i] + .25) + (realDuration / 1000) - .002, 0.0010);
-			osc.stop( nextTime[i] + (realDuration / 1000) + .25 );
+			oscGainNode.gain.setTargetAtTime(0, (nextTime[i]) + (realDuration / 1000) - .0025, 0.0010);
+			osc.stop( nextTime[i] + (realDuration / 1000) );
 			
 			// update nextTime 
 			nextTime[i] += (thisNote.duration / 1000);
-			
+
 			// increment the note pointer for this instrument 
 			instrumentNotePointers[i]++;
 			
 			// add note to play into currentInstrumentNoteQueue
 			if(instruments[i] === pianoRoll.currentInstrument){
+				
+				// when oscillator ends, highlight the note
+				osc.onended = onendFunc(thisNote.block.id);
+				
 				pianoRoll.currentInstrumentNoteQueue.push({"note": thisNote.block.id, "time": nextTime[i]});
 			}
 		}
@@ -265,7 +305,7 @@ function scheduler(pianoRoll, allInstruments){
 // https://www.html5rocks.com/en/tutorials/audio/scheduling/
 // go through the queue and for each note dequeued, highlight the column it's in to 
 // show where the current note is being played 
-var lastNote = null; 
+// don't use this 
 var currNote = null;
 function showCurrentNote(pianoRoll){
 	

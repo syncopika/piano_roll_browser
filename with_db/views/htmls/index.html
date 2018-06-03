@@ -4,11 +4,11 @@
 	<meta charset='utf-8'>
 	<title> a piano roll in the browser </title>
 	<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
-	<script src='scripts/classes.js'></script>
-	<script src='scripts/context_menus.js'></script>
-	<script src='scripts/dom_modification.js'></script>
-	<script src='scripts/grid_builder.js'></script>
-	<script src='scripts/functionality.js'></script>
+	<script src='../../scripts/classes.js'></script>
+	<script src='../../scripts/context_menus.js'></script>
+	<script src='../../scripts/dom_modification.js'></script>
+	<script src='../../scripts/grid_builder.js'></script>
+	<script src='../../scripts/functionality.js'></script>
 	
 	<!-- stuff needed for contextMenu -->
 	<link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/screen.css" type="text/css"/>
@@ -55,11 +55,6 @@
 			width: 40px;
 		}
 		
-		#title{
-			margin: 0 auto;
-			text-align: center;
-		}
-		
 		#toolbar{
 			/* border: 1px solid #000; */
 			position: relative;
@@ -81,7 +76,7 @@
 		}
 		
 		#toolbar li h2{
-			font-size: 12px;
+			font-size: 14px;
 		}
 		
 		#pianoNotes{
@@ -95,7 +90,7 @@
 			position: relative;
 		}
 		
-		#demo{
+		#yourScores{
 			margin-top: 10px;
 		}
 		
@@ -122,6 +117,12 @@
 		select, option{
 			height: 24px;
 		}
+		
+		#namespace{
+			display: inline-block;
+		}
+
+		
 	</style>
 	
 </head>
@@ -129,9 +130,13 @@
 
 <body>
 
-<div id='toolbar'>
+<div id='header'>
+	<!-- template here -->
+	<h3 id='namespace'> hey! ...insert name here... </h3>
+	<!-- <h2 id='title'> piano roll fun! &#127929;</h2> -->
+</div>
 
-	<h2 id='title'> piano roll fun! &#127929;</h2>
+<div id='toolbar'>
 
 	<ul id='metadata'>
 		<li><h2 id='measures'></h2></li>
@@ -157,7 +162,8 @@
 		<li><button id='delMeasure' class='btn'> delete measure </button></li>
 		<li><button id='addInstrument' class='btn'> add new instrument </button></li>
 		<li><button id='clearGrid' class='btn'> clear grid </button></li>
-		<li><button class='btn' onclick='generateJSON()'> save & export data </button></li>
+		<li><button class='btn' onclick=''> save </button></li>
+		<li><button class='btn' onclick='generateJSON()'> save & export</button></li>
 		<li><button class='btn' onclick='fileHandler()'> import data </button></li>
 		<input type='file' id='importFile' style='display: none'>
 		
@@ -171,8 +177,8 @@
 		</li>
 	</ul>
 
-	<div id='demo'>
-		<label> demo: </label>
+	<div id='yourScores'>
+		<label> your scores: </label>
 		<select onchange="getDemo(this)">
 			<option label=""></option>
 			<option>
@@ -616,8 +622,8 @@ function getDemo(selectedDemo){
 
 }
 
-// show where currently-playing note is 
-//requestAnimationFrame( function(){ showCurrentNote(pianoRoll) });
+// on document load 
+requestAnimationFrame( function(){ showCurrentNote(pianoRoll) });
 
 </script>
 

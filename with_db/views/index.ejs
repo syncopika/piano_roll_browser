@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-
+<html>
 <head>
 	<meta charset='utf-8'>
 	<title> a piano roll in the browser </title>
 	<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
-	<script src='scripts/classes.js'></script>
-	<script src='scripts/context_menus.js'></script>
-	<script src='scripts/dom_modification.js'></script>
-	<script src='scripts/grid_builder.js'></script>
-	<script src='scripts/functionality.js'></script>
+	<script src='/scripts/classes.js'></script>
+	<script src='/scripts/context_menus.js'></script>
+	<script src='/scripts/dom_modification.js'></script>
+	<script src='/scripts/grid_builder.js'></script>
+	<script src='/scripts/functionality.js'></script>
 	
 	<!-- stuff needed for contextMenu -->
 	<link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/screen.css" type="text/css"/>
@@ -55,11 +55,6 @@
 			width: 40px;
 		}
 		
-		#title{
-			margin: 0 auto;
-			text-align: center;
-		}
-		
 		#toolbar{
 			/* border: 1px solid #000; */
 			position: relative;
@@ -81,7 +76,7 @@
 		}
 		
 		#toolbar li h2{
-			font-size: 12px;
+			font-size: 14px;
 		}
 		
 		#pianoNotes{
@@ -95,7 +90,7 @@
 			position: relative;
 		}
 		
-		#demo{
+		#yourScores{
 			margin-top: 10px;
 		}
 		
@@ -122,6 +117,8 @@
 		select, option{
 			height: 24px;
 		}
+		
+		
 	</style>
 	
 </head>
@@ -129,9 +126,11 @@
 
 <body>
 
-<div id='toolbar'>
+<div id='header'>
 
-	<h2 id='title'> piano roll fun! &#127929;</h2>
+</div>
+
+<div id='toolbar'>
 
 	<ul id='metadata'>
 		<li><h2 id='measures'></h2></li>
@@ -147,6 +146,10 @@
 		<li><h2 id='composer'> hi </h2></li>
 		<li>|</li>
 		<li><h2><a href='https://github.com/syncopika/piano_roll_browser'>help!</a></h2></li>
+		<li>|</li>
+		<li><h2 id='namespace'> back to <a href='/profile'> profile </a> </h2></li>
+		<li>|</li>
+		<li><h2>logout</h2></li>
 	</ul>
 
 	<ul id='buttons'>
@@ -157,7 +160,8 @@
 		<li><button id='delMeasure' class='btn'> delete measure </button></li>
 		<li><button id='addInstrument' class='btn'> add new instrument </button></li>
 		<li><button id='clearGrid' class='btn'> clear grid </button></li>
-		<li><button class='btn' onclick='generateJSON()'> save & export data </button></li>
+		<li><button class='btn' onclick='saveScore()'> save </button></li>
+		<li><button class='btn' onclick='generateJSON()'> save & export</button></li>
 		<li><button class='btn' onclick='fileHandler()'> import data </button></li>
 		<input type='file' id='importFile' style='display: none'>
 		
@@ -171,8 +175,16 @@
 		</li>
 	</ul>
 
-	<div id='demo'>
-		<label> demo: </label>
+	<div id='yourScores'>
+		<label> your scores: </label>
+		<select onchange="selectScore(this)">
+			<option label=""></option>
+			<% for (var i = 0; i < user.local.scores.length; i++) { %>
+					<option> <%= user.local.scores[i][0].title %> </option>
+			<% } %>
+		</select>
+		
+		<!--
 		<select onchange="getDemo(this)">
 			<option label=""></option>
 			<option>
@@ -182,6 +194,7 @@
 				sand_canyon_test
 			</option>
 		</select>
+		-->
 	</div>
 </div>
 
@@ -356,7 +369,7 @@ function bindButtons(pianoRollObject){
 
 /****
 
-gather JSON data 
+gather JSON data and download it! need to make a function that just saves to database as another option!
 
 first element in json data array will be an object with 
 one key-value pair indicating how many measures there are.
@@ -414,6 +427,52 @@ function generateJSON(){
 	// clear array for new data 
 	jsonData = [];
 }
+
+
+/****
+
+save current score to database!
+
+****/
+function saveScore(){
+
+	var jsonData = [];
+
+	pianoRoll.currentInstrument.notes = readInNotes(pianoRoll);
+	
+	var metadata = {};
+	metadata["measures"] = parseInt( document.getElementById('measures').textContent.match(/[0-9]{1,}/g)[0] );
+	metadata["tempo"] = parseInt( document.getElementById("tempo").textContent );
+	
+	// put in composer info, name of piece 
+	metadata["composer"] = document.getElementById("composer").textContent;
+	metadata["title"] = document.getElementById("pieceTitle").textContent;
+
+	jsonData.push(metadata);
+
+	for(var i = 0; i < pianoRoll.instruments.length; i++){
+		jsonData.push( [ pianoRoll.instruments[i] ] );
+	}
+
+	jsonData = JSON.stringify(jsonData);
+	
+	//console.log(jsonData);
+	
+	$.ajax({
+		type: 'POST',
+		url: '/save_score',
+		dataType: "JSON",
+		data: {
+			score: jsonData // the query attribute is "score"!
+		},
+		success: function(response){				
+			// DYNAMICALLY ADD IT TO THE CHOOSE SCORE DROPDOWN AND MAKE IT THE CURRENTLY SELECTED SCORE???
+			console.log("posted score to database");
+		}
+	});
+	
+}	
+
 
 
 /****
@@ -515,109 +574,107 @@ function getFile(e){
 
 /****
 
-separate file reader function 
-for my local JSON file demos 
-
-if testing locally, remember that Chrome
-is picky about cross-origin requests 
-
-use python -m http.server to launch 
-a local server. then access this page through it. 
+need to query the database to fetch a list of all the scores belonging to this user!
 
 ****/
 
-function getDemo(selectedDemo){
+function selectScore(selectedDemo){
 
 	// get the selected demo from the dropbox
 	// selectedDemo is the path to the demo to load 
 	if(selectedDemo.options[selectedDemo.selectedIndex].text === ""){
 		return;
 	}
-
-	var selectedDemo = "demos/" + selectedDemo.options[selectedDemo.selectedIndex].text + ".json"; 
-
-	var httpRequest = new XMLHttpRequest();
-
-	if(!httpRequest){
-		// unable to make request instance
-		return;
-	}
 	
-	httpRequest.open("GET", selectedDemo);
-	
-	httpRequest.onload = function(){
-
-		// request was successful. process json data now.
-	
-		// clear grid first
-		clearGridAll(pianoRoll);
-	
-		var data = JSON.parse(httpRequest.responseText);
-		
-		// update metadata 
-		document.getElementById("composer").textContent = data[0]["composer"]; // could be undefined!
-		document.getElementById("pieceTitle").textContent = data[0]["title"]; // could be undefined!
-		
-		// set new tempo acording to json data
-		var tempoText = document.getElementById("tempo");
-		tempoText.innerHTML = data[0]["tempo"] + " bpm";
-		pianoRoll.currentTempo = ((Math.round((60000 / data[0]["tempo"]) * 1000)) / 1000 );
-		
-		// now put the data on the grid 
-		var measures = data[0]["measures"];
-		
-		// add new measures first - NEED TO ALSO DELETE IF TOO MANY!!
-		if(measures > pianoRoll.numberOfMeasures){
-			var measuresToAdd = measures - pianoRoll.numberOfMeasures;
-			for(var j = 0; j < measuresToAdd; j++){
-				addNewMeasure(pianoRoll); // add new measures as needed 
+	// need to make a request for the score!
+	var data;
+	var selectedScore = selectedDemo.options[selectedDemo.selectedIndex].text;
+	$.ajax({
+		type: 'GET',
+		url: '/get_score/?name=' + selectedScore,
+		success: function(response){				
+			console.log("got score");
+			//console.log(response);
+			
+			var userScores = response[0].local.scores;
+			for(var i = 0; i < userScores.length; i++){
+				if(userScores[i][0].title === selectedScore){
+					data = userScores[i];
+				}
 			}
-		}
-		
-		// update num of measures 
-		$('#measures').text( "number of measures: " + pianoRoll.numberOfMeasures );
-
-		// then assign instruments array the data 
-		pianoRoll.instruments = []; // clear instruments array 
-
-		var instrumentsGrid = document.getElementById("instrumentTable");
-		while(instrumentsGrid.firstChild){
-			instrumentsGrid.removeChild(instrumentsGrid.firstChild);
-		}
-		
-		for(var i = 1; i < data.length; i++){
-			// put each instrument into the instrument grid 
-			addNewInstrument(data[i][0].name, false, pianoRoll);
-
-			// set up a fresh new gain node for each instrument 
-			var newGain = initGain(pianoRoll.audioContext);
-			
-			var newInstrument = data[i][0];
-			newInstrument.gain = newGain;
-			
-			newGain.connect(context.destination);
-			
-			// add new instrument to array
-			pianoRoll.instruments.push(newInstrument);
-		}
-		
-		// make 1st instrument active
-		var instrument1 = document.getElementById("instrumentTable").firstChild;
-		instrument1.style.backgroundColor = "rgb(188,223,70)";
-		instrument1.setAttribute("selected", "1");
-		instrument1.classList.add("context-menu-instrument");
-		
-		pianoRoll.currentInstrument = pianoRoll.instruments[0];
-		drawNotes(pianoRoll.currentInstrument, pianoRoll);
-		showOnionSkin(pianoRoll);
-	}
+			console.log(data);
+			return; // QUIT FOR NOW
+			// request was successful. process json data now.
 	
-	httpRequest.send();
+			// clear grid first
+			clearGridAll(pianoRoll);
+
+			//data = selectedDemo; //JSON.parse(httpRequest.responseText);
+			
+			// update metadata 
+			document.getElementById("composer").textContent = data[0]["composer"]; // could be undefined!
+			document.getElementById("pieceTitle").textContent = data[0]["title"]; // could be undefined!
+			
+			// set new tempo acording to json data
+			var tempoText = document.getElementById("tempo");
+			tempoText.innerHTML = data[0]["tempo"] + " bpm";
+			pianoRoll.currentTempo = ((Math.round((60000 / data[0]["tempo"]) * 1000)) / 1000 );
+			
+			// now put the data on the grid 
+			var measures = data[0]["measures"];
+			
+			// add new measures first - NEED TO ALSO DELETE IF TOO MANY!!
+			if(measures > pianoRoll.numberOfMeasures){
+				var measuresToAdd = measures - pianoRoll.numberOfMeasures;
+				for(var j = 0; j < measuresToAdd; j++){
+					addNewMeasure(pianoRoll); // add new measures as needed 
+				}
+			}
+			
+			// update num of measures 
+			$('#measures').text( "number of measures: " + pianoRoll.numberOfMeasures );
+
+			// then assign instruments array the data 
+			pianoRoll.instruments = []; // clear instruments array 
+
+			var instrumentsGrid = document.getElementById("instrumentTable");
+			while(instrumentsGrid.firstChild){
+				instrumentsGrid.removeChild(instrumentsGrid.firstChild);
+			}
+			
+			for(var i = 1; i < data.length; i++){
+				// put each instrument into the instrument grid 
+				addNewInstrument(data[i][0].name, false, pianoRoll);
+
+				// set up a fresh new gain node for each instrument 
+				var newGain = initGain(pianoRoll.audioContext);
+				
+				var newInstrument = data[i][0];
+				newInstrument.gain = newGain;
+				
+				newGain.connect(context.destination);
+				
+				// add new instrument to array
+				pianoRoll.instruments.push(newInstrument);
+			}
+			
+			// make 1st instrument active
+			var instrument1 = document.getElementById("instrumentTable").firstChild;
+			instrument1.style.backgroundColor = "rgb(188,223,70)";
+			instrument1.setAttribute("selected", "1");
+			instrument1.classList.add("context-menu-instrument");
+			
+			pianoRoll.currentInstrument = pianoRoll.instruments[0];
+			drawNotes(pianoRoll.currentInstrument, pianoRoll);
+			showOnionSkin(pianoRoll);
+		}
+	});
+
 
 }
 
-// show where currently-playing note is 
-//requestAnimationFrame( function(){ showCurrentNote(pianoRoll) });
+// on document load 
+requestAnimationFrame( function(){ showCurrentNote(pianoRoll) });
 
 </script>
 
