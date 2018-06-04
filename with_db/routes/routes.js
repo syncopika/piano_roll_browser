@@ -56,7 +56,25 @@ module.exports = function(app, passport){
 	
 	// if user updates their profile 
 	app.post('/profile', function(req, res){
-		// implement me 
+		// get the info as supplied by the url query 
+		var locationInfo = req.query.location.trim();
+		var aboutInfo = req.query.about.trim();
+
+		// update the database 
+		var user = req.user.local.username;
+	
+		User.findOneAndUpdate({'local.username': user},
+							{
+							 '$set': {'local.location': locationInfo, 'local.about': aboutInfo},
+							},
+							{new: true, upsert: true},
+							function(err, user){
+								if(err){
+									throw err;
+								}
+								res.send(user);
+							}
+		);	
 	});
 	
 	// if user wants to save current score to db 
@@ -69,10 +87,19 @@ module.exports = function(app, passport){
 		// for the query attribute when making the post request 
 		
 		var score = req.body;
-
+		var scorejson = [JSON.parse(score.score)];
+		
 		// put it in the db 
 		User.findOneAndUpdate({'local.username': user},
-							{$push: {"local.scores": [JSON.parse(score.score)]} }, // add the new score to the array "scores" - BUT WHAT ABOUT UPDATING!?
+							// add the new score to the array "scores"
+							// BUT WHAT ABOUT UPDATING A SCORE THAT WAS ALREADY IN THE ARRAY!?
+							// no problem, use $pull to remove it if it's there (the old version), then add the new one 
+							{
+								 // this is broken. the best fix is to probably reformat your score json!!!! 
+								 // i don't think it's very beneficial to have the metadata in a separate object anyway. 
+								'$pull': {"local.scores.$.title": scorejson[0].title},
+								'$push': {"local.scores": scorejson}
+							}, 
 							{new: true, upsert: true},
 							function(err, user){
 								if(err){
@@ -91,9 +118,6 @@ module.exports = function(app, passport){
 		
 		// get the name of the score requested 
 		var scoreName = req.query.name;
-	
-		//console.log(user);
-		//console.log(req.query);
 	
 		// look for the score 
 		User.find({'local.username': user},
