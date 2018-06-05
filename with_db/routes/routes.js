@@ -65,7 +65,7 @@ module.exports = function(app, passport){
 	
 		User.findOneAndUpdate({'local.username': user},
 							{
-							 '$set': {'local.location': locationInfo, 'local.about': aboutInfo},
+							 $set: {'local.location': locationInfo, 'local.about': aboutInfo},
 							},
 							{new: true, upsert: true},
 							function(err, user){
@@ -78,6 +78,14 @@ module.exports = function(app, passport){
 	});
 	
 	// if user wants to save current score to db 
+	function contains(array, titleToFind){
+		for(var i = 0; i < array.length; i++){
+			if(array[i].title.trim() === titleToFind.trim()){
+				return true;
+			}
+		}
+		return false;
+	}
 	app.post('/save_score', function(req, res){
 		
 		// get the user 
@@ -87,27 +95,38 @@ module.exports = function(app, passport){
 		// for the query attribute when making the post request 
 		
 		var score = req.body;
-		var scorejson = [JSON.parse(score.score)];
+		var scorejson = JSON.parse(score.score);
 		
-		// put it in the db 
-		User.findOneAndUpdate({'local.username': user},
-							// add the new score to the array "scores"
-							// BUT WHAT ABOUT UPDATING A SCORE THAT WAS ALREADY IN THE ARRAY!?
-							// no problem, use $pull to remove it if it's there (the old version), then add the new one 
-							{
-								 // this is broken. the best fix is to probably reformat your score json!!!! 
-								 // i don't think it's very beneficial to have the metadata in a separate object anyway. 
-								'$pull': {"local.scores.$.title": scorejson[0].title},
-								'$push': {"local.scores": scorejson}
-							}, 
-							{new: true, upsert: true},
-							function(err, user){
-								if(err){
-									throw err;
-								}
-								res.send(user);
+		// if score exists, update the note data. otherwise, add it.
+		User.update(
+			{'local.username': user, 'local.scores.title': scorejson.title},
+			{$set: {'local.scores.$.instruments': scorejson.instruments}},
+			{new: true},
+			function(err, result){
+				if(err){
+					throw err;
+				}
+				if(result.nModified === 0){
+					// nothing was modified, so score is new. push it to the scores array
+					//console.log("need to add new score!");
+					
+					User.update({'local.username': user},
+						{$push: {"local.scores": [scorejson]}}, 
+						{new: true},
+						function(err, result){
+							if(err){
+								throw err;
 							}
+							res.send(result);
+						}
+					);
+					
+				}else{
+					res.send(result);
+				}
+			}	
 		);
+		
 	});
 	
 	// retrieve requested score from user's scores list 
@@ -121,11 +140,11 @@ module.exports = function(app, passport){
 	
 		// look for the score 
 		User.find({'local.username': user},
-					function(err, cursor){
+					function(err, user){
 								if(err){
 									throw err;
 								}
-								res.send(cursor);
+								res.send(user);
 					});
 	
 	});

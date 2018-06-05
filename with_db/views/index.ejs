@@ -180,7 +180,7 @@
 		<select onchange="selectScore(this)">
 			<option label=""></option>
 			<% for (var i = 0; i < user.local.scores.length; i++) { %>
-					<option> <%= user.local.scores[i][0].title %> </option>
+					<option> <%= user.local.scores[i].title %> </option>
 			<% } %>
 		</select>
 		
@@ -436,27 +436,29 @@ save current score to database!
 ****/
 function saveScore(){
 
-	var jsonData = [];
-
+	var jsonData;
+	
 	pianoRoll.currentInstrument.notes = readInNotes(pianoRoll);
 	
-	var metadata = {};
-	metadata["measures"] = parseInt( document.getElementById('measures').textContent.match(/[0-9]{1,}/g)[0] );
-	metadata["tempo"] = parseInt( document.getElementById("tempo").textContent );
+	var data = {};
+	
+	// add metadata first 
+	data["measures"] = parseInt( document.getElementById('measures').textContent.match(/[0-9]{1,}/g)[0] );
+	data["tempo"] = parseInt( document.getElementById("tempo").textContent );
 	
 	// put in composer info, name of piece 
-	metadata["composer"] = document.getElementById("composer").textContent;
-	metadata["title"] = document.getElementById("pieceTitle").textContent;
+	data["composer"] = document.getElementById("composer").textContent;
+	data["title"] = document.getElementById("pieceTitle").textContent;
 
-	jsonData.push(metadata);
 
+	// now collect instruments
+	// each instrument's data will be in an array mapped to the "instruments" key 
+	data["instruments"] = [];
 	for(var i = 0; i < pianoRoll.instruments.length; i++){
-		jsonData.push( [ pianoRoll.instruments[i] ] );
+		data["instruments"].push(  pianoRoll.instruments[i]  );
 	}
 
-	jsonData = JSON.stringify(jsonData);
-	
-	//console.log(jsonData);
+	jsonData = JSON.stringify(data);
 	
 	$.ajax({
 		type: 'POST',
@@ -498,7 +500,7 @@ function getFile(e){
 	
 		return function(e){
 		
-			// clear grid first
+		// clear grid first
 			// note that I'm relying on my pianoRoll variable
 			clearGridAll(pianoRoll);
 		
@@ -507,16 +509,16 @@ function getFile(e){
 			//console.log(jsonData);
 			
 			// update metadata 
-			document.getElementById("composer").textContent = data[0]["composer"]; // could be undefined!
-			document.getElementById("pieceTitle").textContent = data[0]["title"]; // could be undefined!
+			document.getElementById("composer").textContent = data.composer; // could be undefined!
+			document.getElementById("pieceTitle").textContent = data.title; // could be undefined!
 			
 			// set new tempo acording to json data
 			var tempoText = document.getElementById("tempo");
-			tempoText.innerHTML = data[0]["tempo"] + " bpm";
-			pianoRoll.currentTempo = ((Math.round((60000 / data[0]["tempo"]) * 1000)) / 1000 );
+			tempoText.innerHTML = data.tempo + " bpm";
+			pianoRoll.currentTempo = ((Math.round((60000 / data.tempo) * 1000)) / 1000 );
 			
 			// now put the data on the grid 
-			var measures = data[0]["measures"];
+			var measures = data.measures;
 			
 			// add new measures first - NEED TO ALSO DELETE IF TOO MANY!!
 			var measuresToAdd = measures - pianoRoll.numberOfMeasures;
@@ -535,14 +537,14 @@ function getFile(e){
 				instrumentsGrid.removeChild(instrumentsGrid.firstChild);
 			}
 			
-			for(var i = 1; i < data.length; i++){
+			for(var i = 0; i < data.instruments.length; i++){
 				// put each instrument into the instrument grid 
-				addNewInstrument(data[i][0].name, false, pianoRoll);
+				addNewInstrument(data.instruments[i].name, false, pianoRoll);
 				
 				// set up a fresh new gain node for each instrument 
 				var newGain = initGain(context);
 				
-				var newInstrument = data[i][0];
+				var newInstrument = data.instruments[i];
 				newInstrument.gain = newGain;
 				
 				// connect gain to audio context 
@@ -594,11 +596,10 @@ function selectScore(selectedDemo){
 		url: '/get_score/?name=' + selectedScore,
 		success: function(response){				
 			console.log("got score");
-			//console.log(response);
 			
 			var userScores = response[0].local.scores;
 			for(var i = 0; i < userScores.length; i++){
-				if(userScores[i][0].title === selectedScore){
+				if(userScores[i].title.trim() === selectedScore){
 					data = userScores[i];
 				}
 			}
@@ -612,16 +613,16 @@ function selectScore(selectedDemo){
 			//data = selectedDemo; //JSON.parse(httpRequest.responseText);
 			
 			// update metadata 
-			document.getElementById("composer").textContent = data[0]["composer"]; // could be undefined!
-			document.getElementById("pieceTitle").textContent = data[0]["title"]; // could be undefined!
+			document.getElementById("composer").textContent = data.composer; // could be undefined!
+			document.getElementById("pieceTitle").textContent = data.title; // could be undefined!
 			
 			// set new tempo acording to json data
 			var tempoText = document.getElementById("tempo");
-			tempoText.innerHTML = data[0]["tempo"] + " bpm";
-			pianoRoll.currentTempo = ((Math.round((60000 / data[0]["tempo"]) * 1000)) / 1000 );
+			tempoText.innerHTML = data.tempo + " bpm";
+			pianoRoll.currentTempo = ((Math.round((60000 / data.tempo) * 1000)) / 1000 );
 			
 			// now put the data on the grid 
-			var measures = data[0]["measures"];
+			var measures = data.measures;
 			
 			// add new measures first - NEED TO ALSO DELETE IF TOO MANY!!
 			if(measures > pianoRoll.numberOfMeasures){
@@ -642,14 +643,14 @@ function selectScore(selectedDemo){
 				instrumentsGrid.removeChild(instrumentsGrid.firstChild);
 			}
 			
-			for(var i = 1; i < data.length; i++){
+			for(var i = 0; i < data.instruments.length; i++){
 				// put each instrument into the instrument grid 
-				addNewInstrument(data[i][0].name, false, pianoRoll);
+				addNewInstrument(data.instruments[i].name, false, pianoRoll);
 
 				// set up a fresh new gain node for each instrument 
 				var newGain = initGain(pianoRoll.audioContext);
 				
-				var newInstrument = data[i][0];
+				var newInstrument = data.instruments[i];
 				newInstrument.gain = newGain;
 				
 				newGain.connect(context.destination);
