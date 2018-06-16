@@ -44,7 +44,14 @@
 	#container{
 		margin-left: 2%;
 	}
-
+	
+	.scoreList > *{
+		display: inline-block;
+	}
+	
+	.delete:hover{
+		color: #f00;
+	}
 
 </style>
 
@@ -78,9 +85,9 @@
 		
 		<br>
 		
-		<h3> <a href="/pianoRoll"> go to piano roll </a> </h3>
-		<h3> <a href=""> check out public scores </a> </h3>
-		<h3 onclick="editProfile()"> edit profile </h3>
+		<h4> <a href="/pianoRoll"> go to piano roll </a> </h4>
+		<!-- <h4> <a href=""> check out public scores </a> </h4> -->
+		<h4 class="toggle" onclick="editProfile()"> edit profile </h4>
 		
 	</div>
 	
@@ -90,7 +97,11 @@
 		<!-- some container with columns and rows to display scores for user -->
 		<div id=''>
 			<% for(var i = 0; i < user.local.scores.length; i++){ %>
-				<h3> <%=  user.local.scores[i].title %> </h3>
+				<div class="scoreList">
+					<h3> <%=  user.local.scores[i].title %> </h3>
+					<p> | </p>
+					<p class="delete" id=<%=  user.local.scores[i].title %>> delete </p>
+				</div>
 			<% } %>
 		</div>
 	</div>
@@ -108,8 +119,8 @@
 		var locInfo = document.getElementById('editLocation').value.trim();
 		var aboutInfo = document.getElementById('editAbout').value.trim();
 		
-		console.log(locInfo);
-		console.log(aboutInfo);
+		//console.log(locInfo);
+		//console.log(aboutInfo);
 		
 		/* save the info in the textareas to the database, update the display, and remove textareas */
 		// is there going to be a problem if the ampersand appears in the textarea????? :/
@@ -119,8 +130,12 @@
 			success: function(response){				
 				console.log("saved info.");
 				
-				// display the changes on the client side!
+				// display the changes on the client side immediately!
+				var updatedLocInfo = document.getElementById('locationText');
+				updatedLocInfo.textContent = "location: " + locInfo;
 				
+				var updatedAbout = document.getElementById('aboutText');
+				updatedAbout.textContent = aboutInfo;
 			}
 		});
 		
