@@ -6,7 +6,7 @@
 <html>
 
 <head>
-	<title> <%= user.local.username %>'s profile - online piano roll </title>
+	<title> <%= user.local.username %>'s profile - Piano Roll Online </title>
 	<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
 </head>
 
@@ -14,6 +14,10 @@
 
 	body{
 		font-family: Arial;
+	}
+	
+	#avatar{
+		text-align: center;
 	}
 	
 	#userFacts{
@@ -45,12 +49,30 @@
 		margin-left: 2%;
 	}
 	
+	#toggleEdit{
+		cursor: pointer;
+	}
+	
+	#toggleEdit:hover, #logout:hover{
+		color: #5d6066;
+	}
+	
 	.scoreList > *{
 		display: inline-block;
 	}
 	
 	.delete:hover{
 		color: #f00;
+		cursor: pointer;
+	}
+	
+	a{
+		text-decoration: none;
+		color: #000;
+	}
+	
+	a:hover{
+		color: #5d6066;
 	}
 
 </style>
@@ -65,6 +87,7 @@
 		<h2> welcome back <%= user.local.username %> </h2>
 		
 		<div id='avatar'>
+			<p> avatar feature in progress...</p>
 		</div>
 		
 		<div id='locationField'>
@@ -87,7 +110,8 @@
 		
 		<h4> <a href="/pianoRoll"> go to piano roll </a> </h4>
 		<!-- <h4> <a href=""> check out public scores </a> </h4> -->
-		<h4 class="toggle" onclick="editProfile()"> edit profile </h4>
+		<h4 id="toggleEdit" onclick="editProfile()"> edit profile </h4>
+		<h4 id="logout"><a href="/logout"> logout </a></h4>
 		
 	</div>
 	
@@ -97,10 +121,10 @@
 		<!-- some container with columns and rows to display scores for user -->
 		<div id=''>
 			<% for(var i = 0; i < user.local.scores.length; i++){ %>
-				<div class="scoreList">
+				<div class="scoreList" id=<%=  user.local.scores[i].title %>>
 					<h3> <%=  user.local.scores[i].title %> </h3>
 					<p> | </p>
-					<p class="delete" id=<%=  user.local.scores[i].title %>> delete </p>
+					<p class="delete" onclick="deleteScore(this.parentNode.id)"> delete </p>
 				</div>
 			<% } %>
 		</div>
@@ -207,6 +231,27 @@
 		buttonLocation.appendChild(saveButton);
 		buttonLocation.appendChild(cancelButton);
 		
+	}
+	
+	// delete a score 
+	function deleteScore(scoreName){
+		
+		$.ajax({
+		type: 'DELETE',
+		url: '/delete_score?name=' + scoreName,
+		success: function(response){				
+			if(response === "success"){
+				
+				console.log("removed score: " + scoreName);
+				
+				// remove from DOM 
+				var element = document.getElementById(scoreName);
+				element.parentNode.removeChild(element);
+			}
+		}
+	});
+	
+	
 	}
 
 

@@ -1,8 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
+
 <html>
 <head>
 	<meta charset='utf-8'>
-	<title> a piano roll in the browser </title>
+	<title> <%= user.local.username %>'s Piano Roll - Piano Roll Online </title>
 	<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
 	<script src='/scripts/classes.js'></script>
 	<script src='/scripts/context_menus.js'></script>
@@ -145,11 +146,11 @@
 		<li id='composerLabel'><h2> composer:  </h2></li>
 		<li><h2 id='composer'> hi </h2></li>
 		<li>|</li>
-		<li><h2><a href='https://github.com/syncopika/piano_roll_browser'>help!</a></h2></li>
+		<li><h2><a href='https://github.com/syncopika/piano_roll_browser'  target="_blank">help!</a></h2></li>
 		<li>|</li>
 		<li><h2 id='namespace'> back to <a href='/profile'> profile </a> </h2></li>
 		<li>|</li>
-		<li><h2>logout</h2></li>
+		<li><h2><a href="/logout">logout</a></h2></li>
 	</ul>
 
 	<ul id='buttons'>
@@ -183,18 +184,6 @@
 					<option> <%= user.local.scores[i].title %> </option>
 			<% } %>
 		</select>
-		
-		<!--
-		<select onchange="getDemo(this)">
-			<option label=""></option>
-			<option>
-				intrada_pezel_test
-			</option>
-			<option>
-				sand_canyon_test
-			</option>
-		</select>
-		-->
 	</div>
 </div>
 
@@ -230,7 +219,6 @@
 - allow color customizations for highlight, note blocks
 - allow playback at specified measure 
 - allow repeats (add some new attributes to column headers)?
-- highlight current note column on playback
 - 32nd notes? mayyyybe
 */
 
@@ -670,7 +658,6 @@ function selectScore(selectedDemo){
 			showOnionSkin(pianoRoll);
 		}
 	});
-
 
 }
 

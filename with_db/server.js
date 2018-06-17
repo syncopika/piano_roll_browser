@@ -60,6 +60,8 @@ app.use(flash()); 		            // connect-flash is used for flash messages stor
 require('./routes/routes.js')(app, passport);
 
 // set directory path so the piano roll (index.ejs) will know where to look to find the required javascript files 
+// since this project is a nested directory and I want to reference my script folder outside it, I need to do this.
+// this treats the crrent directory's parent as the root directory 
 var parentDir = (__dirname).split("\\");
 parentDir = parentDir.slice(0, parentDir.length - 1); // remove last part of path, because that's the current directory 
 parentDir = parentDir.join("\\"); // rejoin the array elements 

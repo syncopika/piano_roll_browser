@@ -90,17 +90,17 @@ module.exports = function(app, passport){
 		
 		// get the user 
 		var user = req.user.local.username;
+		
 		// get the score (the body attribute is holding the json data)
 		// careful - the req.body is actually an object where the data is mapped to "score", the name you gave 
 		// for the query attribute when making the post request 
-		
 		var score = req.body;
 		var scorejson = JSON.parse(score.score);
 		
-		// if score exists, update the note data. otherwise, add it.
+		// if score exists, update the note data (via the instruments field). otherwise, add it.
 		User.update(
-			{'local.username': user, 'local.scores.title': scorejson.title},
-			{$set: {'local.scores.$.instruments': scorejson.instruments}},
+			{'local.username': user, 'local.scores.title': scorejson.title}, // conditions to find 
+			{$set: {'local.scores.$.instruments': scorejson.instruments}},	// what to do when found 
 			{new: true},
 			function(err, result){
 				if(err){
@@ -138,7 +138,7 @@ module.exports = function(app, passport){
 		// get the name of the score requested 
 		var scoreName = req.query.name;
 	
-		// look for the score 
+		// look for the score (this is actually returning the whole user! :O maybe not a good idea...)
 		User.find({'local.username': user},
 					function(err, user){
 								if(err){
@@ -147,6 +147,27 @@ module.exports = function(app, passport){
 								res.send(user);
 					});
 	
+	});
+	
+	// delete a score (this option is selected from the user's profile page)
+	app.delete('/delete_score', function(req, res){
+		
+		var user = req.user.local.username;
+		var scoreToDelete = req.query.name;
+		
+		// delete the score 
+		User.update(
+			{'local.username': user, 'local.scores.title': scoreToDelete},
+			{$pull: {'local.scores': {'title': scoreToDelete} } }, 
+			false,
+			function(err, user){
+						if(err){
+							throw err;
+						}
+						res.send("success");
+					}
+		);
+		
 	});
 	
 	// show logout page 
