@@ -2,15 +2,16 @@
 a music sequencer inspired by LMMS, one of the best software applications ever!    
 also influenced a bit by PxTone Collage, another great application!      
     
-This project is a work-in-progress.            
+This project is a work-in-progress.        
+    
+![screenshot of the piano roll](current.png "current look")    
      
 ### instructions:    
 - to change the name of the piece or the composer, double click on 'title' or 'composer', just above the buttons.     
-- left-click a block on the grid to place a note; click again to remove.   
+- left-click a block on the grid to place a note; click again to remove. Each column can only have one note.    
 - right-click a block on the grid to create 16th notes (subdivide), or rejoin 16th notes to revert back to 8th notes. You can also change a note's properties, such as volume and style.    
 - right-click an instrument block to modify its sound, name, and volume.    
     
-please note: each column can only have 1 note per instrument.    
 check out a demo! see the demo dropdown box.    
     
 ### current problems:  
