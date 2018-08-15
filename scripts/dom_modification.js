@@ -15,24 +15,29 @@ the PianoRoll class in classes.js
 ****/
 function clickNote(id, waveType, pianoRollObject){
 
-	var parent = document.getElementById(id).parentNode.id;
-	parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
-	
-	// create a new oscillator just for this note 
-	var osc = pianoRollObject.audioContext.createOscillator();
-	osc.type = waveType;
-	osc.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], 0);
-	
-	// borrow the currentInstrument's gain node 
-	var gain = pianoRollObject.currentInstrument.gain;
-	osc.connect(gain);
-	
-	gain.gain.setTargetAtTime(.3, pianoRollObject.audioContext.currentTime, 0.002);
-	osc.start(0);
-	
-	// this setTimeout makes sure the oscillator gets silent again
-	gain.gain.setTargetAtTime(0, pianoRollObject.audioContext.currentTime + 0.080, 0.002);
-	osc.stop(pianoRollObject.audioContext.currentTime + .100);
+	// resume the context per the Web Audio autoplay policy 
+	pianoRollObject.audioContext.resume().then(() => {
+
+		var parent = document.getElementById(id).parentNode.id;
+		parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
+		
+		// create a new oscillator just for this note 
+		var osc = pianoRollObject.audioContext.createOscillator();
+		osc.type = waveType;
+		osc.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], 0);
+		
+		// borrow the currentInstrument's gain node 
+		var gain = pianoRollObject.currentInstrument.gain;
+		osc.connect(gain);
+		
+		gain.gain.setTargetAtTime(.3, pianoRollObject.audioContext.currentTime, 0.002);
+		osc.start(0);
+		
+		// this setTimeout makes sure the oscillator gets silent again
+		gain.gain.setTargetAtTime(0, pianoRollObject.audioContext.currentTime + 0.080, 0.002);
+		osc.stop(pianoRollObject.audioContext.currentTime + .100);
+		
+	});
 
 }
 

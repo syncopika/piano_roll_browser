@@ -263,6 +263,9 @@ pianoRoll.currentInstrument = pianoRoll.instruments[0];
 buildGridHeader('columnHeaderRow', pianoRoll);
 buildGrid('piano', pianoRoll);
 
+// suspend the context (testing prior to M70 update (Chrome))
+context.suspend();
+
 // allow components like the toolbar to move with the user when scrolling right after more measures are added 
 $(window).scroll(function(){
 
@@ -311,11 +314,16 @@ function bindButtons(pianoRollObject){
 	});
 	
 	document.getElementById('play').addEventListener('click', function(){
-		play(pianoRoll);
+		// resume the context per the Web Audio autoplay policy 
+		context.resume().then(() => {
+			play(pianoRoll);
+		})
 	});
 	
 	document.getElementById('playAll').addEventListener('click', function(){
-		playAll(pianoRoll);
+		context.resume().then(() => {
+			playAll(pianoRoll);
+		})
 	});
 	
 	document.getElementById('stopPlay').addEventListener('click', function(){
