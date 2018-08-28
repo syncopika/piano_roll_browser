@@ -322,6 +322,11 @@ function addNewMeasure(pianoRollObject){
 ****/
 function deleteMeasure(pianoRollObject){
 	
+	// check how many measures exist first. if none, don't do anything. 
+	if(pianoRollObject.numberOfMeasures === 0){
+		return;
+	}
+	
 	var confirmDelete = confirm('Are you sure? Please make sure all notes are deleted from the measure first.');
 	
 	if(confirmDelete){
