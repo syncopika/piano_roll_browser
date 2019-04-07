@@ -186,3 +186,12 @@ function ElementNode(domElement){
 	// indicates whether note is regular, legato, staccato, or glide 
 	this.style = domElement.getAttribute("type");
 }
+
+
+
+module.exports = {
+	PianoRoll: PianoRoll,
+	Instrument: Instrument,
+	Note: Note,
+	ElementNode: ElementNode
+}

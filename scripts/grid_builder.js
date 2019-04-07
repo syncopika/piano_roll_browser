@@ -13,7 +13,7 @@ set up grid headers first (the headers for each column)
 ****/
 function buildGridHeader( columnHeaderRowId, pianoRollObject ){
 	
-	var columnHeaderRow = $( '#' + columnHeaderRowId );
+	var columnHeaderRow = document.getElementById(columnHeaderRowId);
 	
 	// wherever each new measure starts, mark it
 	// start at 2 (1 is implicit)
@@ -180,5 +180,7 @@ function appendDummyElement(elementToAppendTo){
 
 module.exports = {
 	replaceSharp: replaceSharp,
-	appendDummyElement: appendDummyElement
+	appendDummyElement: appendDummyElement,
+	buildGridHeader: buildGridHeader,
+	buildGrid: buildGrid
 }
