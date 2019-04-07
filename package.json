@@ -1,0 +1,24 @@
+{
+  "name": "piano_roll_browser",
+  "version": "1.0.0",
+  "description": "a piano roll in the browser",
+  "main": "",
+  "scripts": {
+    "test": "node ./node_modules/mocha/bin/mocha --require tests/jsdom.js tests/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/syncopika/piano_roll_browser.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/syncopika/piano_roll_browser/issues"
+  },
+  "homepage": "https://github.com/syncopika/piano_roll_browser#readme",
+  "dependencies": {
+    "chai": "^4.2.0",
+    "jsdom": "^14.0.0",
+    "mocha": "^6.0.2"
+  }
+}

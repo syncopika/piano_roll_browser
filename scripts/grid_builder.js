@@ -176,3 +176,9 @@ function appendDummyElement(elementToAppendTo){
 	dummyElement.id = elementToAppendTo.id + "_dummy";
 	elementToAppendTo.appendChild(dummyElement);
 }
+
+
+module.exports = {
+	replaceSharp: replaceSharp,
+	appendDummyElement: appendDummyElement
+}

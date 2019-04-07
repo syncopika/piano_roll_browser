@@ -330,7 +330,7 @@ function subdivide(elementId, clearColumn, pianoRollObject){
 // take an element node id as parameter, and true or false if you want to clear a whole column (no green in any block of the column)
 function rejoin(elementId, clearColumn, pianoRollObject){
 
-	block = document.getElementById(elementId);
+	var block = document.getElementById(elementId);
 	
 	// if block is null, it doesn't exist in the grid. it might be a 16th note currently that should be an 8th note 
 	// or vice versa	
