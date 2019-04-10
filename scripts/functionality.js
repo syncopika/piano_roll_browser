@@ -95,9 +95,9 @@ function readInNotes(pianoRollObject){
 		}else{
 			if(columnHeaders[i].id.indexOf("-1") > 0 || columnHeaders[i].id.indexOf("-2") > 0){
 				// just pass in the C7 note of the column id for rests 
-				notes.push(new Note(0.0,  Math.round(tempo / pianoRollObject.noteLengths["sixteenth"]), document.getElementById( 'C7' + columnHeaders[i].id )));
+				notes.push(new Note(0.0, Math.round(tempo / pianoRollObject.noteLengths["sixteenth"]), document.getElementById( 'C7' + columnHeaders[i].id )));
 			}else{
-				notes.push(new Note(0.0,  Math.round(tempo / pianoRollObject.noteLengths["eighth"]), document.getElementById( 'C7' + columnHeaders[i].id )));
+				notes.push(new Note(0.0, Math.round(tempo / pianoRollObject.noteLengths["eighth"]), document.getElementById( 'C7' + columnHeaders[i].id )));
 			}
 		}
 	}
@@ -542,3 +542,8 @@ function createNewInstrument(name, pianoRollObject){
 function deleteInstrument(){
 }
 
+
+
+module.exports = {
+	getCorrectLength: getCorrectLength
+}

@@ -84,16 +84,12 @@ set up rest of grid
 ****/
 function buildGrid( gridDivId, pianoRollObject ){
 
-	var thePiano = $('#' + gridDivId);
+	var thePiano = document.getElementById(gridDivId);
 	
 	// this special div is the bar that shows the available notes 
-	var pianoNotes = $('#pianoNotes');
+	var pianoNotes = document.getElementById('pianoNotes');
 	
-	var note;
-	
-	for(note in pianoRollObject.noteFrequencies){
-		
-		note = note;
+	for(var note in pianoRollObject.noteFrequencies){
 		
 		// ignore enharmonics 
 		if(note.substring(0, 2) === "Gb" || note.substring(0, 2) === "Db" ||
