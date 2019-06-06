@@ -503,3 +503,15 @@ function changeRightBorder(columnBlockId, type){
 	}
 	
 }
+
+try{
+	module.export = { 
+		makeInstrumentContextMenu: makeInstrumentContextMenu, 
+		makeNoteContextMenu: makeNoteContextMenu, 
+		subdivide: subdivide, 
+		rejoin: rejoin, 
+		changeRightBorder: changeRightBorder 
+	};
+}catch(e){
+	// ignore 
+}

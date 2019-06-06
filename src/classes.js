@@ -188,10 +188,13 @@ function ElementNode(domElement){
 }
 
 
-
-module.exports = {
-	PianoRoll: PianoRoll,
-	Instrument: Instrument,
-	Note: Note,
-	ElementNode: ElementNode
+try{
+	module.exports = {
+		PianoRoll: PianoRoll,
+		Instrument: Instrument,
+		Note: Note,
+		ElementNode: ElementNode
+	}
+}catch(e){
+	// ignore
 }

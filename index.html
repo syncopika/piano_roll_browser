@@ -4,11 +4,11 @@
 	<meta charset='utf-8'>
 	<title> a piano roll in the browser </title>
 	<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
-	<script src='scripts/classes.js'></script>
-	<script src='scripts/context_menus.js'></script>
-	<script src='scripts/dom_modification.js'></script>
-	<script src='scripts/grid_builder.js'></script>
-	<script src='scripts/functionality.js'></script>
+	<script src='src/classes.js'></script>
+	<script src='src/context_menus.js'></script>
+	<script src='src/dom_modification.js'></script>
+	<script src='src/grid_builder.js'></script>
+	<script src='src/functionality.js'></script>
 	
 	<!-- stuff needed for contextMenu -->
 	<link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/screen.css" type="text/css"/>
@@ -217,7 +217,6 @@
 - allow color customizations for highlight, note blocks
 - allow playback at specified measure 
 - allow repeats (add some new attributes to column headers)?
-- highlight current note column on playback
 - 32nd notes? mayyyybe
 */
 
@@ -235,22 +234,30 @@ $(document).ready(function(){
 	$('#pianoNotes').css('top', position.top);
 });
 
-// make new Piano Roll object (has some necessary information about the piano roll)
+/****
+	make new Piano Roll object (has some necessary information about the piano roll)
+****/
 var pianoRoll = new PianoRoll();
 makeInstrumentContextMenu(pianoRoll);
 makeNoteContextMenu(pianoRoll);
 bindButtons(pianoRoll);
 
-/**** INFORMATION ABOUT THE CURRENT SETUP ****/
+/**** 
+	INFORMATION ABOUT THE CURRENT SETUP 
+****/
 $('#measures').html("number of measures: " + pianoRoll.numberOfMeasures);
 $('#timeSig').html("time signature: " + pianoRoll.timeSignature);
 $('#subdiv').html("subdivision: " + pianoRoll.subdivision);
 
-/**** SET UP AUDIO CONTEXT ****/
+/**** 
+	SET UP AUDIO CONTEXT 
+****/
 var context = new AudioContext();
 pianoRoll.audioContext = context;
 
-/**** SET UP INITIAL INSTRUMENT ****/
+/**** 
+	SET UP INITIAL INSTRUMENT 
+****/
 var g = initGain(context);	
 g.connect(context.destination);
 
@@ -529,7 +536,7 @@ separate file reader function
 for my local JSON file demos 
 
 if testing locally, remember that Chrome
-is picky about cross-origin requests 
+doesn't allow cross-origin resource sharing
 
 use python -m http.server to launch 
 a local server. then access this page through it. 
@@ -626,8 +633,6 @@ function getDemo(selectedDemo){
 
 }
 
-// show where currently-playing note is 
-//requestAnimationFrame( function(){ showCurrentNote(pianoRoll) });
 
 </script>
 
