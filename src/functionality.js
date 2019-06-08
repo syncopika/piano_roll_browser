@@ -544,7 +544,7 @@ function deleteInstrument(){
 
 
 try {
-	modules.export = {
+	module.exports = {
 		initGain: initGain,
 		readInNotes: readInNotes,
 		onendFunc: onendFunc,

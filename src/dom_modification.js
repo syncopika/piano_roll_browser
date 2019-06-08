@@ -33,9 +33,32 @@ function clickNote(id, waveType, pianoRollObject){
 		gain.gain.setTargetAtTime(.3, pianoRollObject.audioContext.currentTime, 0.002);
 		osc.start(0);
 		
-		// this setTimeout makes sure the oscillator gets silent again
+		// silence the oscillator 
 		gain.gain.setTargetAtTime(0, pianoRollObject.audioContext.currentTime + 0.080, 0.002);
 		osc.stop(pianoRollObject.audioContext.currentTime + .100);
+		
+		
+		/*
+		
+		// kick drum! 
+		
+		var osc = pianoRollObject.audioContext.createOscillator();
+		osc.frequency.setValueAtTime(150, 0);
+		
+		var gain = pianoRollObject.currentInstrument.gain;
+		osc.connect(gain);
+		gain.gain.setTargetAtTime(.3, pianoRollObject.audioContext.currentTime, 0.002);
+		
+		osc.frequency.exponentialRampToValueAtTime(0.01, pianoRollObject.audioContext.currentTime + .100);
+		gain.gain.exponentialRampToValueAtTime(0.01, pianoRollObject.audioContext.currentTime + .100);
+		
+		osc.start(0);
+		
+		gain.gain.setTargetAtTime(0, pianoRollObject.audioContext.currentTime + 0.080, 0.002);
+		osc.stop(pianoRollObject.audioContext.currentTime + .100);
+		
+		
+		*/
 		
 	});
 
@@ -63,7 +86,7 @@ function addNote(id, pianoRollObject){
 		// take away green color 
 		$('#' + id).css("background-color", "transparent");
 		
-		//update attributes
+		// update attributes
 		$('#' + id).attr("volume", 0.0);
 		
 		// change hasNote attribute to false (0) in column header
@@ -122,7 +145,7 @@ function addNote(id, pianoRollObject){
 			// add the note to the currentInstrument's activeNotes attribute (an associative array)
 			pianoRollObject.currentInstrument.activeNotes[id] = 1;
 		
-			//change hasNote attribute to true (1) in column header
+			//change hasNote attribute to true in column header
 			document.getElementById(headerId).setAttribute("hasNote", 1); // set it to 1, no matter how many notes are added to the column 
 		}
 	}
@@ -134,7 +157,7 @@ function addNote(id, pianoRollObject){
 /****
 
 	highlight row
-	-used when mouseover 
+	- used when mouseover 
 
 ****/
 function highlightRow(id, color){
