@@ -20,7 +20,11 @@ function PianoRoll(){
 	this.lastTime; 				// the time the last note was supposed to be played
 	this.currentInstrumentNoteQueue = []; // keep track of the current instrument' scheduled notes. use this for showing what note is currently playing
 
-	// NOTE FREQUENCIES @ 440Hz
+	// instrument-related stuff 
+	this.noiseBuffer; // for percussion 
+
+
+	// NOTE FREQUENCIES WITH A @ 440Hz
 	this.noteFrequencies = {
 	/*
 		"C8": 4186.01,
@@ -139,8 +143,32 @@ function PianoRoll(){
 		"quarter": 1, //4 means quarter note 
 		"eighth": 2, //this means divide by a factor of 2 to get milliseconds per eighth note
 		"sixteenth": 4
-	}	
+	}
 	
+	// initialize the audio context and setup some stuff 
+	this.init = function(){
+		
+		var context = new AudioContext();
+		this.audioContext = context;
+		
+		// suspend the context (testing prior to M70 update (Chrome))
+		context.suspend();
+		
+		/*
+			percussion-related setup 
+		*/
+		// set up a noise buffer for snare drum
+		//var bufSize = context.sampleRate;
+		//var buffer = context.createBuffer(1, bufSize, bufSize);
+		//var output = buffer.getChannelData(0);
+		//for(var i = 0; i < bufSize; i++){
+		//	output[i] = Math.random() * 2 - 1;
+		//}
+		//this.noiseBuffer = buffer;
+		
+		this.PercussionManager = new PercussionManager(context);
+	}
+
 }
 
 
@@ -155,7 +183,7 @@ function Instrument(name, gain, notesArray){
 	
 	// volume property so all notes for a particular instrument can be set to a certain volume
 	// float value!
-	this.volume = .3; 				// set default volume to .3 (I think that's probably loud enough)
+	this.volume = .2; 				// set default volume to .2 (I think that's probably loud enough)
 }
 
 /*****  NOTE CLASS ******/
@@ -187,6 +215,93 @@ function ElementNode(domElement){
 	this.style = domElement.getAttribute("type");
 }
 
+/***** PERCUSSION CLASS ******/
+function PercussionManager(context){
+	
+	// set up a noise buffer to be used for the snare drum 
+	this.context = context;
+	var bufSize = context.sampleRate;
+	var buffer = context.createBuffer(1, bufSize, bufSize);
+	var output = buffer.getChannelData(0);
+	for(var i = 0; i < bufSize; i++){
+		output[i] = Math.random() * 2 - 1;
+	}
+	
+	this.noiseBuffer = buffer;
+	
+	// note that each oscillator needs its own gain node!
+	this.kickDrumNote = function(frequency, volume, time, returnBool){
+		
+		var context = this.context;
+		var osc = context.createOscillator();
+		var gain = context.createGain();//gainNode;
+		osc.connect(gain);
+		
+		osc.frequency.setValueAtTime(frequency, time);
+		gain.gain.setValueAtTime(volume, time);
+		
+		osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.1);
+		gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+		
+		gain.connect(context.destination);
+		
+		if(!returnBool){
+			// this is just for clicking on a note
+			osc.start(0);
+			//gain.gain.setTargetAtTime(0.0, time + 0.08, 0.0045);
+			osc.stop(time + 0.1);
+		}else{
+			// this is for a note that needs to be played.
+			// return the oscillator node
+			return osc;
+		}
+	}
+	
+	this.snareDrumNote = function(frequency, volume, time, returnBool){
+		var context = this.context;
+		var noise = context.createBufferSource();
+		noise.buffer = this.noiseBuffer;
+		var noiseFilter = context.createBiquadFilter();
+		noiseFilter.type = 'highpass';
+		noiseFilter.frequency.value = 1000;
+		noise.connect(noiseFilter);
+
+		// add gain to the noise filter 
+		var noiseEnvelope = context.createGain();
+		noiseFilter.connect(noiseEnvelope);
+		noiseEnvelope.connect(context.destination);
+		
+		// the pianoRollObject should have the noise buffer and envelope set up for the snare 
+		// we just need to trigger it 
+		// here we add the snappy part of the drum sound
+		var snapOsc = context.createOscillator();
+		snapOsc.type = 'triangle';
+		
+		//var snapOscEnvelope = pianoRollObject.audioContext.createGain();
+		var snapOscEnv = context.createGain(); //gainNode;
+		snapOsc.connect(snapOscEnv);
+		snapOscEnv.connect(context.destination);
+		
+		noiseEnvelope.gain.setValueAtTime(volume, time);
+		noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+		
+		snapOsc.frequency.setValueAtTime(100, time);
+		snapOscEnv.gain.setValueAtTime(0.7, time);
+		snapOscEnv.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+			
+		if(!returnBool){
+			// this is for clicking a note (not setting up a note for playback)
+			// filter the noise buffer 
+			noise.start(time);
+			snapOsc.start(time);
+			snapOsc.stop(time + 0.2);
+			noise.stop(time + 0.2);
+		}else{
+			return noise;
+		}
+	}
+	
+}
 
 try{
 	module.exports = {

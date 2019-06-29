@@ -238,6 +238,8 @@ $(document).ready(function(){
 	make new Piano Roll object (has some necessary information about the piano roll)
 ****/
 var pianoRoll = new PianoRoll();
+pianoRoll.init();
+
 makeInstrumentContextMenu(pianoRoll);
 makeNoteContextMenu(pianoRoll);
 bindButtons(pianoRoll);
@@ -249,15 +251,11 @@ $('#measures').html("number of measures: " + pianoRoll.numberOfMeasures);
 $('#timeSig').html("time signature: " + pianoRoll.timeSignature);
 $('#subdiv').html("subdivision: " + pianoRoll.subdivision);
 
-/**** 
-	SET UP AUDIO CONTEXT 
-****/
-var context = new AudioContext();
-pianoRoll.audioContext = context;
 
 /**** 
 	SET UP INITIAL INSTRUMENT 
 ****/
+var context = pianoRoll.audioContext;
 var g = initGain(context);	
 g.connect(context.destination);
 
@@ -270,8 +268,6 @@ pianoRoll.currentInstrument = pianoRoll.instruments[0];
 buildGridHeader('columnHeaderRow', pianoRoll);
 buildGrid('piano', pianoRoll);
 
-// suspend the context (testing prior to M70 update (Chrome))
-context.suspend();
 
 // allow components like the toolbar to move with the user when scrolling right after more measures are added 
 $(window).scroll(function(){

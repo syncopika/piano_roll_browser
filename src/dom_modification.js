@@ -18,51 +18,99 @@ function clickNote(id, waveType, pianoRollObject){
 	// resume the context per the Web Audio autoplay policy 
 	pianoRollObject.audioContext.resume().then(() => {
 
-		var parent = document.getElementById(id).parentNode.id;
-		parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
+		if(waveType === "percussion"){
+			
+			clickPercussionNote(id, pianoRollObject);
+			
+		}else{
+			
+			var parent = document.getElementById(id).parentNode.id;
+			parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
+			
+			// create a new oscillator just for this note 
+			var osc = pianoRollObject.audioContext.createOscillator();
+			osc.type = waveType;
+			osc.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], 0);
+			
+			// borrow the currentInstrument's gain node 
+			var gain = pianoRollObject.currentInstrument.gain;
+			osc.connect(gain);
+			
+			// set the volume of a clicked note to whatever the current isntrument's volume is 
+			gain.gain.setTargetAtTime(pianoRollObject.currentInstrument.volume, pianoRollObject.audioContext.currentTime, 0.002);
+			osc.start(0);
+			
+			// silence the oscillator 
+			gain.gain.setTargetAtTime(0, pianoRollObject.audioContext.currentTime + 0.080, 0.002);
+			osc.stop(pianoRollObject.audioContext.currentTime + .100);
+			
+		}
+
+	});
+}
+
+function clickPercussionNote(id, pianoRollObject){
+	
+	var parent = document.getElementById(id).parentNode.id;
+	parent = parent.replace('s', '#')
+	
+	var context = pianoRollObject.audioContext;
+	var gain = pianoRollObject.currentInstrument.gain;
+	var time = pianoRollObject.audioContext.currentTime;
+	var octave = parseInt(parent.match(/[0-9]/g)[0]);
+	var volume = pianoRollObject.currentInstrument.volume;
+	
+	if(octave >= 2 && octave <= 4){
+		// kick drum 
+		pianoRollObject.PercussionManager.kickDrumNote(pianoRollObject.noteFrequencies[parent], volume, time, false);
 		
-		// create a new oscillator just for this note 
-		var osc = pianoRollObject.audioContext.createOscillator();
-		osc.type = waveType;
-		osc.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], 0);
-		
-		// borrow the currentInstrument's gain node 
-		var gain = pianoRollObject.currentInstrument.gain;
-		osc.connect(gain);
-		
-		gain.gain.setTargetAtTime(.3, pianoRollObject.audioContext.currentTime, 0.002);
-		osc.start(0);
-		
-		// silence the oscillator 
-		gain.gain.setTargetAtTime(0, pianoRollObject.audioContext.currentTime + 0.080, 0.002);
-		osc.stop(pianoRollObject.audioContext.currentTime + .100);
-		
+	}else if(octave === 5){
+		// snare drum 
 		
 		/*
-		
-		// kick drum! 
-		
-		var osc = pianoRollObject.audioContext.createOscillator();
-		osc.frequency.setValueAtTime(150, 0);
-		
-		var gain = pianoRollObject.currentInstrument.gain;
-		osc.connect(gain);
-		gain.gain.setTargetAtTime(.3, pianoRollObject.audioContext.currentTime, 0.002);
-		
-		osc.frequency.exponentialRampToValueAtTime(0.01, pianoRollObject.audioContext.currentTime + .100);
-		gain.gain.exponentialRampToValueAtTime(0.01, pianoRollObject.audioContext.currentTime + .100);
-		
-		osc.start(0);
-		
-		gain.gain.setTargetAtTime(0, pianoRollObject.audioContext.currentTime + 0.080, 0.002);
-		osc.stop(pianoRollObject.audioContext.currentTime + .100);
-		
-		
-		*/
-		
-	});
+		// filter the noise buffer 
+		var noise = context.createBufferSource();
+		noise.buffer = pianoRollObject.noiseBuffer;
+		var noiseFilter = context.createBiquadFilter();
+		noiseFilter.type = 'highpass';
+		noiseFilter.frequency.value = 1000;
+		noise.connect(noiseFilter);
 
+		// add gain to the noise filter 
+		var noiseEnvelope = context.createGain();
+		noiseFilter.connect(noiseEnvelope);
+		noiseEnvelope.connect(context.destination);
+		
+		// the pianoRollObject should have the noise buffer and envelope set up for the snare 
+		// we just need to trigger it 
+		// here we add the snappy part of the drum sound (this can probably be moved to piano roll obj.'s init())
+		var snapOsc = pianoRollObject.audioContext.createOscillator();
+		snapOsc.type = 'triangle';
+		
+		//var snapOscEnvelope = pianoRollObject.audioContext.createGain();
+		var snapOscEnv = pianoRollObject.currentInstrument.gain;
+		snapOsc.connect(snapOscEnv);
+		snapOscEnv.connect(pianoRollObject.audioContext.destination);
+		
+		noiseEnvelope.gain.setValueAtTime(1, time);
+		noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+		noise.start(time);
+		
+		snapOsc.frequency.setValueAtTime(100, time);
+		snapOscEnv.gain.setValueAtTime(0.7, time);
+		snapOscEnv.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+		snapOsc.start(time);
+		
+		snapOsc.stop(time + 0.2);
+		noise.stop(time + 0.2);
+		*/
+		pianoRollObject.PercussionManager.snareDrumNote(pianoRollObject.noteFrequencies[parent], volume, time, false);
+		
+	}else{
+		// hi-hat 
+	}
 }
+
 
 
 /****

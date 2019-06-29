@@ -34,7 +34,7 @@ function makeInstrumentContextMenu(pianoRollObject){
 				select: {
 					name: "Select wave type",
 					type: 'select',
-					options: {1: 'square', 2: 'sine', 3: 'sawtooth', 4: 'triangle'},
+					options: {1: 'square', 2: 'sine', 3: 'sawtooth', 4: 'triangle', 5: 'percussion'},
 					selected: function() { 
 						if(pianoRollObject.currentInstrument.waveType === "square" ){ 
 							// this string I'm returning is actually the "key" for the options object above.
@@ -44,8 +44,10 @@ function makeInstrumentContextMenu(pianoRollObject){
 							return "2";
 						}else if(pianoRollObject.currentInstrument.waveType === "sawtooth"){
 							return "3";
-						}else{
+						}else if(pianoRollObject.currentInstrument.waveType === "triangle"){
 							return "4";
+						}else{
+							return "5";
 						}		
 					},
 					events: {

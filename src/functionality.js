@@ -176,9 +176,6 @@ function scheduler(pianoRoll, allInstruments){
 	// keep a counter that counts the number of instruments that have finished playing all their notes  
 	var stillNotesToPlay = 0;
 	
-	// make a copy of pianoRoll.instruments so that we can edit the array 
-	// i.e. when an instrument is done, I can set the index of that instrument in the array to null or something 
-	
 	// get the index of the current instrument in case allInstruments is false (just playing one instrument in this case) 
 	var currentInstrumentIndex; 
 	for(var j = 0; j < pianoRoll.instruments.length; j++){
@@ -188,6 +185,9 @@ function scheduler(pianoRoll, allInstruments){
 	}
 
 	var instruments;
+	
+	// make a copy of pianoRoll.instruments so that we can edit the array 
+	// i.e. when an instrument is done, I can set the index of that instrument in the array to null or something 
 	if(!allInstruments){
 		// if only playing the current instrument 
 		instruments = [pianoRoll.instruments[currentInstrumentIndex]];
@@ -224,41 +224,13 @@ function scheduler(pianoRoll, allInstruments){
 				nextTime[i] = ctx.currentTime;
 			}
 			
-			// make a new oscillator for this note 
-			var osc = pianoRoll.audioContext.createOscillator();
-			
-			// don't forget gain! (use the already initialized gain nodes from each instrument )
+			var osc = null;
 			var oscGainNode = instruments[i].gain;
-			osc.connect(oscGainNode); // connect the new oscillator to the instrument's gain node!
 			
-			// don't forget any specified attributes for this particular instrument 
-			// check wave type
-			osc.type = instruments[i].waveType;
-			
-			// and note attributes 
+			// note attributes 
 			var currIndex = instrumentNotePointers[i];
 			var notesArr = instruments[i].notes;
 			var thisNote = notesArr[currIndex];
-			
-			if(thisNote.freq < 440){
-				// need to set initial freq to 0 for low notes (C3 and below)
-				// otherwise gliding will be messed up for notes on one end of the spectrum
-				osc.frequency.setValueAtTime(0, 0);
-			}
-			
-			if(notesArr[currIndex].block.style === "glide"){
-				osc.frequency.setTargetAtTime(thisNote.freq, nextTime[i], 0.025);
-			}else{
-				//osc.frequency.setTargetAtTime(thisNote.freq, nextTime[i], 0);
-				osc.frequency.setValueAtTime(thisNote.freq, nextTime[i]);
-			}
-			
-			// check volume 
-			// setting gain value here depending on condition allows for the 'articulation' of notes without 
-			// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
-			// this is fixed by always setting gain to 0 if a note's frequency is 0.
-			var val = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
-			oscGainNode.gain.setTargetAtTime(val, nextTime[i], 0.0045); 
 			
 			// by default, ~70% of the note duration should be played 
 			// the rest of the time can be devoted to the spacer 
@@ -272,16 +244,73 @@ function scheduler(pianoRoll, allInstruments){
 				realDuration = (0.70 * thisNote.duration);
 			}
 			
+			// don't forget any specified attributes for this particular instrument 
+			// check wave type
+			if(instruments[i].waveType === "percussion"){
+				
+				// articulation DOES apply to percussion IF STACCATO OR LEGATO? ignore for now 
+		
+				// find out what octave the note is in 
+				// note that the note might be a rest! so it has no block id!
+				var parent = document.getElementById(thisNote.block.id).parentNode.id;
+				parent = parent.replace('s', '#');
+				var octave = parseInt(parent.match(/[0-9]/g)[0]);
+				
+				var newOsc;
+				var volume = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
+				if(octave >= 2 && octave <= 4){
+					osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
+				}else if(octave === 5){
+					osc = pianoRoll.PercussionManager.snareDrumNote(thisNote.freq, volume, nextTime[i], true);
+				}else{
+					// this is a rest 
+					osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
+				}
+				
+			}else{
+				
+				// make a new oscillator for this note 
+				osc = ctx.createOscillator();
+				
+				// don't forget gain! (use the already initialized gain nodes from each instrument)
+				osc.connect(oscGainNode); // connect the new oscillator to the instrument's gain node!
+					
+				osc.type = instruments[i].waveType;
+				
+				if(thisNote.freq < 440){
+					// need to set initial freq to 0 for low notes (C3 and below)
+					// otherwise gliding will be messed up for notes on one end of the spectrum
+					osc.frequency.setValueAtTime(0, 0);
+				}
+				
+				if(notesArr[currIndex].block.style === "glide"){
+					osc.frequency.setTargetAtTime(thisNote.freq, nextTime[i], 0.025);
+				}else{
+					//osc.frequency.setTargetAtTime(thisNote.freq, nextTime[i], 0);
+					osc.frequency.setValueAtTime(thisNote.freq, nextTime[i]);
+				}
+				
+				// check volume 
+				// setting gain value here depending on condition allows for the 'articulation' of notes without 
+				// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
+				// this is fixed by always setting gain to 0 if a note's frequency is 0.
+				var val = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
+				oscGainNode.gain.setTargetAtTime(val, nextTime[i], 0.0045); 
+				
+				// change gain to 0 after a really small amount of time to give the impression of articulation
+				oscGainNode.gain.setTargetAtTime(0, (nextTime[i]) + (realDuration / 1000) - .0025, 0.0010);		
+			}
+		
 			pianoRoll.timers.push(osc);
 			
-			osc.start( nextTime[i]);
-			pianoRoll.lastTime = nextTime[i];
+			// start osc 
+			osc.start(nextTime[i]);
 			
-			// change gain to 0 after a really small amount of time to give the impression of articulation
-			oscGainNode.gain.setTargetAtTime(0, (nextTime[i]) + (realDuration / 1000) - .0025, 0.0010);
+			// stop osc 
 			osc.stop( nextTime[i] + (realDuration / 1000) );
 			
-			// update nextTime 
+			// update lastTime and nextTime
+			pianoRoll.lastTime = nextTime[i];
 			nextTime[i] += (thisNote.duration / 1000);
 
 			// increment the note pointer for this instrument 
@@ -295,8 +324,9 @@ function scheduler(pianoRoll, allInstruments){
 				
 				pianoRoll.currentInstrumentNoteQueue.push({"note": thisNote.block.id, "time": nextTime[i]});
 			}
-		}
-	}
+			
+		} // end for
+	} // end while 
 	
 }
 
@@ -406,7 +436,7 @@ function stopPlay(pianoRollObject){
 		pianoRollObject.instruments[j].gain = newGain;
 	}
 
-	// clear out timers array (which is actually filled with oscillator nodes)
+	// clear out timers array (which holds the oscillator nodes)
 	pianoRollObject.timers = [];
 	
 	// this is a cheap hack for now (for dealing with showCurrentNote)
@@ -529,7 +559,7 @@ function addNewInstrument(name, bool, pianoRollObject){
 
 ****/
 function createNewInstrument(name, pianoRollObject){
-	// make new oscillator and gain nodes
+	// make new gain node for the instrument 
 	var newGain = initGain(pianoRollObject.audioContext);
 	newGain.connect(pianoRollObject.audioContext.destination);
 	
