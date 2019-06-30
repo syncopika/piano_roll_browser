@@ -218,7 +218,8 @@ function ElementNode(domElement){
 /***** PERCUSSION CLASS ******/
 function PercussionManager(context){
 	
-	// set up a noise buffer to be used for the snare drum 
+	// set up a noise buffer
+	// used in hihat and snare drum 
 	this.context = context;
 	var bufSize = context.sampleRate;
 	var buffer = context.createBuffer(1, bufSize, bufSize);
@@ -252,8 +253,8 @@ function PercussionManager(context){
 			osc.stop(time + 0.1);
 		}else{
 			// this is for a note that needs to be played.
-			// return the oscillator node
-			return osc;
+			// return the oscillator node in an array
+			return [osc];
 		}
 	}
 	
@@ -297,7 +298,35 @@ function PercussionManager(context){
 			snapOsc.stop(time + 0.2);
 			noise.stop(time + 0.2);
 		}else{
-			return noise;
+			return [noise, snapOsc];
+		}
+	}
+	
+	
+	this.hihatNote = function(volume, time, returnBool){
+		var context = this.context;
+		var noise = context.createBufferSource();
+		noise.buffer = this.noiseBuffer;
+		var noiseFilter = context.createBiquadFilter();
+		noiseFilter.type = 'highpass';
+		noiseFilter.frequency.value = 1000;
+		noise.connect(noiseFilter);
+
+		// add gain to the noise filter 
+		var noiseEnvelope = context.createGain();
+		noiseFilter.connect(noiseEnvelope);
+		noiseEnvelope.connect(context.destination);
+		
+		noiseEnvelope.gain.setValueAtTime(volume, time);
+		noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+			
+		if(!returnBool){
+			// this is for clicking a note (not setting up a note for playback)
+			// filter the noise buffer 
+			noise.start(time);
+			noise.stop(time + 0.2);
+		}else{
+			return [noise];
 		}
 	}
 	

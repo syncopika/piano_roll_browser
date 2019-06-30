@@ -2,7 +2,7 @@
 a music sequencer inspired by LMMS, one of the best software applications ever!    
 also influenced a bit by PxTone Collage, another great application!      
     
-This project is a work-in-progress.        
+This project is a work-in-progress :)        
     
 ![screenshot of the piano roll](current.png "current look")    
      
@@ -14,7 +14,7 @@ This project is a work-in-progress.
     
 check out a demo! see the demo dropdown box.    
     
-### current problems:  
+### current potential issues:  
 can get pretty slow when changing instruments.    
 json loading seems a lot slower in Firefox compared to Chrome?     
     

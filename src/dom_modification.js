@@ -19,9 +19,7 @@ function clickNote(id, waveType, pianoRollObject){
 	pianoRollObject.audioContext.resume().then(() => {
 
 		if(waveType === "percussion"){
-			
 			clickPercussionNote(id, pianoRollObject);
-			
 		}else{
 			
 			var parent = document.getElementById(id).parentNode.id;
@@ -66,48 +64,11 @@ function clickPercussionNote(id, pianoRollObject){
 		
 	}else if(octave === 5){
 		// snare drum 
-		
-		/*
-		// filter the noise buffer 
-		var noise = context.createBufferSource();
-		noise.buffer = pianoRollObject.noiseBuffer;
-		var noiseFilter = context.createBiquadFilter();
-		noiseFilter.type = 'highpass';
-		noiseFilter.frequency.value = 1000;
-		noise.connect(noiseFilter);
-
-		// add gain to the noise filter 
-		var noiseEnvelope = context.createGain();
-		noiseFilter.connect(noiseEnvelope);
-		noiseEnvelope.connect(context.destination);
-		
-		// the pianoRollObject should have the noise buffer and envelope set up for the snare 
-		// we just need to trigger it 
-		// here we add the snappy part of the drum sound (this can probably be moved to piano roll obj.'s init())
-		var snapOsc = pianoRollObject.audioContext.createOscillator();
-		snapOsc.type = 'triangle';
-		
-		//var snapOscEnvelope = pianoRollObject.audioContext.createGain();
-		var snapOscEnv = pianoRollObject.currentInstrument.gain;
-		snapOsc.connect(snapOscEnv);
-		snapOscEnv.connect(pianoRollObject.audioContext.destination);
-		
-		noiseEnvelope.gain.setValueAtTime(1, time);
-		noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
-		noise.start(time);
-		
-		snapOsc.frequency.setValueAtTime(100, time);
-		snapOscEnv.gain.setValueAtTime(0.7, time);
-		snapOscEnv.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
-		snapOsc.start(time);
-		
-		snapOsc.stop(time + 0.2);
-		noise.stop(time + 0.2);
-		*/
 		pianoRollObject.PercussionManager.snareDrumNote(pianoRollObject.noteFrequencies[parent], volume, time, false);
 		
 	}else{
 		// hi-hat 
+		pianoRollObject.PercussionManager.hihatNote(volume, time, false);
 	}
 }
 

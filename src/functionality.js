@@ -224,6 +224,7 @@ function scheduler(pianoRoll, allInstruments){
 				nextTime[i] = ctx.currentTime;
 			}
 			
+			var oscList = []; // list of nodes because some sounds have 2 parts (i.e. snare drum sound consists of 2 nodes to be played simultaneously)
 			var osc = null;
 			var oscGainNode = instruments[i].gain;
 			
@@ -252,20 +253,25 @@ function scheduler(pianoRoll, allInstruments){
 		
 				// find out what octave the note is in 
 				// note that the note might be a rest! so it has no block id!
-				var parent = document.getElementById(thisNote.block.id).parentNode.id;
-				parent = parent.replace('s', '#');
-				var octave = parseInt(parent.match(/[0-9]/g)[0]);
-				
-				var newOsc;
-				var volume = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
-				if(octave >= 2 && octave <= 4){
-					osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
-				}else if(octave === 5){
-					osc = pianoRoll.PercussionManager.snareDrumNote(thisNote.freq, volume, nextTime[i], true);
+				if(thisNote.block.id){
+					//console.log(thisNote.block.id)
+					var octave = parseInt(thisNote.block.id.match(/[0-9]/g)[0]);
+					
+					var newOsc;
+					var volume = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
+					if(octave >= 2 && octave <= 4){
+						osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
+					}else if(octave === 5){
+						osc = pianoRoll.PercussionManager.snareDrumNote(thisNote.freq, volume, nextTime[i], true);
+					}else{
+						osc = pianoRoll.PercussionManager.hihatNote(volume, nextTime[i], true);
+					}
 				}else{
-					// this is a rest 
+					// this is a rest
 					osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
 				}
+				
+				oscList = oscList.concat(osc);
 				
 			}else{
 				
@@ -299,15 +305,17 @@ function scheduler(pianoRoll, allInstruments){
 				
 				// change gain to 0 after a really small amount of time to give the impression of articulation
 				oscGainNode.gain.setTargetAtTime(0, (nextTime[i]) + (realDuration / 1000) - .0025, 0.0010);		
+				
+				oscList.push(osc);
 			}
 		
-			pianoRoll.timers.push(osc);
-			
-			// start osc 
-			osc.start(nextTime[i]);
-			
-			// stop osc 
-			osc.stop( nextTime[i] + (realDuration / 1000) );
+			// we generally expect oscList to have 1 osc node. sometimes there may be 2 (i.e. snare drum)
+			pianoRoll.timers = pianoRoll.timers.concat(oscList);
+
+			oscList.forEach(function(osc){
+				osc.start(nextTime[i]);
+				osc.stop( nextTime[i] + (realDuration / 1000) );
+			});
 			
 			// update lastTime and nextTime
 			pianoRoll.lastTime = nextTime[i];
@@ -319,7 +327,8 @@ function scheduler(pianoRoll, allInstruments){
 			// add note to play into currentInstrumentNoteQueue
 			if(instruments[i] === pianoRoll.currentInstrument){
 				
-				// when oscillator ends, highlight the note
+				// when oscillator ends, highlight the note (if oscList contains more than 1 node, just pick the first one)
+				osc = oscList[0];
 				osc.onended = onendFunc(thisNote.block.id);
 				
 				pianoRoll.currentInstrumentNoteQueue.push({"note": thisNote.block.id, "time": nextTime[i]});
@@ -370,7 +379,6 @@ function showCurrentNote(pianoRoll){
 		document.getElementById(column).style.backgroundColor = '#709be0'; // nice light blue color 
 		
 		lastNote = document.getElementById(column);
-		
 	}
 
 	requestAnimationFrame(function(){ showCurrentNote(pianoRoll); });
