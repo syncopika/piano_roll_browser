@@ -5,6 +5,8 @@ DOM MODIFICATION
 many functions here rely on an instance of
 the PianoRoll class in classes.js 
 
+these functions affect what's being displayed on the DOM 
+
 ***************/
 
 
@@ -104,30 +106,32 @@ function addNote(id, pianoRollObject){
 		
 		// update right border (this is only really needed for concatenated note blocks i.e. length = eighth-eighth)
 		// NOTE: the method changeRightBorder is defined in context_menus.js!!
-		changeRightBorder(id, "add");
+		changeRightBorder(id, "add", pianoRollObject.subdivision);
 		
 		// if neighbor is green, make sure their column's hasnote is 1!
-		// again, this is important only for concatenated note blocks 
-		var neighbor = document.getElementById(id).nextSibling.id;
-		var neighborHeader = document.getElementById(neighbor.substring(neighbor.indexOf("col_")));
-		if(neighborHeader.getAttribute("hasnote") < 0){
-			// change hasnote attribute to 1
-			neighborHeader.setAttribute("hasnote", 1);
-			
-			// truncate the current note's length attribute by 1 
-			// i.e. if currently eighth-eighth, make it eighth (remove the first one)
-			var currLength = document.getElementById(id).getAttribute("length");
-			
-			// use the removed substring and make it the current note's new length 
-			// in other words it just takes on its old length before concatenation
-			var oldLength = currLength.substring(0, currLength.indexOf('-'));
-			$('#' + id).attr("length", oldLength);
-			
-			var newLength = currLength.substring(currLength.indexOf('-') + 1);
-			document.getElementById(neighbor).setAttribute("length", newLength);
-			
-			// also add the neighbor's entry in activeNotes 
-			pianoRollObject.currentInstrument.activeNotes[neighbor] = newLength.split('-').length;
+		// this is important only for concatenated note blocks 
+		if(document.getElementById(id).nextSibling){
+			var neighbor = document.getElementById(id).nextSibling.id;
+			var neighborHeader = document.getElementById(neighbor.substring(neighbor.indexOf("col_")));
+			if(neighborHeader.getAttribute("hasnote") < 0){
+				// change hasnote attribute to 1
+				neighborHeader.setAttribute("hasnote", 1);
+				
+				// truncate the current note's length attribute by 1 
+				// i.e. if currently eighth-eighth, make it eighth (remove the first one)
+				var currLength = document.getElementById(id).getAttribute("length");
+				
+				// use the removed substring and make it the current note's new length 
+				// in other words it just takes on its old length before concatenation
+				var oldLength = currLength.substring(0, currLength.indexOf('-'));
+				$('#' + id).attr("length", oldLength);
+				
+				var newLength = currLength.substring(currLength.indexOf('-') + 1);
+				document.getElementById(neighbor).setAttribute("length", newLength);
+				
+				// also add the neighbor's entry in activeNotes 
+				pianoRollObject.currentInstrument.activeNotes[neighbor] = newLength.split('-').length;
+			}
 		}
 		
 		// remove this note from currentInstrument's activeNotes assoc. array 
@@ -341,7 +345,7 @@ function addNewMeasure(pianoRollObject){
 		// adjust width of row 
 		noteRows[j].style.width = parseInt(noteRows[j].style.width) + 20 + "%";
 	}
-	pianoRollObject.numberOfMeasures++; // increment measure variable
+	pianoRollObject.numberOfMeasures++; // increment measure variable of piano roll
 }
 
 /****
@@ -436,7 +440,7 @@ function chooseInstrument(thisElement, pianoRollObject){
 				}
 				
 				// fix border (note that changeRightBorder is defined in context_menus.js)
-				changeRightBorder(currNote.id, "add");	
+				changeRightBorder(currNote.id, "add", pianoRollObject.subdivision);	
 				currNote = currNote.nextSibling;
 			}		
 		}else{
@@ -532,7 +536,7 @@ function drawNotes(instrumentObject, pianoRollObject){
 			
 			// remove right border
 			// NOTE: changeRightBorder is defined in context_menus.js!
-			changeRightBorder(elementExists.id, "remove");
+			changeRightBorder(elementExists.id, "remove", pianoRollObject.subdivision);
 			
 			// need to draw in rest of note block. 
 			var noteHead = elementExists.getAttribute("length").split('-').shift(); // get the head (i.e. is the beginning a 16th or 8th note)
@@ -599,7 +603,7 @@ function drawNotes(instrumentObject, pianoRollObject){
 			
 			// after for loop, make sure to give border on last segment of concatenated note block
 			currNote = currNote.previousSibling;
-			changeRightBorder(currNote.id, "add");
+			changeRightBorder(currNote.id, "add", pianoRollObject.subdivision);
 		}
 
 	}
@@ -620,6 +624,89 @@ function resetHeaders(){
 		columnHeaders[k].setAttribute('hasnote', 0);
 	}
 }
+
+/***
+
+	change tempo 
+
+	this function relies on an INPUT box's ID to get the user-inputted tempo
+
+***/
+function changeTempo(pianoRollObject){
+	var tempoInput = document.getElementById("changeTempo");
+	var selectedTempo = parseInt(tempoInput.value);
+	var tempoText = document.getElementById("tempo");
+	tempoText.innerHTML = selectedTempo + " bpm";
+	
+	// initially getting milliseconds FOR QUARTER NOTES (that's 2 blocks on the grid)
+	// note that currentTempo needs to be rounded before use
+	pianoRollObject.currentTempo = ((Math.round((60000 / selectedTempo) * 1000)) / 1000 );
+	
+	// go through all instruments and adjust duration of each note in their note arrays
+	// according to new current tempo
+	for(var i = 0; i < pianoRollObject.instruments.length; i++){
+		if(pianoRollObject.instruments[i] !== pianoRollObject.currentInstrument){
+			var noteArray = pianoRollObject.instruments[i].notes;
+			for(var j = 0; j < noteArray.length; j++){
+				if(noteArray[j].duration > 1){
+					noteArray[j].duration = getCorrectLength(noteArray[j].block.length, pianoRollObject);
+				}
+			}
+		}
+	}
+}
+
+/***
+
+	change time signature and subdivision (can only switch between 4/4 and 3/4)
+
+***/
+function changeTimeSignature(pianoRollObject, newTimeSig){
+	if(newTimeSig === '4/4'){
+		pianoRollObject.subdivision = 8;
+		pianoRollObject.timeSignature = '4/4';
+	}else{
+		pianoRollObject.subdivision = 6;
+		pianoRollObject.timeSignature = '3/4';
+	}
+}
+
+/***
+	show current note playing
+	
+	// https://www.html5rocks.com/en/tutorials/audio/scheduling/
+	// trying to sync visual (show currently playing note) with audio...
+	// right now I'm using the oscillator node's onended function to 
+	// highlight where the current note playing is. obviously, since it's
+	// onended it's a bit laggy... but it gives a good idea of where the piece is 
+	// and it works just the same on low and high tempi 
+***/
+var lastNote = null;
+var onendFunc = function(x, pianoRoll){ 
+	return function(){
+		// take away highlight of previous note 
+		if(lastNote !== null){
+			lastNote.style.backgroundColor = '#fff';
+		}
+		
+		var column = x.substring(x.indexOf('col'));
+		
+		if(document.getElementById(column) === null){
+			if(column.indexOf("-") < 0){
+				// get first subdivision
+				column = x.substring(x.indexOf('col')) + "-1";
+			}else{
+				column = x.substring(x.indexOf('col'), x.indexOf('-'));
+			}
+		}
+		
+		//console.log(column);
+		document.getElementById(column).style.backgroundColor = '#709be0'; // nice light blue color 
+
+		lastNote = document.getElementById(column);
+	}
+};
+
 
 /****
 
@@ -695,6 +782,40 @@ function showOnionSkin(pianoRollObject){
 	}
 }
 
+/****
+
+	add a new instrument 
+
+****/
+function addNewInstrument(name, bool, pianoRollObject){
+	var instrumentTable = document.getElementById("instrumentTable");
+	var newInstrument = document.createElement('td');
+	
+	// we want to be able to access the instruments in sequential order
+	newInstrument.id = "" + (pianoRollObject.instruments.length + 1); 
+	newInstrument.setAttribute("selected", "0");
+	newInstrument.style.backgroundColor = "transparent";
+	
+	if(name === undefined){
+		newInstrument.innerHTML = "new_instrument";
+	}else{
+		newInstrument.innerHTML = name;
+	}
+	newInstrument.addEventListener('click', function(event){
+		// pass the event target's id to chooseInstrument()
+		chooseInstrument(event.target.id, pianoRollObject);
+	});
+	
+	instrumentTable.appendChild(newInstrument);
+	
+	// bool is not false - if a new instrument needs to be created
+	// - when importing data, this createNewInstrument step is not needed
+	if(bool !== false){
+		createNewInstrument("new_instrument", pianoRollObject);
+	}
+}
+
+
 try{
 	module.exports = { 
 		clickNote: clickNote,
@@ -702,12 +823,16 @@ try{
 		highlightRow: highlightRow,
 		clearGrid: clearGrid,
 		clearGridAll: clearGridAll,
+		showCurrentNote: showCurrentNote,
 		addNewMeasure: addNewMeasure,
 		deleteMeasure: deleteMeasure,
 		chooseInstrument: chooseInstrument,
 		drawNotes: drawNotes,
 		resetHeaders: resetHeaders,
-		showOnionSkin: showOnionSkin
+		showOnionSkin: showOnionSkin,
+		onendFunc: onendFunc,
+		changeTempo: changeTempo,
+		addNewInstrument: addNewInstrument,
 	};
 }catch(e){
 	// ignore 

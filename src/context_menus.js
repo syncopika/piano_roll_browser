@@ -402,7 +402,7 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 			oBlock.setAttribute("length", newLength);
 			
 			// remove right border 
-			changeRightBorder(elementId, "remove");
+			changeRightBorder(elementId, "remove", pianoRollObject.subdivision);
 			
 			// add renamed note to activeNotes, delete old ones only if notes being rejoined are green (i.e. belong to this instrument; not onion-skin)
 			// because sometimes you might want to rejoin empty columns, in which you don't need to do any of this stuff here 
@@ -443,7 +443,7 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 		pianoRollObject.currentInstrument.activeNotes[block.id] = numNotes;
 		
 		// then remove the right border from the current block so the note looks elongated appropriately
-		changeRightBorder(block.id, "remove");
+		changeRightBorder(block.id, "remove", pianoRollObject.subdivision);
 		
 		// change adjacent block column header's hasnote attribute to -1 since it got concatenated with the current block
         // using -1 will be helpful in identifying concatenated blocks 		
@@ -474,8 +474,9 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 }
 
 // function for removing/putting back right border after subdivide, join
-// second arg = if "remove", make right border transparent. if "add", make it #000.
-function changeRightBorder(columnBlockId, type){
+// @param type = 2 options. if "remove", make right border transparent. if "add", make it #000.
+// @param subdivision = the current subdivision of the piano roll (determined by time signature)
+function changeRightBorder(columnBlockId, type, subdivision){
 	
 	// if the target element is the first 16th note of a subdivided eighth note, 
 	// don't mess with the right border 
@@ -491,13 +492,13 @@ function changeRightBorder(columnBlockId, type){
 	var boldBorder = parseInt(headerId.match(/[0-9]{1,}/g)[0]) + 1;
 
 	if(type === "remove"){
-		if(boldBorder % 8 === 0){
+		if(boldBorder % subdivision === 0){
 			$('#' + columnBlockId).css("border-right", "3px solid transparent");
 		}else{
 			$('#' + columnBlockId).css("border-right", "1px solid transparent");
 		}
 	}else if(type === "add"){
-		if(boldBorder % 8 === 0){
+		if(boldBorder % subdivision === 0){
 			$('#' + columnBlockId).css("border-right", "3px solid #000");
 		}else{
 			$('#' + columnBlockId).css("border-right", "1px solid #000");

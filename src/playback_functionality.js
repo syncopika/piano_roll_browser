@@ -5,7 +5,6 @@ these functions control functionality such as:
 - note reading / playback
 - tempo change
 - play/stop 
-- adding / creating new instruments
 
 relies on PianoRoll object in classes.js 
 
@@ -123,38 +122,6 @@ function readInNotes(pianoRollObject){
 	
 ****/
 
-// https://www.html5rocks.com/en/tutorials/audio/scheduling/
-// trying to sync visual (show currently playing note) with audio...
-// right now I'm using the oscillator node's onended function to 
-// highlight where the current note playing is. obviously, since it's
-// onended it's a bit laggy... but it gives a good idea of where the piece is 
-// and it works just the same on low and high tempi 
-
-var lastNote = null;
-var onendFunc = function(x, pianoRoll){ 
-	return function(){
-		// take away highlight of previous note 
-		if(lastNote !== null){
-			lastNote.style.backgroundColor = '#fff';
-		}
-		
-		var column = x.substring(x.indexOf('col'));
-		
-		if(document.getElementById(column) === null){
-			if(column.indexOf("-") < 0){
-				// get first subdivision
-				column = x.substring(x.indexOf('col')) + "-1";
-			}else{
-				column = x.substring(x.indexOf('col'), x.indexOf('-'));
-			}
-		}
-		
-		//console.log(column);
-		document.getElementById(column).style.backgroundColor = '#709be0'; // nice light blue color 
-
-		lastNote = document.getElementById(column);
-	}
-};
 
 function scheduler(pianoRoll, allInstruments){
 	
@@ -339,51 +306,6 @@ function scheduler(pianoRoll, allInstruments){
 	
 }
 
-// show what note is currently playing (only the current instrument's)
-// https://www.html5rocks.com/en/tutorials/audio/scheduling/
-// go through the queue and for each note dequeued, highlight the column it's in to 
-// show where the current note is being played 
-// don't use this 
-var currNote = null;
-function showCurrentNote(pianoRoll){
-	
-	//var currTime = pianoRoll.audioContext.currentTime;
-	var queue = pianoRoll.currentInstrumentNoteQueue;
-	
-	while(queue.length > 0 && queue[0].time <= pianoRoll.audioContext.currentTime && pianoRoll.isPlaying){
-		
-		currNote = queue.splice(0,1)[0];
-
-		// ok, reached the note 
-		// highlight the column of the note
-		if(lastNote !== null){
-			lastNote.style.backgroundColor = '#fff';
-		}
-		
-		// color current note's column header background color
-		var column = currNote.note.substring(currNote.note.indexOf('col'));
-		
-		if(document.getElementById(column) === null){
-			// i.e. if user switches instruments, the note that is supposed to be shown (from the previous instrument) might not exist on the grid 
-			// so the note that's not existing might be subdivided or not 
-
-			if(column.indexOf("-") < 0){
-				// get first subdivision
-				column = currNote.note.substring(currNote.note.indexOf('col')) + "-1";
-			}else{
-				column = currNote.note.substring(currNote.note.indexOf('col'), currNote.note.indexOf('-'));
-			}
-
-		}
-		
-		document.getElementById(column).style.backgroundColor = '#709be0'; // nice light blue color 
-		
-		lastNote = document.getElementById(column);
-	}
-
-	requestAnimationFrame(function(){ showCurrentNote(pianoRoll); });
-}
-
 
 /****
 
@@ -457,36 +379,6 @@ function stopPlay(pianoRollObject){
 	pianoRollObject.currentInstrumentNoteQueue = [];
 }
 
-/***
-
-	change tempo 
-
-	this function relies on an INPUT box's ID to get the user-inputted tempo
-
-***/
-function changeTempo(pianoRollObject){
-	var tempoInput = document.getElementById("changeTempo");
-	var selectedTempo = parseInt(tempoInput.value);
-	var tempoText = document.getElementById("tempo");
-	tempoText.innerHTML = selectedTempo + " bpm";
-	
-	// initially getting milliseconds FOR QUARTER NOTES (that's 2 blocks on the grid)
-	// note that currentTempo needs to be rounded before use
-	pianoRollObject.currentTempo = ((Math.round((60000 / selectedTempo) * 1000)) / 1000 );
-	
-	// go through all instruments and adjust duration of each note in their note arrays
-	// according to new current tempo
-	for(var i = 0; i < pianoRollObject.instruments.length; i++){
-		if(pianoRollObject.instruments[i] !== pianoRollObject.currentInstrument){
-			var noteArray = pianoRollObject.instruments[i].notes;
-			for(var j = 0; j < noteArray.length; j++){
-				if(noteArray[j].duration > 1){
-					noteArray[j].duration = getCorrectLength(noteArray[j].block.length, pianoRollObject);
-				}
-			}
-		}
-	}
-}
 
 /***
 
@@ -530,39 +422,6 @@ function getCorrectLength(length, pianoRollObject){
 
 /****
 
-	add a new instrument 
-
-****/
-function addNewInstrument(name, bool, pianoRollObject){
-	var instrumentTable = document.getElementById("instrumentTable");
-	var newInstrument = document.createElement('td');
-	
-	// we want to be able to access the instruments in sequential order
-	newInstrument.id = "" + (pianoRollObject.instruments.length + 1); 
-	newInstrument.setAttribute("selected", "0");
-	newInstrument.style.backgroundColor = "transparent";
-	
-	if(name === undefined){
-		newInstrument.innerHTML = "new_instrument";
-	}else{
-		newInstrument.innerHTML = name;
-	}
-	newInstrument.addEventListener('click', function(event){
-		// pass the event target's id to chooseInstrument()
-		chooseInstrument(event.target.id, pianoRollObject);
-	});
-	
-	instrumentTable.appendChild(newInstrument);
-	
-	// bool is not false - if a new instrument needs to be created
-	// - when importing data, this createNewInstrument step is not needed
-	if(bool !== false){
-		createNewInstrument("new_instrument", pianoRollObject);
-	}
-}
-
-/****
-
 	create a new instrument 
 
 ****/
@@ -580,20 +439,15 @@ function deleteInstrument(){
 }
 
 
-
 try {
 	module.exports = {
 		initGain: initGain,
 		readInNotes: readInNotes,
-		onendFunc: onendFunc,
 		scheduler: scheduler,
-		showCurrentNote: showCurrentNote,
 		play: play,
 		playAll: playAll,
 		stopPlay: stopPlay,
-		changeTempo: changeTempo,
 		getCorrectLength: getCorrectLength,
-		addNewInstrument: addNewInstrument,
 		createNewInstrument: createNewInstrument
 	}
 }catch(e){

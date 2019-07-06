@@ -6,9 +6,9 @@
 	<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
 	<script src='src/classes.js'></script>
 	<script src='src/context_menus.js'></script>
-	<script src='src/dom_modification.js'></script>
 	<script src='src/grid_builder.js'></script>
-	<script src='src/functionality.js'></script>
+	<script src='src/playback_functionality.js'></script>
+	<script src='src/dom_modification.js'></script>
 	
 	<!-- stuff needed for contextMenu -->
 	<link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/screen.css" type="text/css"/>
@@ -80,8 +80,9 @@
 			display: inline-block; 
 		}
 		
-		#toolbar li h2{
+		#toolbar li h2, label{
 			font-size: 12px;
+			font-weight: bold;
 		}
 		
 		#pianoNotes{
@@ -136,7 +137,15 @@
 	<ul id='metadata'>
 		<li><h2 id='measures'></h2></li>
 		<li>|</li>
-		<li><h2 id='timeSig'></h2></li>
+		<li>
+			<label>
+				time signature:
+			</label>
+			<select id='timeSig'>
+				<option>4/4</option>
+				<option>3/4</option>
+			</select>
+		</li>
 		<li>|</li>
 		<li><h2 id='tempo'>120 bpm</h2></li>
 		<li>|</li>
@@ -251,7 +260,7 @@ bindButtons(pianoRoll);
 	INFORMATION ABOUT THE CURRENT SETUP 
 ****/
 $('#measures').html("number of measures: " + pianoRoll.numberOfMeasures);
-$('#timeSig').html("time signature: " + pianoRoll.timeSignature);
+//$('#timeSig').html("time signature: " + pianoRoll.timeSignature);
 $('#subdiv').html("subdivision: " + pianoRoll.subdivision);
 
 
@@ -299,7 +308,7 @@ $(window).scroll(function(){
 	
 });
 
-// add event listeners to buttons 
+// add event listeners to buttons (and other clickable elements)
 function bindButtons(pianoRollObject){
 
 	document.getElementById('delMeasure').addEventListener('click', function(){
@@ -363,6 +372,13 @@ function bindButtons(pianoRollObject){
 		}
 		
 		name.textContent = userInput;
+	});
+	
+	// toggle time signature 
+	document.getElementById('timeSig').addEventListener('change', function(){
+		var timeSig = document.getElementById('timeSig').value;
+		changeTimeSignature(pianoRollObject, timeSig);
+		redrawCellBorders(pianoRollObject, 'columnHeaderRow');
 	});
 }
 

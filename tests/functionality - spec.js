@@ -3,17 +3,13 @@ var expect = require('chai').expect;
 var { PianoRoll } = require('../src/classes.js');
 var {	initGain,
 		readInNotes,
-		onendFunc,
 		scheduler,
-		showCurrentNote,
 		play,
 		playAll,
 		stopPlay,
-		changeTempo,
 		getCorrectLength,
-		addNewInstrument,
 		createNewInstrument 
-} = require('../src/functionality.js');
+} = require('../src/playback_functionality.js');
 
 describe('testing functionality.js', function(){
 
