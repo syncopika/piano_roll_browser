@@ -1,4 +1,4 @@
-{"measures":23,"tempo":120,"composer":"Johann Pezel (1639-1694)","title":"Intrada","instruments":
+{"measures":23,"tempo":120,"composer":"Johann Pezel (1639-1694)","title":"Intrada","timeSignature":"4/4","subdivision":8,"instruments":
 [{"name":"Instrument 1","oscillator":{},"gain":{},"volume":0.2,"notes":[
 {"freq":523.25,"duration":250,"block":{"id":"C5col_0","length":"eighth","volume":"0.2","style":"default"}},
 {"freq":523.25,"duration":250,"block":{"id":"C5col_1","length":"eighth","volume":"0.2","style":"default"}},

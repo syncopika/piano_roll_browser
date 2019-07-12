@@ -6,9 +6,9 @@
 	<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
 	<script src='src/classes.js'></script>
 	<script src='src/context_menus.js'></script>
-	<script src='src/dom_modification.js'></script>
 	<script src='src/grid_builder.js'></script>
-	<script src='src/functionality.js'></script>
+	<script src='src/playback_functionality.js'></script>
+	<script src='src/dom_modification.js'></script>
 	
 	<!-- stuff needed for contextMenu -->
 	<link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/screen.css" type="text/css"/>
@@ -80,8 +80,9 @@
 			display: inline-block; 
 		}
 		
-		#toolbar li h2{
+		#toolbar li h2, label{
 			font-size: 12px;
+			font-weight: bold;
 		}
 		
 		#pianoNotes{
@@ -136,7 +137,15 @@
 	<ul id='metadata'>
 		<li><h2 id='measures'></h2></li>
 		<li>|</li>
-		<li><h2 id='timeSig'></h2></li>
+		<li>
+			<label>
+				time signature:
+			</label>
+			<select id='timeSig'>
+				<option>4/4</option>
+				<option>3/4</option>
+			</select>
+		</li>
 		<li>|</li>
 		<li><h2 id='tempo'>120 bpm</h2></li>
 		<li>|</li>
@@ -251,7 +260,7 @@ bindButtons(pianoRoll);
 	INFORMATION ABOUT THE CURRENT SETUP 
 ****/
 $('#measures').html("number of measures: " + pianoRoll.numberOfMeasures);
-$('#timeSig').html("time signature: " + pianoRoll.timeSignature);
+//$('#timeSig').html("time signature: " + pianoRoll.timeSignature);
 $('#subdiv').html("subdivision: " + pianoRoll.subdivision);
 
 
@@ -299,7 +308,7 @@ $(window).scroll(function(){
 	
 });
 
-// add event listeners to buttons 
+// add event listeners to buttons (and other clickable elements)
 function bindButtons(pianoRollObject){
 
 	document.getElementById('delMeasure').addEventListener('click', function(){
@@ -364,6 +373,16 @@ function bindButtons(pianoRollObject){
 		
 		name.textContent = userInput;
 	});
+	
+	// toggle time signature 
+	document.getElementById('timeSig').addEventListener('change', function(){
+		var timeSig = document.getElementById('timeSig').value;
+		changeTimeSignature(pianoRollObject, timeSig);
+		redrawCellBorders(pianoRollObject, 'columnHeaderRow');
+		
+		// update measure count 
+		$('#measures').text( "number of measures: " + pianoRollObject.numberOfMeasures );
+	});
 }
 
 
@@ -392,13 +411,17 @@ function generateJSON(){
 	var data = {};
 	
 	// add metadata first 
-	data["measures"] = parseInt( document.getElementById('measures').textContent.match(/[0-9]{1,}/g)[0] );
+	data["measures"] = pianoRoll.numberOfMeasures; //parseInt( document.getElementById('measures').textContent.match(/[0-9]{1,}/g)[0] );
 	data["tempo"] = parseInt( document.getElementById("tempo").textContent );
 	
 	// put in composer info, name of piece 
 	data["composer"] = document.getElementById("composer").textContent;
 	data["title"] = document.getElementById("pieceTitle").textContent;
-
+	
+	// get time signature (and set subdivision as well) 
+	var timesig = document.getElementById("timeSig");
+	data["timeSignature"] = timesig.options[timesig.selectedIndex].value;
+	data["subdivision"] = (data["timeSignature"] === "4/4") ? 8 : 6;
 
 	// now collect instruments
 	// each instrument's data will be in an array mapped to the "instruments" key 
@@ -466,6 +489,15 @@ function getFile(e){
 			// update metadata 
 			document.getElementById("composer").textContent = data.composer; // could be undefined!
 			document.getElementById("pieceTitle").textContent = data.title; // could be undefined!
+			var timesig = data.timeSignature || "4/4";
+			document.getElementById('timeSig').value = timesig;
+			
+			pianoRoll.subdivision = data.subdivision || 8;
+			
+			// reset measure boundaries if time sig is not 4/4 
+			if(timesig !== "4/4"){
+				redrawCellBorders(pianoRoll, 'columnHeaderRow');
+			}
 			
 			// set new tempo acording to json data
 			var tempoText = document.getElementById("tempo");
@@ -475,7 +507,7 @@ function getFile(e){
 			// now put the data on the grid 
 			var measures = data.measures;
 			
-			// add new measures first - NEED TO ALSO DELETE IF TOO MANY!!
+			// add new measures first - todo: delete measures if too many!
 			var measuresToAdd = measures - pianoRoll.numberOfMeasures;
 			if(measures > pianoRoll.numberOfMeasures){
 				for(var i = 0; i < measuresToAdd; i++){
@@ -483,6 +515,9 @@ function getFile(e){
 				}
 			}
 			
+			// update num of measures 
+			$('#measures').text( "number of measures: " + pianoRoll.numberOfMeasures );
+		
 			// then assign instruments array the data 
 			pianoRoll.instruments = []; // clear instruments array 
 			
@@ -573,6 +608,15 @@ function getDemo(selectedDemo){
 		// update metadata 
 		document.getElementById("composer").textContent = data.composer; // could be undefined!
 		document.getElementById("pieceTitle").textContent = data.title; // could be undefined!
+		var timesig = data.timeSignature || "4/4";
+		document.getElementById('timeSig').value = timesig;
+			
+		pianoRoll.subdivision = data.subdivision || 8;
+			
+		// reset measure boundaries if time sig is not 4/4 
+		if(timesig !== "4/4"){
+			redrawCellBorders(pianoRoll, 'columnHeaderRow'); // this might not be incrementing number of measures correctly!
+		}
 		
 		// set new tempo acording to json data
 		var tempoText = document.getElementById("tempo");
@@ -582,7 +626,7 @@ function getDemo(selectedDemo){
 		// now put the data on the grid 
 		var measures = data.measures;
 		
-		// add new measures first - NEED TO ALSO DELETE IF TOO MANY!!
+		// add new measures first
 		if(measures > pianoRoll.numberOfMeasures){
 			var measuresToAdd = measures - pianoRoll.numberOfMeasures;
 			for(var j = 0; j < measuresToAdd; j++){

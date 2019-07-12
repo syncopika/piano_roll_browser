@@ -9,8 +9,8 @@
 function PianoRoll(){
 	
 	this.numberOfMeasures = 4; 	// 4 measures by default
-	this.subdivision = 8; 		// each measure subdivided by eighth notes
-	this.timeSignature = "4/4";
+	this.subdivision = 8; 		// number of eighth notes per measure (8 for 4 quarter notes per measure, 6 for 3/4)
+	this.timeSignature = "4/4"; 
 	this.currentTempo = 500; 	// hold the current tempo - in milliseconds!! ((1000 ms/sec. * 60 sec./min.) / 120 beats/min. = 500 ms/beat) default is 120 bpm
 	this.instruments = [];		// list of instruments will be an array
 	this.timers = [];			// keep track of setTimeouts so all can be ended at once 

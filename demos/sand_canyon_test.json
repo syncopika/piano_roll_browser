@@ -1,4 +1,4 @@
-{"measures":24,"tempo":150,"composer":"Jun Ishikawa","title":"Sand Canyon (Kirby's Dream Land 3)","instruments":
+{"measures":24,"tempo":150,"composer":"Jun Ishikawa","title":"Sand Canyon (Kirby's Dream Land 3)","timeSignature":"4/4","subdivision":8,"instruments":
 [{"name":"Instrument 1","oscillator":{},"gain":{},"volume":0.2,"notes":[
 {"freq":349.23,"duration":200,"block":{"id":"F4col_0","length":"eighth","volume":"0.2","style":"default"}},
 {"freq":0,"duration":100,"block":{"id":"C7col_1-1","length":"sixteenth","volume":"0.3","style":"default"}},
