@@ -173,7 +173,12 @@ function replaceSharp(string){
 function redrawCellBorders(pianoRollObject, headerId){
 
 	var subdivision = pianoRollObject.subdivision;
-	var headers = document.getElementById(headerId).children; // filter out any right halves (i.e. id contains '-2') of any subdivided columns 
+	
+	// filter out any right halves (i.e. id contains '-2') of any subdivided columns 
+	var headers = Array.from(document.getElementById(headerId).children).filter(function(element){
+		return element.id.indexOf('-2') < 0;
+	});
+	
 	var measureCounter = 2;
 	
 	for(var i = 1; i < headers.length; i++){
@@ -186,16 +191,15 @@ function redrawCellBorders(pianoRollObject, headerId){
 		
 		// take into account any subdivided columns because the right border of the left half can be different from the right half
 		// the left half holds the column number while the right half border change might be needed
-		// we also need to worry about the value of i when dealing with subdivided columns 
-		// treat the 2 columns as 1 
 		
 		if(i < subdivision + 1){
 			// for the first measure
 			if(i === pianoRollObject.subdivision){
 				columnHeader.style.borderRight = '3px solid #000';
 			}
-			if(i !== 0 && columnHeader.id.indexOf('-2') < 0){
-				columnHeader.textContent = i;
+			if(i !== 0){
+				// just in case columnHeader was set to next sibling, make sure to use the original column header
+				headers[i].textContent = i; 
 			}
 		}else{
 			// mark the measure number 
@@ -206,19 +210,21 @@ function redrawCellBorders(pianoRollObject, headerId){
 				measureNumber.style.color = '#2980B9';
 				
 				columnHeader.appendChild(measureNumber);
+				
 				columnHeader.style.borderRight = "1px solid transparent";
+				
 			}else{
 				if(subdivision === subdiv){
 					columnHeader.style.borderRight = '3px solid #000';
 				}
-				columnHeader.textContent = subdiv; 
-				
+				headers[i].textContent = subdiv; 
 			}
 		}
 		
 		// don't forget to correct each header's column as well!
 		// and also update the piano roll's number of measures!!
-		var columnCells = document.querySelectorAll('[id*=' + "\"col_" + colNum + '\"]');
+		var columnCells = document.querySelectorAll('[id$=' + '\"' + columnHeader.id + '\"]');
+		//console.log(columnCells)
 		
 		// skip the first element, which is the column header (not a note on the grid)
 		for(var j = 1; j < columnCells.length; j++){
@@ -226,7 +232,15 @@ function redrawCellBorders(pianoRollObject, headerId){
 			var gridCell = columnCells[j];
 			
 			// apply the same border modifications as the column header
-			gridCell.style.borderRight = columnHeader.style.borderRight === '1px solid transparent' ? '1px solid #000' : columnHeader.style.borderRight;
+			// need to be careful here: if a column is subdivided, we only look at the left half.
+			// but the left half border style should not inherit from the column header (instead, the right half should inherit from the column header)
+			// however, if the column header has a transparent right border, make it solid black 1px 
+			if(columnHeader.id.indexOf('-1') > 0){
+				gridCell.style.borderRight = '1px solid #000';
+				gridCell.nextSibling.style.borderRight = (columnHeader.style.borderRight === '1px solid transparent') ? '1px solid #000' : columnHeader.style.borderRight;
+			}else{
+				gridCell.style.borderRight = (columnHeader.style.borderRight === '1px solid transparent') ? '1px solid #000' : columnHeader.style.borderRight;
+			}
 		};
 		
 		// update piano roll num measures 

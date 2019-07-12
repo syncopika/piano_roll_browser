@@ -331,7 +331,7 @@ function subdivide(elementId, clearColumn, pianoRollObject){
 
 // take an element node id as parameter, and true or false if you want to clear a whole column (no green in any block of the column)
 function rejoin(elementId, clearColumn, pianoRollObject){
-
+	
 	var block = document.getElementById(elementId);
 	
 	// if block is null, it doesn't exist in the grid. it might be a 16th note currently that should be an 8th note 
@@ -373,7 +373,7 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 			blockHeader.style.width = "40px";
 			blockHeader.setAttribute("length", "eighth");
 			
-			if(boldBorder % 8 === 0){
+			if(boldBorder % pianoRollObject.subdivision === 0){
 				blockHeader.style.borderRight = "3px solid #000";
 			}
 			
@@ -383,12 +383,11 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 			
 			// this renames the 1st half of the block (i.e. C3col_1-1) back to the original (i.e. C3col_1)
 			blockHeader.id = blockHeader.id.substring(0, blockHeader.id.indexOf("-"));
-			
 			blockHeader.parentNode.removeChild(blockHeader.nextSibling);
 		}
 		
 		// if a PianoRoll object is passed in, do some changes for the current instrument here
-		// why wouldn't it be passed in?? 
+		// why/when wouldn't it be passed in?? 
 		if(pianoRollObject && $('#' + elementId).css("background-color") === "rgb(0, 178, 0)"){
 			
 			// what if the right 16th note is actually a concatenated note block!?
@@ -407,16 +406,18 @@ function rejoin(elementId, clearColumn, pianoRollObject){
 			// add renamed note to activeNotes, delete old ones only if notes being rejoined are green (i.e. belong to this instrument; not onion-skin)
 			// because sometimes you might want to rejoin empty columns, in which you don't need to do any of this stuff here 
 			pianoRollObject.currentInstrument.activeNotes[elementId] = oBlock.getAttribute("length").split('-').length;
-			
-			// also remove from active notes 
-			for(note in pianoRollObject.currentInstrument.activeNotes){
-				if(!document.getElementById(note)){
-					delete pianoRollObject.currentInstrument.activeNotes[note];
-				}
+		}
+		
+		// after any adjustments remove from active notes any notes that don't exist in the grid anymore
+		// but if you have a subdivided column and you joined it and there was a note in the left half, the left half will become a regular quarter note 
+		// but it will not be present in activeNotes (until you play).
+		for(note in pianoRollObject.currentInstrument.activeNotes){
+			if(!document.getElementById(note)){
+				//console.log(note)
+				delete pianoRollObject.currentInstrument.activeNotes[note];
 			}
 		}
 		
-		// done here 
 		return;
 	}
 	

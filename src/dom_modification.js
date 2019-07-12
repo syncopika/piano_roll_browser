@@ -238,7 +238,7 @@ function clearGridAll(pianoRollObject){
 		
 		if(columns[i].id.indexOf("-1") > 0){
 			// is the boolean value really doing anything? look into this. 
-			rejoin(columns[i].id, true, null);
+			rejoin(columns[i].id, true, pianoRollObject);
 		}
 	}
 	
@@ -551,7 +551,7 @@ function drawNotes(instrumentObject, pianoRollObject){
 			var currNote = elementExists.nextSibling;
 			
 			for(var j = 0; j < restOfNote.length; j++){
-				// figure out what kind of note the next one is by doing some math given the note's duration
+				
 				var currLength = restOfNote[j];
 				
 				// get the column header 
