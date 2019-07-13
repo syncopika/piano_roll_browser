@@ -15,20 +15,20 @@ This project is a work-in-progress :)
 check out a demo! see the demo dropdown box.    
     
 ### current potential issues:  
-can get pretty slow when changing instruments.    
+can get pretty slow when changing instruments because of the onion skin.    
 json loading seems a lot slower in Firefox compared to Chrome?     
     
 ### current next steps:    
-still need to delete instruments.    
-still need to subdivide 16th notes for 32nd notes.     
+still need to delete instruments.     
+be able to start playback at a certain measure.   
 be able to toggle onion skin?    
     
 ### features I would like to implement:    
 - ability to change color of highlight and color of note blocks, i.e. different for each instrument    
 - be able to make custom sounds!    
 - be able to record playback
-- be able to repeat a section
-- be able to start playback at a certain measure 
+- be able to repeat a section 
+- be able to subdivide 16th notes for 32nd notes.
     
 ### implementation / design:    
 
@@ -53,6 +53,8 @@ Another very important feature is the use of custom contextmenus (thanks to <a h
 Intrada - Johann Pezel (1639 - 1694). One of my favorite brass quintet pieces!    
     
 Sand Canyon (Kirby's Dream Land 3) - Jun Ishikawa
+    
+3_4_time_example - my own composition
 
 
     

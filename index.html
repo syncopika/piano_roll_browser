@@ -193,6 +193,9 @@
 			<option>
 				sand_canyon_with_percussion
 			</option>
+			<option>
+				3_4_time_example
+			</option>
 		</select>
 	</div>
 </div>
@@ -495,9 +498,7 @@ function getFile(e){
 			pianoRoll.subdivision = data.subdivision || 8;
 			
 			// reset measure boundaries if time sig is not 4/4 
-			if(timesig !== "4/4"){
-				redrawCellBorders(pianoRoll, 'columnHeaderRow');
-			}
+			redrawCellBorders(pianoRoll, 'columnHeaderRow');
 			
 			// set new tempo acording to json data
 			var tempoText = document.getElementById("tempo");
@@ -613,10 +614,8 @@ function getDemo(selectedDemo){
 			
 		pianoRoll.subdivision = data.subdivision || 8;
 			
-		// reset measure boundaries if time sig is not 4/4 
-		if(timesig !== "4/4"){
-			redrawCellBorders(pianoRoll, 'columnHeaderRow'); // this might not be incrementing number of measures correctly!
-		}
+		// reset measure boundaries
+		redrawCellBorders(pianoRoll, 'columnHeaderRow'); 
 		
 		// set new tempo acording to json data
 		var tempoText = document.getElementById("tempo");

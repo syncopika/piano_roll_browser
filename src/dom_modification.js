@@ -254,6 +254,9 @@ function clearGridAll(pianoRollObject){
 
 ****/
 function addNewMeasure(pianoRollObject){
+	
+	console.log("adding new measure");
+	console.log(pianoRollObject.numberOfMeasures)
 
 	// updating the measure count - notice specific id of element! 
 	$('#measures').text( "number of measures: " + (parseInt($('#measures').text().match(/[0-9]{1,}/g)[0]) + 1) );
