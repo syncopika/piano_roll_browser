@@ -4,7 +4,7 @@
   "description": "a piano roll in the browser",
   "main": "",
   "scripts": {
-    "test": "node ./node_modules/mocha/bin/mocha --require tests/jsdom.js tests/*.js"
+    "test": "node ./node_modules/nyc/bin/nyc ./node_modules/mocha/bin/mocha --require tests/jsdom.js tests/*.js"
   },
   "repository": {
     "type": "git",
@@ -19,6 +19,9 @@
   "dependencies": {
     "chai": "^4.2.0",
     "jsdom": "^14.0.0",
-    "mocha": "^6.0.2"
+    "mocha": "^6.2.0"
+  },
+  "devDependencies": {
+    "nyc": "^14.1.1"
   }
 }

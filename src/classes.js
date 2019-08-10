@@ -7,7 +7,6 @@
 
 *******/
 function PianoRoll(){
-	
 	this.numberOfMeasures = 4; 	// 4 measures by default
 	this.subdivision = 8; 		// number of eighth notes per measure (8 for 4 quarter notes per measure, 6 for 3/4)
 	this.timeSignature = "4/4"; 
@@ -174,7 +173,6 @@ function PianoRoll(){
 
 /****** INSTRUMENT CLASS ********/
 function Instrument(name, gain, notesArray){
-
 	this.name = name;
 	this.gain = gain; 				// assign a gain node object
 	this.notes = notesArray;		// array of Note objects
@@ -190,11 +188,9 @@ function Instrument(name, gain, notesArray){
 // this class will hold a note's frequency, duration, and div element
 // duration is in milliseconds (i.e. 600, 300, 1000)
 function Note(freq, duration, block){
-
 	this.freq = freq;
 	this.duration = duration;
 	this.block = new ElementNode(block);
-
 }
 
 /****** CUSTOM DOM ELEMENT NODE CLASS *********/
@@ -206,7 +202,6 @@ function Note(freq, duration, block){
 
 // pass in a dom element node and the object will extract the information 
 function ElementNode(domElement){
-	
 	this.id = domElement.id;
 	this.length = domElement.getAttribute("length");
 	this.volume = domElement.getAttribute("volume");
@@ -217,7 +212,6 @@ function ElementNode(domElement){
 
 /***** PERCUSSION CLASS ******/
 function PercussionManager(context){
-	
 	// set up a noise buffer
 	// used in hihat and snare drum 
 	this.context = context;
@@ -232,7 +226,6 @@ function PercussionManager(context){
 	
 	// note that each oscillator needs its own gain node!
 	this.kickDrumNote = function(frequency, volume, time, returnBool){
-		
 		var context = this.context;
 		var osc = context.createOscillator();
 		var gain = context.createGain();//gainNode;

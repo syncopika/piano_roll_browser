@@ -1,3 +1,4 @@
 # ignore the node_modules for my online version of the piano roll 
 with_db/node_modules
 node_modules
+.nyc_output
