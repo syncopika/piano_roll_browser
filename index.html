@@ -603,6 +603,9 @@ function getDemo(selectedDemo){
 	
 		// clear grid first
 		clearGridAll(pianoRoll);
+		
+		// reset playMarker if set 
+		pianoRoll.playMarker = null;
 	
 		var data = JSON.parse(httpRequest.responseText);
 		

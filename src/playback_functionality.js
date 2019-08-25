@@ -92,6 +92,7 @@ function readInNotes(pianoRollObject){
 				}
 			}		
 		}else{
+			// for rests 
 			if(columnHeaders[i].id.indexOf("-1") > 0 || columnHeaders[i].id.indexOf("-2") > 0){
 				// just pass in the C7 note of the column id for rests 
 				notes.push(new Note(0.0, Math.round(tempo / pianoRollObject.noteLengths["sixteenth"]), document.getElementById( 'C7' + columnHeaders[i].id )));
@@ -116,26 +117,23 @@ function readInNotes(pianoRollObject){
 	- figure out the realDuration and spacer 
 	- create a new oscillator for every note?? (lots of garbage?)
 	
-	the second argument is a boolean value 
+	@param pianoRoll 
+	- PianoRoll object
+	
+	@param allInstruments (boolean)
 	- true for all instruments 
 	- false for just the current instrument 
 	
 ****/
-
-
 function scheduler(pianoRoll, allInstruments){
 	
 	var ctx = pianoRoll.audioContext;
+	var startMarker = pianoRoll.playMarker; // if user specified a certain column to start playing at 
 	
 	// each instrument may have a different number of notes.
 	// keep an array of numbers, where each array index corresponds to an instrument 
 	// each number will be the current note index of each instrument 
 	var instrumentNotePointers = [];
-	
-	// in the case where the user specified a measure to start playing at - NOT YET IMPLEMENTED
-	for(var k = 0; k < pianoRoll.instruments.length; k++){
-		//instrumentNotePointers[k] = 5;
-	}
 	
 	// keep another array holding the next time the next note should play for each instrument
 	var nextTime = [];
@@ -150,11 +148,12 @@ function scheduler(pianoRoll, allInstruments){
 			currentInstrumentIndex = j;
 		}
 	}
-
-	var instruments;
 	
-	// make a copy of pianoRoll.instruments so that we can edit the array 
-	// i.e. when an instrument is done, I can set the index of that instrument in the array to null or something 
+	// make a copy of pianoRoll.instruments so that we can edit the array
+	// i.e. when an instrument is done, I can set the index of that instrument in the array to null as a flag
+	// also, for each instrument set their index in instrumentNotePointers to 0, which means that playing should 
+	// start at the beginning (0 being the index of the first note of that instrument)
+	var instruments;
 	if(!allInstruments){
 		// if only playing the current instrument 
 		instruments = [pianoRoll.instruments[currentInstrumentIndex]];
@@ -165,6 +164,33 @@ function scheduler(pianoRoll, allInstruments){
 		for(var i = 0; i < pianoRoll.instruments.length; i++){
 			instrumentNotePointers.push(0);
 			nextTime.push(0);
+		}
+	}
+	
+	// in the case where the user specified a measure to start playing at
+	if(startMarker){
+		// if the header clicked on is a subdivision, truncate the headerId to just the col num 
+		// this is because each instrument may or may not have the exact same headerId but we want them all 
+		// to start playing at the same place. just truncating the id to the column number will help since 
+		// even subdivisions have the column number, which we can use to match against
+		if(startMarker.indexOf('-') > 0){
+			startMarker = startMarker.substring(0, startMarker.indexOf('-'));
+		}
+	
+		for(var k = 0; k < pianoRoll.instruments.length; k++){
+			// have each instrument start with the note at index given by startMarker
+			for(var l = 0; l < pianoRoll.instruments[k].notes.length; l++){
+				try{
+					if(pianoRoll.instruments[k].notes[l].block.id.indexOf(startMarker) > -1){
+						instrumentNotePointers[k] = l;
+						break;
+					}
+				}catch(error){
+					//instrumentNotePointers[k] = l+1;
+					console.error(error);
+					console.error(pianoRoll.instruments[k].notes[l]);
+				}
+			}
 		}
 	}
 	
@@ -181,7 +207,8 @@ function scheduler(pianoRoll, allInstruments){
 			
 			// check if current note pointer for this instrument has reached the end of this
 			// instrument's notes array. if so, increment stillNotesToPlay 
-			if(instrumentNotePointers[i] >= instruments[i].notes.length){
+			var numNotesLeft = instruments[i].notes.length - instrumentNotePointers[i];
+			if(numNotesLeft === 0){
 				stillNotesToPlay++;
 				instruments[i] = null;
 				continue;
@@ -354,7 +381,7 @@ function stopPlay(pianoRollObject){
 
 	for(var i = 0; i < pianoRollObject.timers.length; i++){
 		pianoRollObject.timers[i].stop(0);
-		pianoRollObject.timers[i] = null;
+		pianoRollObject.timers[i].ended = null; // unhook onendFunc 
 	}
 	
 	for(var j = 0; j < pianoRollObject.instruments.length; j++){

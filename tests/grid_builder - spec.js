@@ -1,6 +1,6 @@
 var assert = require('assert');
 var expect = require('chai').expect;
-var { replaceSharp, buildGrid, buildGridHeader } = require('../src/grid_builder.js');
+var { replaceSharp, buildGrid, buildGridHeader, highlightHeader } = require('../src/grid_builder.js');
 var { PianoRoll } = require('../src/classes.js');
 
 describe('testing grid_builder.js', function(){
@@ -58,6 +58,21 @@ describe('testing grid_builder.js', function(){
 		var numUniqueNotes = 61; //Object.keys(pianoRoll.noteFrequencies).length;
 		expect(document.getElementById(el.id).children.length).to.equal(numUniqueNotes);
 		expect(document.getElementById(pianoNotes.id).children.length).to.equal(numUniqueNotes);
+	});
+	 
+	it('testing highlightHeader', function(){
+		el.id = "columnHeaderRow";
+		document.body.appendChild(el);
+		buildGridHeader(el.id, pianoRoll);
+		
+		expect(document.getElementById("col_1").style.backgroundColor).to.equal("");
+		highlightHeader("col_1", pianoRoll);
+		expect(pianoRoll.playMarker).to.equal("col_1");
+		expect(document.getElementById("col_1").style.backgroundColor).to.equal("rgb(50, 205, 50)");
+		
+		// as an integration test later simulate a click on another header column 
+		// and check that the previous one does not have a colored background anymore
+		// and make sure the right element is highlighted
 	});
 	
  

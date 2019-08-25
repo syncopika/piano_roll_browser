@@ -255,8 +255,8 @@ function clearGridAll(pianoRollObject){
 ****/
 function addNewMeasure(pianoRollObject){
 	
-	console.log("adding new measure");
-	console.log(pianoRollObject.numberOfMeasures)
+	//console.log("adding new measure");
+	//console.log(pianoRollObject.numberOfMeasures)
 
 	// updating the measure count - notice specific id of element! 
 	$('#measures').text( "number of measures: " + (parseInt($('#measures').text().match(/[0-9]{1,}/g)[0]) + 1) );
@@ -290,6 +290,9 @@ function addNewMeasure(pianoRollObject){
 			// don't label the first header column since that's the measure number 
 			newHeader.textContent = i + 1;
 		}
+		
+		// attach highlightHeader function to allow user to specify playing to start at this column 
+		newHeader.addEventListener("click", function(){highlightHeader(this.id, pianoRollObject)} );
 		
 		columnHeaderParent.appendChild(newHeader);
 		
@@ -405,6 +408,14 @@ function chooseInstrument(thisElement, pianoRollObject){
 	// look at grid, collect the notes, save them to the current instrument, and
 	// move on to the clicked-on instrument
 	pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
+	
+	// reset the playMarker because the previously-set marker might be a column header 
+	// that doesn't exist anymore (i.e. because of subdivision or rejoining)
+	var prevMarker = document.getElementById(pianoRollObject.playMarker);
+	if(prevMarker){
+		prevMarker.style.backgroundColor = "#fff";
+	}
+	pianoRollObject.playMarker = null;
 	
 	// instrumentTable is specific to my implementation
 	var instrumentsView = document.getElementById('instrumentTable').children;
@@ -688,7 +699,7 @@ var lastNote = null;
 var onendFunc = function(x, pianoRoll){ 
 	return function(){
 		// take away highlight of previous note 
-		if(lastNote !== null){
+		if(lastNote){
 			lastNote.style.backgroundColor = '#fff';
 		}
 		

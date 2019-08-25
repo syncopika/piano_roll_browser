@@ -4,14 +4,18 @@ also influenced a bit by PxTone Collage, another great application!
     
 This project is a work-in-progress :)        
     
-![screenshot of the piano roll](current.png "current look")    
+![screenshot of the piano roll](screenshots/current.png "current look")    
      
 ### instructions:    
 - to change the name of the piece or the composer, double click on 'title' or 'composer', just above the buttons.     
 - left-click a block on the grid to place a note; click again to remove. Each column can only have one note.    
-- right-click a block on the grid to create 16th notes (subdivide), or rejoin 16th notes to revert back to 8th notes. You can also change a note's properties, such as volume and style.    
-- right-click an instrument block to modify its sound, name, and volume.    
-    
+- right-click a block on the grid to create 16th notes (subdivide), or rejoin 16th notes to revert back to 8th notes. You can also change a note's properties, such as volume and style. (see below)    
+![note features with right-click](screenshots/subdivide_demo.gif "note features")    
+- right-click an instrument block to modify its sound, name, and volume. (see below)    
+![instrument features with right-click](screenshots/instrument_edit_demo.gif "instrument features")    
+- click on a column header to start playing at that column (but it currently doesn't work properly if you select a column header that is within a long note (i.e. if a note spans 3 columns and you select the middle column).    
+![select column header to start playing at](screenshots/setplaymarker_demo.gif "select column header to start playing at")   
+	
 check out a demo! see the demo dropdown box.    
     
 ### current potential issues:  
@@ -20,7 +24,7 @@ json loading seems a lot slower in Firefox compared to Chrome?
     
 ### current next steps:    
 still need to delete instruments.     
-be able to start playback at a certain measure.   
+be able to start playback at a certain measure. (mostly done)   
 be able to toggle onion skin?    
     
 ### features I would like to implement:    

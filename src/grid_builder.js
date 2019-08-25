@@ -69,8 +69,26 @@ function buildGridHeader( columnHeaderRowId, pianoRollObject ){
 		
 		// 0 == false; i.e. does not have a note in the column
 		columnHeader.setAttribute("hasNote", 0); 
+		columnHeader.addEventListener("click", function(){ highlightHeader(this.id, pianoRollObject) });
 		
 		columnHeaderRow.append(columnHeader);
+	}
+}
+
+function highlightHeader(headerId, pianoRollObject){
+	var element = document.getElementById(headerId);
+	var currColor = element.style.backgroundColor;
+	if(currColor !== "rgb(50, 205, 50)"){
+		if(pianoRollObject.playMarker){
+			var oldMarker = document.getElementById(pianoRollObject.playMarker);
+			oldMarker.style.backgroundColor = "rgb(255, 255, 255)";
+		}
+		var columnIndex = parseInt(headerId.match(/\d+/)[0]);
+		pianoRollObject.playMarker = headerId;
+		element.style.backgroundColor = "rgb(50, 205, 50)";
+	}else{
+		pianoRollObject.playMarker = null;
+		element.style.backgroundColor = "rgb(255, 255, 255)";
 	}
 }
 
@@ -295,7 +313,8 @@ try{
 	module.exports = {
 		replaceSharp: replaceSharp,
 		buildGridHeader: buildGridHeader,
-		buildGrid: buildGrid
+		buildGrid: buildGrid,
+		highlightHeader: highlightHeader
 	}
 }catch(e){
 	// ignore 
