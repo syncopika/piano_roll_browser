@@ -188,6 +188,7 @@ function replaceSharp(string){
 
 
 // redraw thick grid cell lines for the correct cells if subdivision changes (i.e. going from 4/4 to 3/4)
+// headerId = the id of the element that holds all the column header elements
 function redrawCellBorders(pianoRollObject, headerId){
 
 	var subdivision = pianoRollObject.subdivision;

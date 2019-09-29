@@ -25,8 +25,14 @@ describe('testing playback_functionality.js', function(){
 		// make sure pianoRoll has default tempo of 500 ms / beat (120 bpm)
 		assert.equal(pianoRoll.currentTempo, 500);
 		
-		// check quarter note length at 120
+		// check quarter note length at 120bpm
 		expect(getCorrectLength("quarter", pianoRoll)).to.equal(500);
+		
+		// check eighth note length at 120bpm
+		expect(getCorrectLength("eighth", pianoRoll)).to.equal(250);
+		
+		// check 16th note length at 120bpm
+		expect(getCorrectLength("sixteenth", pianoRoll)).to.equal(125);
 	});
 	
 

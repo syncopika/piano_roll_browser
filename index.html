@@ -166,6 +166,7 @@
 		<li><button id='delMeasure' class='btn'> delete measure </button></li>
 		<li><button id='addInstrument' class='btn'> add new instrument </button></li>
 		<li><button id='clearGrid' class='btn'> clear grid </button></li>
+		<li><input type='checkbox' id='loop'><label>loop</label></li>
 		<li><button class='btn' onclick='generateJSON()'> save & export data </button></li>
 		<li><button class='btn' onclick='fileHandler()'> import data </button></li>
 		<input type='file' id='importFile' style='display: none'>
@@ -375,6 +376,10 @@ function bindButtons(pianoRollObject){
 		}
 		
 		name.textContent = userInput;
+	});
+	
+	document.getElementById('loop').addEventListener('click', function(){
+		pianoRoll.loopFlag = this.checked;
 	});
 	
 	// toggle time signature 

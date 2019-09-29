@@ -194,7 +194,7 @@ function scheduler(pianoRoll, allInstruments){
 		}
 	}
 	
-	while(stillNotesToPlay < instruments.length){
+	while(pianoRoll.isPlaying && stillNotesToPlay < instruments.length){
 
 		// for each instrument in the piano roll, get their next note and schedule it 
 		// to play given the next note's duration 
@@ -222,9 +222,8 @@ function scheduler(pianoRoll, allInstruments){
 			var osc = null;
 			var oscGainNode = instruments[i].gain;
 			
-			// note attributes 
-			var currIndex = instrumentNotePointers[i];
 			var notesArr = instruments[i].notes;
+			var currIndex = instrumentNotePointers[i];
 			var thisNote = notesArr[currIndex];
 			
 			// by default, ~70% of the note duration should be played 
@@ -241,8 +240,7 @@ function scheduler(pianoRoll, allInstruments){
 			
 			// don't forget any specified attributes for this particular instrument 
 			// check wave type
-			if(instruments[i].waveType === "percussion"){
-				
+			if(instruments[i].waveType === "percussion"){	
 				// articulation DOES apply to percussion IF STACCATO OR LEGATO? ignore for now 
 		
 				// find out what octave the note is in 
@@ -265,10 +263,8 @@ function scheduler(pianoRoll, allInstruments){
 					osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
 				}
 				
-				oscList = oscList.concat(osc);
-				
-			}else{
-				
+				oscList = oscList.concat(osc);	
+			}else{	
 				// make a new oscillator for this note 
 				osc = ctx.createOscillator();
 				
@@ -328,9 +324,21 @@ function scheduler(pianoRoll, allInstruments){
 				pianoRoll.currentInstrumentNoteQueue.push({"note": thisNote.block.id, "time": nextTime[i]});
 			}
 			
-		} // end for
+		} // end for	
 	} // end while 
 	
+	// get the last oscillator and make it send a signal when it's done playing to start over again 
+	if(pianoRoll.loopFlag && pianoRoll.isPlaying){
+		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){loopSignal(pianoRoll, allInstruments)};
+	}
+	
+}
+
+function loopSignal(pianoRoll, allInstruments){
+	//pianoRoll.loopFlag = false;
+	setTimeout(function(){
+		scheduler(pianoRoll, allInstruments);
+	}, 200);
 }
 
 
@@ -442,7 +450,9 @@ function getCorrectLength(length, pianoRollObject){
 		var total = (lengths['eighth'] / pianoRollObject.noteLengths["eighth"]) + (lengths['sixteenth'] / pianoRollObject.noteLengths["sixteenth"]);
 		
 		return Math.round(currentTempo * total);
-		
+	}else{
+		// this shouldn't happen?
+		return 0;
 	}
 }
 

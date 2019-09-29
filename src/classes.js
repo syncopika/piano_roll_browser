@@ -19,6 +19,7 @@ function PianoRoll(){
 	this.lastTime; 				// the time the last note was supposed to be played
 	this.currentInstrumentNoteQueue = []; // keep track of the current instrument' scheduled notes. use this for showing what note is currently playing
 	this.playMarker = null;		// the id of a column header indicating where to start playing
+	this.loopFlag = false;		// if playback should be looped or not 
 
 	// instrument-related stuff 
 	this.noiseBuffer; // for percussion 
@@ -140,8 +141,8 @@ function PianoRoll(){
 	// figure out note lengths using these. 
 	// each note length corresponds to a factor which to divide the currentTempo (milliseconds per quarter note) by
 	this.noteLengths = {
-		"quarter": 1, //4 means quarter note 
-		"eighth": 2, //this means divide by a factor of 2 to get milliseconds per eighth note
+		"quarter": 1, 
+		"eighth": 2,    // this means divide by a factor of 2 to get milliseconds per eighth note
 		"sixteenth": 4
 	}
 	
