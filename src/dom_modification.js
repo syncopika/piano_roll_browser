@@ -92,7 +92,7 @@ function addNote(id, pianoRollObject){
 	}
 	
 	// if note is already green 
-	if($('#' + id).css("background-color") === "rgb(0, 178, 0)"){
+	if($('#' + id).css("background-color") === pianoRollObject.noteColor){
 	
 		// take away green color 
 		$('#' + id).css("background-color", "transparent");
@@ -153,7 +153,7 @@ function addNote(id, pianoRollObject){
 		var currValue = parseInt(document.getElementById(headerId).getAttribute("hasNote"));
 		if(currValue !== 1){
 			// if no note added to this column yet
-			$('#' + id).css("background-color", "rgb(0, 178, 0)");
+			$('#' + id).css("background-color", pianoRollObject.noteColor);
 			
 			// add the note to the currentInstrument's activeNotes attribute (an associative array)
 			pianoRollObject.currentInstrument.activeNotes[id] = 1;
@@ -199,7 +199,7 @@ function clearGrid(pianoRollObject){
 			columns[i].setAttribute("hasnote", "0");
 			var columnToCheck = $("div[id$='" + columns[i].id + "']").get();
 			for(var j = 0; j < columnToCheck.length; j++){
-				if(columnToCheck[j].style.backgroundColor === "rgb(0, 178, 0)"){
+				if(columnToCheck[j].style.backgroundColor === pianoRollObject.noteColor){
 					columnToCheck[j].style.backgroundColor = "transparent";
 				}
 				if(columnToCheck[j].style.background !== ""){
@@ -445,7 +445,7 @@ function chooseInstrument(thisElement, pianoRollObject){
 		if(activeNoteCount > 1){
 			var currNote = document.getElementById(activeNote);
 			for(var j = 0; j < activeNoteCount; j++){
-				currNote.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
+				currNote.style.backgroundColor = pianoRollObject.onionSkinNote;
 				
 				// fix lengths so they won't cause trouble for the chosen instrument
 				var currLength = currNote.getAttribute("length");
@@ -459,7 +459,7 @@ function chooseInstrument(thisElement, pianoRollObject){
 			}		
 		}else{
 			// if not a concatenated note block 
-			document.getElementById(activeNote).style.backgroundColor = "rgba(0, 178, 0, 0.2)";
+			document.getElementById(activeNote).style.backgroundColor = pianoRollObject.onionSkinNote;
 		}
 	}
 
@@ -479,7 +479,7 @@ function chooseInstrument(thisElement, pianoRollObject){
 	
 	showOnionSkin(pianoRollObject);
 	
-	$('#' + thisElement).css('background-color', 'rgb(188,223,70)');
+	$('#' + thisElement).css('background-color', pianoRollObject.instrumentTableColor);
 	
 }
 
@@ -748,7 +748,7 @@ function showOnionSkin(pianoRollObject){
 				if(location !== null){
 					// set background color for that location a very light shade of green
 					if(location.style.backgroundColor === 'transparent'){
-						location.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
+						location.style.backgroundColor = pianoRollObject.onionSkinNote;
 					}
 				}else if(location === null){
 					// if not present, it's either because there's no 16th measure or 8th measure
@@ -761,12 +761,12 @@ function showOnionSkin(pianoRollObject){
 						var subdiv2 = document.getElementById( noteId + "-2" );
 
 						// color the subdiv AND its right sibling if there is no current note in that spot 
-						if(subdiv.style.backgroundColor !== 'rgb(0, 178, 0)'){
-							subdiv.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
+						if(subdiv.style.backgroundColor !== pianoRollObject.noteColor){
+							subdiv.style.backgroundColor = pianoRollObject.onionSkinNote;
 						}
 						
-						if(subdiv2.style.backgroundColor !== 'rgb(0, 178, 0)'){
-							subdiv2.style.backgroundColor = "rgba(0, 178, 0, 0.2)";
+						if(subdiv2.style.backgroundColor !== pianoRollObject.noteColor){
+							subdiv2.style.backgroundColor = pianoRollObject.onionSkinNote;
 						}
 						
 					/****
@@ -783,13 +783,13 @@ function showOnionSkin(pianoRollObject){
 						var findId = noteId.substring(0, noteId.indexOf("-"));
 						var subdiv = document.getElementById(findId);
 						if(subdiv.style.backgroundColor === "transparent"){
-							subdiv.style.background = "linear-gradient(90deg, rgba(0, 178, 0, 0.2) 50%, transparent 50%)";
+							subdiv.style.background = "linear-gradient(90deg," + pianoRollObject.onionSkinNote + " 50%, transparent 50%)";
 						}
 					}else if(noteId.indexOf("-2") > 0){
 						var findId = noteId.substring(0, noteId.indexOf("-"));
 						var subdiv = document.getElementById(findId);
 						if(subdiv.style.backgroundColor === "transparent"){
-							subdiv.style.background = "linear-gradient(90deg, transparent 50%, rgba(0, 178, 0, 0.2) 50%)";
+							subdiv.style.background = "linear-gradient(90deg, transparent 50%, " + pianoRollObject.onionSkinNote + " 50%)";
 						}
 					}
 				}

@@ -61,7 +61,7 @@ function readInNotes(pianoRollObject){
 			// go down each column and look for green. if found, stop and add to array. then move on.
 			for(var j = 0; j < column.length; j++){
 				// look for green background! 
-				if(column[j].style.backgroundColor === "rgb(0, 178, 0)"){
+				if(column[j].style.backgroundColor === pianoRollObject.noteColor){
 					// make any corrections to id string before matching with freq key
 					var freq = pianoRollObject.noteFrequencies[ (column[j].parentNode.id).replace('s', '#') ];
 					// add note to array

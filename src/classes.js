@@ -24,6 +24,8 @@ function PianoRoll(){
 	this.highlightColor = "#FFFF99";
 	this.measureNumberColor = "#2980B9";
 	this.noteColor = "rgb(0, 178, 0)";
+	this.onionSkinNote = "rgba(0, 178, 0, 0.2)";
+	this.instrumentTableColor = 'rgb(188,223,70)';
 
 	// instrument-related stuff 
 	this.noiseBuffer; // for percussion 
