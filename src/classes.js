@@ -18,8 +18,12 @@ function PianoRoll(){
 	this.isPlaying;				// a boolean flag to easily quit playing
 	this.lastTime; 				// the time the last note was supposed to be played
 	this.currentInstrumentNoteQueue = []; // keep track of the current instrument' scheduled notes. use this for showing what note is currently playing
-	this.playMarker = null;		// the id of a column header indicating where to start playing
+	this.playMarker;		    // the id of a column header indicating where to start playing
+	this.playMarkerColor = "rgb(50, 205, 50)";
 	this.loopFlag = false;		// if playback should be looped or not 
+	this.highlightColor = "#FFFF99";
+	this.measureNumberColor = "#2980B9";
+	this.noteColor = "rgb(0, 178, 0)";
 
 	// instrument-related stuff 
 	this.noiseBuffer; // for percussion 
@@ -213,6 +217,7 @@ function ElementNode(domElement){
 }
 
 /***** PERCUSSION CLASS ******/
+// thanks to: https://dev.opera.com/articles/drum-sounds-webaudio/
 function PercussionManager(context){
 	// set up a noise buffer
 	// used in hihat and snare drum 
@@ -230,7 +235,7 @@ function PercussionManager(context){
 	this.kickDrumNote = function(frequency, volume, time, returnBool){
 		var context = this.context;
 		var osc = context.createOscillator();
-		var gain = context.createGain();//gainNode;
+		var gain = context.createGain();
 		osc.connect(gain);
 		
 		osc.frequency.setValueAtTime(frequency, time);
@@ -259,7 +264,7 @@ function PercussionManager(context){
 		noise.buffer = this.noiseBuffer;
 		var noiseFilter = context.createBiquadFilter();
 		noiseFilter.type = 'highpass';
-		noiseFilter.frequency.value = 1000;
+		noiseFilter.frequency.value = 1800;
 		noise.connect(noiseFilter);
 
 		// add gain to the noise filter 
@@ -273,7 +278,6 @@ function PercussionManager(context){
 		var snapOsc = context.createOscillator();
 		snapOsc.type = 'triangle';
 		
-		//var snapOscEnvelope = pianoRollObject.audioContext.createGain();
 		var snapOscEnv = context.createGain(); //gainNode;
 		snapOsc.connect(snapOscEnv);
 		snapOscEnv.connect(context.destination);
@@ -304,7 +308,7 @@ function PercussionManager(context){
 		noise.buffer = this.noiseBuffer;
 		var noiseFilter = context.createBiquadFilter();
 		noiseFilter.type = 'highpass';
-		noiseFilter.frequency.value = 1000;
+		noiseFilter.frequency.value = 1200;
 		noise.connect(noiseFilter);
 
 		// add gain to the noise filter 

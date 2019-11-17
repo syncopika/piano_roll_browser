@@ -319,7 +319,7 @@ function scheduler(pianoRoll, allInstruments){
 				
 				// when oscillator ends, highlight the note (if oscList contains more than 1 node, just pick the first one)
 				osc = oscList[0];
-				osc.onended = onendFunc(thisNote.block.id);
+				osc.onended = onendFunc(thisNote.block.id, pianoRoll);
 				
 				pianoRoll.currentInstrumentNoteQueue.push({"note": thisNote.block.id, "time": nextTime[i]});
 			}
@@ -406,7 +406,7 @@ function stopPlay(pianoRollObject){
 	
 	// this is a cheap hack for now (for dealing with showCurrentNote)
 	// notice it uses the global variables lastNote and currNote 
-	if(lastNote){
+	if(lastNote && lastNote.id !== pianoRollObject.playMarker){
 		lastNote.style.backgroundColor = '#fff';
 	}
 	lastNote = null;
@@ -472,8 +472,7 @@ function createNewInstrument(name, pianoRollObject){
 	pianoRollObject.instruments.push(newInstrument);
 }
 
-function deleteInstrument(){
-}
+function deleteInstrument(){}
 
 
 try {

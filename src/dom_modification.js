@@ -344,7 +344,7 @@ function addNewMeasure(pianoRollObject){
 			//notice passing in id of option/select element for picking wave type. 
 			newColumn.addEventListener("click", function(){ addNote(this.id, pianoRollObject) }); 
 			// allow for highlighting to make it clear which note a block is
-			newColumn.addEventListener("mouseenter", function(){ highlightRow(this.id, '#FFFF99') });
+			newColumn.addEventListener("mouseenter", function(){ highlightRow(this.id, pianoRollObject.highlightColor) });
 			newColumn.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
 			rowParent.appendChild(newColumn);
 		}
@@ -533,7 +533,7 @@ function drawNotes(instrumentObject, pianoRollObject){
 		columnHeader.setAttribute("hasnote", "1");
 		
 		// color in note
-		elementExists.style.backgroundColor = "rgb(0, 178, 0)";
+		elementExists.style.backgroundColor = pianoRollObject.noteColor;
 		// fill in attributes 
 		if(notes[i].block.volume === ""){
 			notes[i].block.volume = instrumentObject.volume;
@@ -574,13 +574,13 @@ function drawNotes(instrumentObject, pianoRollObject){
 				if(currLength === "eighth"){
 					// check if currNote.length is an eighth note. if not, rejoin and color in 
 					if(currNote.getAttribute("length") === "eighth"){
-						currNote.style.backgroundColor = "rgb(0, 178, 0)";
+						currNote.style.backgroundColor = pianoRollObject.noteColor;
 					}else{
 						rejoin(currNote.id, true, pianoRollObject);
 	
 						// now that the correct column should be in place, get the sibling again of elementExists 
 						currNote = elementExists.nextSibling;
-						currNote.style.backgroundColor = "rgb(0, 178, 0)";
+						currNote.style.backgroundColor = pianoRollObject.noteColor;
 						
 						// make sure to update the column header's hasnote to -1 as well!
 						colHeader = document.getElementById( currNote.id.substring(currNote.id.indexOf("col_")) );
@@ -588,13 +588,13 @@ function drawNotes(instrumentObject, pianoRollObject){
 				}else{
 					// check if neighbor is a 16th note. if not, subdivide and color 
 					if(currNote.getAttribute("length") === "sixteenth"){
-						currNote.style.backgroundColor = "rgb(0, 178, 0)";
+						currNote.style.backgroundColor = pianoRollObject.noteColor;
 					}else{
 						subdivide(currNote.id, true, pianoRollObject);
 	
 						// now that the correct column should be in place, get the sibling again of elementExists 
 						currNote = elementExists.nextSibling;
-						currNote.style.backgroundColor = "rgb(0, 178, 0)";
+						currNote.style.backgroundColor = pianoRollObject.noteColor;
 						
 						document.getElementById( currNote.id.substring(currNote.id.indexOf("col_")) );
 					}
@@ -698,13 +698,13 @@ function changeTimeSignature(pianoRollObject, newTimeSig){
 var lastNote = null;
 var onendFunc = function(x, pianoRoll){ 
 	return function(){
+		
 		// take away highlight of previous note 
-		if(lastNote){
+		if(lastNote && pianoRoll.playMarker !== lastNote.id){
 			lastNote.style.backgroundColor = '#fff';
 		}
 		
 		var column = x.substring(x.indexOf('col'));
-		
 		if(document.getElementById(column) === null){
 			if(column.indexOf("-") < 0){
 				// get first subdivision
@@ -714,10 +714,12 @@ var onendFunc = function(x, pianoRoll){
 			}
 		}
 		
-		//console.log(column);
-		document.getElementById(column).style.backgroundColor = '#709be0'; // nice light blue color 
+		var currNote = document.getElementById(column);
+		if(pianoRoll.playMarker !== currNote.id){
+			document.getElementById(column).style.backgroundColor = '#709be0'; // nice light blue color 
+		}
 
-		lastNote = document.getElementById(column);
+		lastNote = currNote;
 	}
 };
 

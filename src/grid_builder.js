@@ -4,6 +4,7 @@ build the grid
 
 ***********/
 
+
 /****
 
 set up grid headers first (the headers for each column)
@@ -44,10 +45,10 @@ function buildGridHeader( columnHeaderRowId, pianoRollObject ){
 					var measureNumber = document.createElement("h2");
 					measureNumber.innerHTML = measureCounter;
 					measureNumber.style.margin = '0 0 0 0';
-					measureNumber.style.color = '#2980B9';
+					measureNumber.style.color = pianoRollObject.measureNumberColor;
 					columnHeader.appendChild(measureNumber);
-					measureCounter++;
 					columnHeader.style.borderRight = "1px solid transparent";
+					measureCounter++;
 				}else{
 					if(pianoRollObject.subdivision === subdiv){
 						columnHeader.style.borderRight = '3px solid #000';
@@ -78,14 +79,14 @@ function buildGridHeader( columnHeaderRowId, pianoRollObject ){
 function highlightHeader(headerId, pianoRollObject){
 	var element = document.getElementById(headerId);
 	var currColor = element.style.backgroundColor;
-	if(currColor !== "rgb(50, 205, 50)"){
+	if(currColor !== pianoRollObject.playMarkerColor){
 		if(pianoRollObject.playMarker){
 			var oldMarker = document.getElementById(pianoRollObject.playMarker);
 			oldMarker.style.backgroundColor = "rgb(255, 255, 255)";
 		}
 		var columnIndex = parseInt(headerId.match(/\d+/)[0]);
 		pianoRollObject.playMarker = headerId;
-		element.style.backgroundColor = "rgb(50, 205, 50)";
+		element.style.backgroundColor = pianoRollObject.playMarkerColor;
 	}else{
 		pianoRollObject.playMarker = null;
 		element.style.backgroundColor = "rgb(255, 255, 255)";
@@ -169,7 +170,7 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	// hook up an event listener to allow for picking notes on the grid!
 	column.addEventListener("click", function(){ addNote(this.id, pianoRollObject) });
 	// allow for highlighting to make it clear which note a block is
-	column.addEventListener("mouseenter", function(){ highlightRow(this.id, '#FFFF99') });
+	column.addEventListener("mouseenter", function(){ highlightRow(this.id, pianoRollObject.highlightColor) });
 	column.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
 	return column;
 }
@@ -226,7 +227,7 @@ function redrawCellBorders(pianoRollObject, headerId){
 				var measureNumber = document.createElement("h2");
 				measureNumber.innerHTML = measureCounter++;
 				measureNumber.style.margin = '0 0 0 0';
-				measureNumber.style.color = '#2980B9';
+				measureNumber.style.color = pianoRollObject.measureNumberColor;
 				
 				columnHeader.appendChild(measureNumber);
 				
