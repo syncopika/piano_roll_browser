@@ -28,4 +28,4 @@
 
 // make it recordable?
 // https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createMediaStreamDestination
-
+// https://stackoverflow.com/questions/38443084/how-can-i-add-predefined-length-to-audio-recorded-from-mediarecorder-in-chrome

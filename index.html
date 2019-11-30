@@ -162,6 +162,7 @@
 		<li><button id='play' class='btn'> play! </button></li>
 		<li><button id='playAll' class='btn'> play <b>all</b>! </button></li>
 		<li><button id='stopPlay' class='btn'> stop! </button></li>
+		<li><button id='record' class='btn'> record </button></li>
 		<li><button id='addMeasure' class='btn'> add new measure </button></li>
 		<li><button id='delMeasure' class='btn'> delete measure </button></li>
 		<li><button id='addInstrument' class='btn'> add new instrument </button></li>
@@ -231,7 +232,6 @@
 //TODO:
 /*
 - allow color customizations for highlight, note blocks
-- allow playback at specified measure 
 - allow repeats (add some new attributes to column headers)?
 - 32nd notes? mayyyybe
 */
@@ -347,6 +347,12 @@ function bindButtons(pianoRollObject){
 	
 	document.getElementById('stopPlay').addEventListener('click', function(){
 		stopPlay(pianoRoll);
+	});
+	
+	document.getElementById('record').addEventListener('click', function(){
+		context.resume().then(() => {
+			recordPlay(pianoRoll);
+		})
 	});
 	
 	document.getElementById('changeTempoBtn').addEventListener('click', function(){

@@ -15,17 +15,23 @@ function PianoRoll(){
 	this.timers = [];			// keep track of setTimeouts so all can be ended at once 
 	this.currentInstrument; 	// need to keep track of what current instrument is!
 	this.audioContext;			// associate an AudioContext with this PianoRoll
+	this.audioContextDestOriginal; // the original audio context destination 
+	this.audioContextDestMediaStream; // a media stream destination for the audio context (to be used when recording is desired)
+	this.audioDataChunks = [];
 	this.isPlaying;				// a boolean flag to easily quit playing
 	this.lastTime; 				// the time the last note was supposed to be played
 	this.currentInstrumentNoteQueue = []; // keep track of the current instrument' scheduled notes. use this for showing what note is currently playing
+	this.loopFlag = false;		// if playback should be looped or not 
+	this.recording = false;		// if recording. note that if looping, recording should not be possible.
+	this.recorder;
 	this.playMarker;		    // the id of a column header indicating where to start playing
 	this.playMarkerColor = "rgb(50, 205, 50)";
-	this.loopFlag = false;		// if playback should be looped or not 
 	this.highlightColor = "#FFFF99";
 	this.measureNumberColor = "#2980B9";
 	this.noteColor = "rgb(0, 178, 0)";
 	this.onionSkinNote = "rgba(0, 178, 0, 0.2)";
-	this.instrumentTableColor = 'rgb(188,223,70)';
+	this.instrumentTableColor = 'rgb(188, 223, 70)';
+	this.currNotePlayingColor = 'rgb(112, 155, 224)';
 
 	// instrument-related stuff 
 	this.noiseBuffer; // for percussion 
@@ -161,17 +167,39 @@ function PianoRoll(){
 		// suspend the context (testing prior to M70 update (Chrome))
 		context.suspend();
 		
-		/*
-			percussion-related setup 
-		*/
-		// set up a noise buffer for snare drum
-		//var bufSize = context.sampleRate;
-		//var buffer = context.createBuffer(1, bufSize, bufSize);
-		//var output = buffer.getChannelData(0);
-		//for(var i = 0; i < bufSize; i++){
-		//	output[i] = Math.random() * 2 - 1;
-		//}
-		//this.noiseBuffer = buffer;
+		// save a reference to the original audio destination
+		this.audioContextDestOriginal = context.destination;
+		
+		// make a recorder
+		var audioStream = context.createMediaStreamDestination();
+		this.audioContextDestMediaStream = audioStream;
+		this.recorder = new MediaRecorder(audioStream.stream);
+		
+		this.recorder.ondataavailable = (function(pianoRoll){
+			return function(evt){
+				console.log(evt.data);
+				pianoRoll.audioDataChunks.push(evt.data);
+			}
+		})(this);
+		
+		this.recorder.onstop = (function(pianoRoll){
+			return function(evt){
+				
+				var blob = new Blob(pianoRoll.audioDataChunks, {'type': 'audio/ogg; codecs=opus'});
+				var url = URL.createObjectURL(blob);
+				var link = document.createElement('a');
+				link.href = url;
+				
+				// note this is specific to my page html
+				link.download = document.getElementById('pieceTitle').textContent + "_pianorollfun";
+				link.click();
+				
+				// reset audio data array
+				while(pianoRoll.audioDataChunks.length){
+					pianoRoll.audioDataChunks.pop();
+				}
+			}
+		})(this);
 		
 		this.PercussionManager = new PercussionManager(context);
 	}

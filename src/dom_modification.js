@@ -715,8 +715,8 @@ var onendFunc = function(x, pianoRoll){
 		}
 		
 		var currNote = document.getElementById(column);
-		if(pianoRoll.playMarker !== currNote.id){
-			document.getElementById(column).style.backgroundColor = '#709be0'; // nice light blue color 
+		if(pianoRoll.isPlaying && pianoRoll.playMarker !== currNote.id){
+			document.getElementById(column).style.backgroundColor = pianoRoll.currNotePlayingColor; // nice light blue color 
 		}
 
 		lastNote = currNote;

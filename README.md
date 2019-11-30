@@ -23,14 +23,13 @@ can get pretty slow when changing instruments because of the onion skin.
 json loading seems a lot slower in Firefox compared to Chrome?     
     
 ### current next steps:    
-still need to delete instruments.     
-be able to start playback at a certain measure. (mostly done)   
+still need to delete instruments.    
 be able to toggle onion skin?    
     
 ### features I would like to implement:    
 - ability to change color of highlight and color of note blocks, i.e. different for each instrument    
 - be able to make custom sounds!    
-- be able to record playback
+- be able to record playback (half-done! on Chrome there's a problem with getting the length of the recording and also no percussion sounds getting recorded atm.)
 - be able to repeat a section 
 - be able to subdivide 16th notes for 32nd notes.
     

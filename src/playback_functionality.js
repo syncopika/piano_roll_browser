@@ -186,7 +186,6 @@ function scheduler(pianoRoll, allInstruments){
 						break;
 					}
 				}catch(error){
-					//instrumentNotePointers[k] = l+1;
 					console.error(error);
 					console.error(pianoRoll.instruments[k].notes[l]);
 				}
@@ -246,10 +245,7 @@ function scheduler(pianoRoll, allInstruments){
 				// find out what octave the note is in 
 				// note that the note might be a rest! so it has no block id!
 				if(thisNote.block.id){
-					//console.log(thisNote.block.id)
 					var octave = parseInt(thisNote.block.id.match(/[0-9]/g)[0]);
-					
-					var newOsc;
 					var volume = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
 					if(octave >= 2 && octave <= 4){
 						osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
@@ -307,6 +303,13 @@ function scheduler(pianoRoll, allInstruments){
 				osc.stop( nextTime[i] + (realDuration / 1000) );
 			});
 			
+			// temporary?
+			if(pianoRoll.recording){
+				oscGainNode.connect(pianoRoll.audioContextDestMediaStream);
+			}else{
+				oscGainNode.connect(pianoRoll.audioContextDestOriginal);
+			}
+			
 			// update lastTime and nextTime
 			pianoRoll.lastTime = nextTime[i];
 			nextTime[i] += (thisNote.duration / 1000);
@@ -327,18 +330,27 @@ function scheduler(pianoRoll, allInstruments){
 		} // end for	
 	} // end while 
 	
-	// get the last oscillator and make it send a signal when it's done playing to start over again 
 	if(pianoRoll.loopFlag && pianoRoll.isPlaying){
+		// get the last oscillator and make it send a signal when it's done playing to start over again 
 		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){loopSignal(pianoRoll, allInstruments)};
+	}else if(pianoRoll.recording){
+		// stop the recorder when the last oscillator is done playing
+		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){
+			// stop recorder
+			pianoRoll.recorder.stop();
+			pianoRoll.recording = false;
+			
+			// reset destination
+			//pianoRoll.audioContext.destination = pianoRoll.audioContextDestOriginal;
+		}
 	}
 	
 }
 
 function loopSignal(pianoRoll, allInstruments){
-	//pianoRoll.loopFlag = false;
 	setTimeout(function(){
 		scheduler(pianoRoll, allInstruments);
-	}, 200);
+	}, 80);
 }
 
 
@@ -348,7 +360,6 @@ function loopSignal(pianoRoll, allInstruments){
 
 ****/
 function play(pianoRollObject){
-	
 	var ctx = pianoRollObject.audioContext;
 	if(!pianoRoll.isPlaying || (pianoRoll.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
 		pianoRoll.isPlaying = true;
@@ -366,7 +377,6 @@ function play(pianoRollObject){
 
 ****/
 function playAll(pianoRollObject){
-	
 	var ctx = pianoRollObject.audioContext;
 	if(!pianoRoll.isPlaying || (pianoRoll.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
 		pianoRollObject.isPlaying = true;
@@ -375,6 +385,25 @@ function playAll(pianoRollObject){
 		
 		// start the piano roll 
 		scheduler(pianoRollObject, true);
+	}
+}
+
+/****
+	
+	record playback 
+	
+****/
+function recordPlay(pianoRollObject){
+	if(pianoRollObject.recording){
+		return;
+	}else{
+		pianoRollObject.recording = true;
+		
+		// change destination to media stream
+		//pianoRollObject.audioContext.destination = pianoRollObject.audioContextDestMediaStream;
+		
+		pianoRollObject.recorder.start();
+		playAll(pianoRollObject);
 	}
 }
 
@@ -409,6 +438,7 @@ function stopPlay(pianoRollObject){
 	if(lastNote && lastNote.id !== pianoRollObject.playMarker){
 		lastNote.style.backgroundColor = '#fff';
 	}
+	
 	lastNote = null;
 	currNote = null;
 	pianoRollObject.currentInstrumentNoteQueue = [];
