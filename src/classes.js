@@ -177,7 +177,7 @@ function PianoRoll(){
 		
 		this.recorder.ondataavailable = (function(pianoRoll){
 			return function(evt){
-				console.log(evt.data);
+				//console.log(evt.data);
 				pianoRoll.audioDataChunks.push(evt.data);
 			}
 		})(this);
@@ -186,10 +186,14 @@ function PianoRoll(){
 			return function(evt){
 				
 				var blob = new Blob(pianoRoll.audioDataChunks, {'type': 'audio/ogg; codecs=opus'});
+				console.log(blob);
 				var url = URL.createObjectURL(blob);
 				var link = document.createElement('a');
 				link.href = url;
 				
+				// duration for output file will be set to infinity on Chrome
+				// I don't think I can edit the file's duration unless you do some crazy annoying stuff. it's a chrome bug :/
+
 				// note this is specific to my page html
 				link.download = document.getElementById('pieceTitle').textContent + "_pianorollfun";
 				link.click();

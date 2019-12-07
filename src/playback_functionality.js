@@ -339,9 +339,8 @@ function scheduler(pianoRoll, allInstruments){
 			// stop recorder
 			pianoRoll.recorder.stop();
 			pianoRoll.recording = false;
-			
-			// reset destination
-			//pianoRoll.audioContext.destination = pianoRoll.audioContextDestOriginal;
+			// html-specific: not the best thing to do here...
+			document.getElementById('record').style.border = "";
 		}
 	}
 	
@@ -361,7 +360,7 @@ function loopSignal(pianoRoll, allInstruments){
 ****/
 function play(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
-	if(!pianoRoll.isPlaying || (pianoRoll.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
+	if(!pianoRollObject.recording && !pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
 		pianoRoll.isPlaying = true;
 		
 		// get the current notes 
@@ -378,7 +377,7 @@ function play(pianoRollObject){
 ****/
 function playAll(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
-	if(!pianoRoll.isPlaying || (pianoRoll.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
+	if(!pianoRollObject.recording && !pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
 		pianoRollObject.isPlaying = true;
 		
 		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
@@ -437,6 +436,14 @@ function stopPlay(pianoRollObject){
 	// notice it uses the global variables lastNote and currNote 
 	if(lastNote && lastNote.id !== pianoRollObject.playMarker){
 		lastNote.style.backgroundColor = '#fff';
+	}
+	
+	// if recording
+	if(pianoRollObject.recording){
+		pianoRollObject.recorder.stop();
+		pianoRollObject.recording = false;
+		// html-specific: not the best thing to do here...
+		document.getElementById('record').style.border = "";
 	}
 	
 	lastNote = null;
