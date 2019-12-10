@@ -335,10 +335,11 @@ function scheduler(pianoRoll, allInstruments){
 		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){loopSignal(pianoRoll, allInstruments)};
 	}else if(pianoRoll.recording){
 		// stop the recorder when the last oscillator is done playing
-		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){
+		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){	
 			// stop recorder
 			pianoRoll.recorder.stop();
 			pianoRoll.recording = false;
+			
 			// html-specific: not the best thing to do here...
 			document.getElementById('record').style.border = "";
 		}
@@ -360,7 +361,7 @@ function loopSignal(pianoRoll, allInstruments){
 ****/
 function play(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
-	if(!pianoRollObject.recording && !pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
+	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
 		pianoRoll.isPlaying = true;
 		
 		// get the current notes 
@@ -377,7 +378,7 @@ function play(pianoRollObject){
 ****/
 function playAll(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
-	if(!pianoRollObject.recording && !pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
+	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
 		pianoRollObject.isPlaying = true;
 		
 		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
@@ -397,10 +398,6 @@ function recordPlay(pianoRollObject){
 		return;
 	}else{
 		pianoRollObject.recording = true;
-		
-		// change destination to media stream
-		//pianoRollObject.audioContext.destination = pianoRollObject.audioContextDestMediaStream;
-		
 		pianoRollObject.recorder.start();
 		playAll(pianoRollObject);
 	}

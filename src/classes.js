@@ -164,7 +164,7 @@ function PianoRoll(){
 		var context = new AudioContext();
 		this.audioContext = context;
 		
-		// suspend the context (testing prior to M70 update (Chrome))
+		// suspend the context (M70 update (Chrome))
 		context.suspend();
 		
 		// save a reference to the original audio destination
@@ -177,7 +177,6 @@ function PianoRoll(){
 		
 		this.recorder.ondataavailable = (function(pianoRoll){
 			return function(evt){
-				//console.log(evt.data);
 				pianoRoll.audioDataChunks.push(evt.data);
 			}
 		})(this);
