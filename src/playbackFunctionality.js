@@ -260,7 +260,16 @@ function scheduler(pianoRoll, allInstruments){
 				}
 				
 				oscList = oscList.concat(osc);	
+				
+			}else if(pianoRoll.instrumentPresets[instruments[i].waveType]){
+				
+				// custom intrument preset!
+				var currPreset = pianoRoll.instrumentPresets[instruments[i].waveType];
+				var instrumentPresetNodes = processNote(thisNote.freq, volume, nextTime[i], ctx, currPreset); 
+				oscList = oscList.concat(instrumentPresetNodes);
+				
 			}else{	
+			
 				// make a new oscillator for this note 
 				osc = ctx.createOscillator();
 				
@@ -506,7 +515,9 @@ function createNewInstrument(name, pianoRollObject){
 	pianoRollObject.instruments.push(newInstrument);
 }
 
-function deleteInstrument(){}
+function deleteInstrument(){
+	//TODO
+}
 
 
 try {

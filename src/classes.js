@@ -32,6 +32,14 @@ function PianoRoll(){
 	this.onionSkinNote = "rgba(0, 178, 0, 0.2)";
 	this.instrumentTableColor = 'rgb(188, 223, 70)';
 	this.currNotePlayingColor = 'rgb(112, 155, 224)';
+	this.instrumentPresets = {};// a dictionary to keep track of imported instrument presets
+								// i.e. {'name': 
+								//				{
+								//					'waveNode': [osc1, osc2],
+								//					'noiseNode': [osc1]
+								//				}
+								//      }
+								// each preset_info dictionary keeps references to the different sound nodes needed for the instrument
 
 	// instrument-related stuff 
 	this.noiseBuffer; // for percussion 
