@@ -59,13 +59,12 @@ function addWaveNode(waveNodeParams, audioContext){
 function processNote(freq, vol, timeStart, audioContext, currPreset){
 	// play the given note based on the current synth setup
 	let allNodes = [];
-	let time = timeStart;//audioContext.currentTime;
+	let time = timeStart;
 	
 	currPreset.waveNodes.forEach((node) => {
 		let snap = addWaveNode(node, audioContext);
 		let snapOsc = snap[0];
 		let snapEnv = snap[1];
-		let volume = vol;//node['waveOscVolume1'];
 		
 		snapOsc.frequency.setValueAtTime(freq, time);
 		snapEnv.gain.setValueAtTime(vol, time);
@@ -76,17 +75,10 @@ function processNote(freq, vol, timeStart, audioContext, currPreset){
 		let noise = addNoise(node, audioContext);
 		let noiseOsc = noise[0];
 		let noiseEnv = noise[1];
-		let volume = vol;//node['noiseOscVolume1'];
 		
 		noiseEnv.gain.setValueAtTime(vol, time);
 		allNodes.push(noiseOsc);
 	});
 	
-	/*
-	allNodes.forEach((osc) => {
-		osc.start(0);
-		osc.stop(audioContext.currentTime + .100);
-	});
-	*/
 	return allNodes;
 }

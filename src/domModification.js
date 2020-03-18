@@ -5,74 +5,11 @@ DOM MODIFICATION
 many functions here rely on an instance of
 the PianoRoll class in classes.js 
 
+and playbackFunctionality.js
+
 these functions affect what's being displayed on the DOM 
 
 ***************/
-
-
-/****
-
-	plays the corresponding pitch of a block when clicked 
-
-****/
-function clickNote(id, waveType, pianoRollObject){
-
-	// resume the context per the Web Audio autoplay policy 
-	pianoRollObject.audioContext.resume().then(() => {
-
-		if(waveType === "percussion"){
-			clickPercussionNote(id, pianoRollObject);
-		}else{
-			
-			var parent = document.getElementById(id).parentNode.id;
-			parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
-			
-			// create a new oscillator just for this note 
-			var osc = pianoRollObject.audioContext.createOscillator();
-			osc.type = waveType;
-			osc.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], 0);
-			
-			// borrow the currentInstrument's gain node 
-			var gain = pianoRollObject.currentInstrument.gain;
-			osc.connect(gain);
-			
-			// set the volume of a clicked note to whatever the current isntrument's volume is 
-			gain.gain.setTargetAtTime(pianoRollObject.currentInstrument.volume, pianoRollObject.audioContext.currentTime, 0.002);
-			osc.start(0);
-			
-			// silence the oscillator 
-			gain.gain.setTargetAtTime(0, pianoRollObject.audioContext.currentTime + 0.080, 0.002);
-			osc.stop(pianoRollObject.audioContext.currentTime + .100);
-			
-		}
-
-	});
-}
-
-function clickPercussionNote(id, pianoRollObject){
-	
-	var parent = document.getElementById(id).parentNode.id;
-	parent = parent.replace('s', '#')
-	
-	var context = pianoRollObject.audioContext;
-	var gain = pianoRollObject.currentInstrument.gain;
-	var time = pianoRollObject.audioContext.currentTime;
-	var octave = parseInt(parent.match(/[0-9]/g)[0]);
-	var volume = pianoRollObject.currentInstrument.volume;
-	
-	if(octave >= 2 && octave <= 4){
-		// kick drum 
-		pianoRollObject.PercussionManager.kickDrumNote(pianoRollObject.noteFrequencies[parent], volume, time, false);
-		
-	}else if(octave === 5){
-		// snare drum 
-		pianoRollObject.PercussionManager.snareDrumNote(pianoRollObject.noteFrequencies[parent], volume, time, false);
-		
-	}else{
-		// hi-hat 
-		pianoRollObject.PercussionManager.hihatNote(volume, time, false);
-	}
-}
 
 
 

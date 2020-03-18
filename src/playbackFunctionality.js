@@ -29,6 +29,106 @@ function initGain(context){
 	return newGain;
 }
 
+
+/****
+
+	plays the corresponding pitch of a block when clicked 
+
+****/
+function clickNote(id, waveType, pianoRollObject){
+
+	// resume the context per the Web Audio autoplay policy 
+	pianoRollObject.audioContext.resume().then(() => {
+
+		if(waveType === "percussion"){
+			clickPercussionNote(id, pianoRollObject);
+		}else if(pianoRoll.instrumentPresets[waveType]){
+			
+			// custom intrument preset!
+			// TODO: refactor this section pls
+			var parent = document.getElementById(id).parentNode.id;
+			parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
+			var audioContext = pianoRollObject.audioContext;
+			var currPreset = pianoRollObject.instrumentPresets[waveType];
+			//console.log(currPreset);
+			var time = audioContext.currentTime;
+			var allNodes = [];
+			
+			currPreset.waveNodes.forEach((node) => {
+				let snap = addWaveNode(node, audioContext);
+				let snapOsc = snap[0];
+				let snapEnv = snap[1];
+				
+				snapOsc.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], time);
+				snapEnv.gain.setValueAtTime(pianoRollObject.currentInstrument.volume, time);
+				allNodes.push(snapOsc);
+			});
+			
+			currPreset.noiseNodes.forEach((node) => {
+				let noise = addNoise(node, audioContext);
+				let noiseOsc = noise[0];
+				let noiseEnv = noise[1];
+				
+				noiseEnv.gain.setValueAtTime(pianoRollObject.currentInstrument.volume, time);
+				allNodes.push(noiseOsc);
+			});
+			
+			allNodes.forEach((osc) => {
+				osc.start(0);
+				osc.stop(audioContext.currentTime + .100);
+			});
+		}else{
+			
+			var parent = document.getElementById(id).parentNode.id;
+			parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
+			
+			// create a new oscillator just for this note 
+			var osc = pianoRollObject.audioContext.createOscillator();
+			osc.type = waveType;
+			osc.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], 0);
+			
+			// borrow the currentInstrument's gain node 
+			var gain = pianoRollObject.currentInstrument.gain;
+			osc.connect(gain);
+			
+			// set the volume of a clicked note to whatever the current isntrument's volume is 
+			gain.gain.setTargetAtTime(pianoRollObject.currentInstrument.volume, pianoRollObject.audioContext.currentTime, 0.002);
+			osc.start(0);
+			
+			// silence the oscillator 
+			gain.gain.setTargetAtTime(0, pianoRollObject.audioContext.currentTime + 0.080, 0.002);
+			osc.stop(pianoRollObject.audioContext.currentTime + .100);
+		}
+
+	});
+}
+
+function clickPercussionNote(id, pianoRollObject){
+	
+	var parent = document.getElementById(id).parentNode.id;
+	parent = parent.replace('s', '#')
+	
+	var context = pianoRollObject.audioContext;
+	var gain = pianoRollObject.currentInstrument.gain;
+	var time = pianoRollObject.audioContext.currentTime;
+	var octave = parseInt(parent.match(/[0-9]/g)[0]);
+	var volume = pianoRollObject.currentInstrument.volume;
+	
+	if(octave >= 2 && octave <= 4){
+		// kick drum 
+		pianoRollObject.PercussionManager.kickDrumNote(pianoRollObject.noteFrequencies[parent], volume, time, false);
+		
+	}else if(octave === 5){
+		// snare drum 
+		pianoRollObject.PercussionManager.snareDrumNote(pianoRollObject.noteFrequencies[parent], volume, time, false);
+		
+	}else{
+		// hi-hat 
+		pianoRollObject.PercussionManager.hihatNote(volume, time, false);
+	}
+}
+
+
 /****
 
 	this will read all the notes, put them in an array and returns the array 
@@ -224,6 +324,7 @@ function scheduler(pianoRoll, allInstruments){
 			var notesArr = instruments[i].notes;
 			var currIndex = instrumentNotePointers[i];
 			var thisNote = notesArr[currIndex];
+			var volume = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
 			
 			// by default, ~70% of the note duration should be played 
 			// the rest of the time can be devoted to the spacer 
@@ -246,7 +347,6 @@ function scheduler(pianoRoll, allInstruments){
 				// note that the note might be a rest! so it has no block id!
 				if(thisNote.block.id){
 					var octave = parseInt(thisNote.block.id.match(/[0-9]/g)[0]);
-					var volume = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
 					if(octave >= 2 && octave <= 4){
 						osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
 					}else if(octave === 5){
@@ -295,8 +395,7 @@ function scheduler(pianoRoll, allInstruments){
 				// setting gain value here depending on condition allows for the 'articulation' of notes without 
 				// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
 				// this is fixed by always setting gain to 0 if a note's frequency is 0.
-				var val = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
-				oscGainNode.gain.setTargetAtTime(val, nextTime[i], 0.0045); 
+				oscGainNode.gain.setTargetAtTime(volume, nextTime[i], 0.0045); 
 				
 				// change gain to 0 after a really small amount of time to give the impression of articulation
 				oscGainNode.gain.setTargetAtTime(0, (nextTime[i]) + (realDuration / 1000) - .0025, 0.0010);		
