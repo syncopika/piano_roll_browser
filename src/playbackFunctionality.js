@@ -8,15 +8,6 @@ these functions control functionality such as:
 
 relies on PianoRoll object in classes.js 
 
-// super helpful hints on how to synchronize web audio properly 
-https://www.html5rocks.com/en/tutorials/audio/scheduling/#disqus_thread
-https://github.com/cwilso/metronome/blob/master/js/metronome.js
-
-http://catarak.github.io/blog/2014/12/02/web-audio-timing-tutorial/
-https://github.com/catarak/web-audio-sequencer/blob/master/javascripts/app.js
-
-http://sriku.org/blog/2013/01/30/taming-the-scriptprocessornode/#replacing-oscillator-with-scriptprocessornode
-
 ************/
 
 

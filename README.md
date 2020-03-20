@@ -7,9 +7,11 @@ This project is a work-in-progress
 ![screenshot of the piano roll](screenshots/current.png "current look")    
     
 ### cool features:    
-- saveable projects!    
-- can import custom instrument presets!    
-- onion skin!    
+- saveable projects    
+- can import custom instrument presets    
+- each note is customizable    
+- onion skin    
+- recordable    
      
 ### instructions:    
 - to change the name of the piece or the composer, double click on 'title' or 'composer', just above the buttons.     
