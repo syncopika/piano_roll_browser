@@ -2,7 +2,7 @@
 a music sequencer inspired by LMMS, one of the best software applications ever!    
 also influenced a bit by PxTone Collage, another great application!      
     
-This project is a work-in-progress :)        
+This project is a work-in-progress        
     
 ![screenshot of the piano roll](screenshots/current.png "current look")    
     
@@ -20,22 +20,21 @@ This project is a work-in-progress :)
 ![instrument features with right-click](screenshots/instrument_edit_demo.gif "instrument features")    
 - click on a column header to start playing at that column (but it currently doesn't work properly if you select a column header that is within a long note (i.e. if a note spans 3 columns and you select the middle column).    
 ![select column header to start playing at](screenshots/setplaymarker_demo.gif "select column header to start playing at")   
-- wanna add custom instrument presets? use this other tool (https://syncopika.github.io/soundmaker/), download your preset, and import it in the piano roll!    
+- wanna add custom instrument presets? use this other tool (https://syncopika.github.io/soundmaker/), download your preset, and import it in the piano roll! see the demo_presets folder for examples.    
 	
 check out a demo! see the demo dropdown box.    
     
 ### current issues:    
-can get pretty slow when changing instruments because of the onion skin.    
-json loading seems a lot slower in Firefox compared to Chrome?     
-downloading the audio isn't great on Chrome - the audio duration is messed up (see: https://stackoverflow.com/questions/38443084/how-can-i-add-predefined-length-to-audio-recorded-from-mediarecorder-in-chrome).    
+- can get pretty slow when changing instruments because of the onion skin.    
+- json loading seems a lot slower in Firefox compared to Chrome?     
+- downloading the audio isn't great on Chrome - the audio duration is messed up (see: https://stackoverflow.com/questions/38443084/how-can-i-add-predefined-length-to-audio-recorded-from-mediarecorder-in-chrome).    
     
-### current next steps:    
-still need to delete instruments.    
-be able to toggle onion skin?    
+### current next steps?:    
+- still need to delete instruments.    
+- be able to toggle onion skin?    
     
 ### features I would like to implement:    
 - ability to change color of highlight and color of note blocks, i.e. different for each instrument    
-- be able to record playback (half-done! on Chrome there's a problem with getting the length of the recording and also no percussion sounds getting recorded atm.)
 - be able to repeat a section 
 - be able to subdivide 16th notes for 32nd notes.
     

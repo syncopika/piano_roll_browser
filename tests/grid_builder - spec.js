@@ -1,9 +1,9 @@
 var assert = require('assert');
 var expect = require('chai').expect;
-var { replaceSharp, buildGrid, buildGridHeader, highlightHeader } = require('../src/grid_builder.js');
+var { replaceSharp, buildGrid, buildGridHeader, highlightHeader } = require('../src/gridBuilder.js');
 var { PianoRoll } = require('../src/classes.js');
 
-describe('testing grid_builder.js', function(){
+describe('testing gridBuilder.js', function(){
 	
 	var pianoRoll, el;
 	
