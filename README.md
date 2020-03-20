@@ -20,7 +20,7 @@ This project is a work-in-progress
 ![instrument features with right-click](screenshots/instrument_edit_demo.gif "instrument features")    
 - click on a column header to start playing at that column (but it currently doesn't work properly if you select a column header that is within a long note (i.e. if a note spans 3 columns and you select the middle column).    
 ![select column header to start playing at](screenshots/setplaymarker_demo.gif "select column header to start playing at")   
-- wanna add custom instrument presets? use this other tool (https://syncopika.github.io/soundmaker/), download your preset, and import it in the piano roll! see the demo_presets folder for examples.    
+- **wanna add custom instrument presets?** use this other tool (https://syncopika.github.io/soundmaker/), download your preset, and import it in the piano roll! see the demo_presets folder for examples. Currently the kind of presets I support is very basic (just 2 kinds of nodes with limited customizations) but I plan to make more improvements in the future.    
 	
 check out a demo! see the demo dropdown box.    
     
