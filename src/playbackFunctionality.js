@@ -55,7 +55,7 @@ function clickNote(id, waveType, pianoRollObject){
 			var allNodes = [];
 			
 			currPreset.waveNodes.forEach((node) => {
-				let snap = addWaveNode(node, audioContext);
+				let snap = addWaveNode(node, pianoRollObject);
 				let snapOsc = snap[0];
 				let snapEnv = snap[1];
 				
@@ -65,7 +65,7 @@ function clickNote(id, waveType, pianoRollObject){
 			});
 			
 			currPreset.noiseNodes.forEach((node) => {
-				let noise = addNoise(node, audioContext);
+				let noise = addNoise(node, pianoRollObject);
 				let noiseOsc = noise[0];
 				let noiseEnv = noise[1];
 				
@@ -365,7 +365,7 @@ function scheduler(pianoRoll, allInstruments){
 				
 				// custom intrument preset!
 				var currPreset = pianoRoll.instrumentPresets[instruments[i].waveType];
-				var instrumentPresetNodes = processNote(thisNote.freq, volume, nextTime[i], ctx, currPreset); 
+				var instrumentPresetNodes = processNote(thisNote.freq, volume, nextTime[i], pianoRoll, currPreset); 
 				oscList = oscList.concat(instrumentPresetNodes);
 				
 			}else{	
@@ -401,6 +401,13 @@ function scheduler(pianoRoll, allInstruments){
 				oscGainNode.gain.setTargetAtTime(0, (nextTime[i]) + (realDuration / 1000) - .0025, 0.0010);		
 				
 				oscList.push(osc);
+				
+				// use right context destination for recording
+				if(pianoRoll.recording){
+					oscGainNode.connect(pianoRoll.audioContextDestMediaStream);
+				}
+				oscGainNode.connect(pianoRoll.audioContextDestOriginal);
+				
 			}
 		
 			// we generally expect oscList to have 1 osc node. sometimes there may be 2 (i.e. snare drum)
@@ -410,13 +417,6 @@ function scheduler(pianoRoll, allInstruments){
 				osc.start(nextTime[i]);
 				osc.stop( nextTime[i] + (realDuration / 1000) );
 			});
-			
-			// temporary?
-			if(pianoRoll.recording){
-				oscGainNode.connect(pianoRoll.audioContextDestMediaStream);
-			}else{
-				oscGainNode.connect(pianoRoll.audioContextDestOriginal);
-			}
 			
 			// update lastTime and nextTime
 			pianoRoll.lastTime = nextTime[i];

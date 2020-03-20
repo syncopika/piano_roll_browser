@@ -4,15 +4,15 @@
   "numNoiseNodes": 1,
   "waveNodes": [
     {
-      "waveOscVolume1": 0.08,
-      "waveOscType1": "square"
+      "waveOscVolume": 0.08,
+      "waveOscType": "square"
     }
   ],
   "noiseNodes": [
     {
-      "noiseOscVolume1": 0.1,
-      "noiseBufPassType1": "highpass",
-      "noiseOscFreq1": 1800
+      "noiseOscVolume": 0.1,
+      "noiseFilterPassType": "highpass",
+      "noiseOscFreq": 1800
     }
   ],
   "comments": "this is neat"

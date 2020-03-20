@@ -18,6 +18,8 @@
 // https://www.smashingmagazine.com/2012/06/introduction-to-javascript-unit-testing/
 // http://stackoverflow.com/questions/3847121/how-can-i-disable-all-settimeout-events
 // http://stackoverflow.com/questions/3955229/remove-all-child-elements-of-a-dom-node-in-javascript
+// https://github.com/swisnl/jQuery-contextMenu/issues/15
+// http://swisnl.github.io/jQuery-contextMenu/demo/dynamic-create.html
 
 // super, super important!
 // https://github.com/WebAudio/web-audio-api/issues/76#issuecomment-107679878

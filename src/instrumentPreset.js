@@ -1,6 +1,8 @@
 // utility functions to handle importing instrument presets
 
-function addNoise(noiseNodeParams, audioContext){
+function addNoise(noiseNodeParams, pianoRoll){
+	
+	let audioContext = pianoRoll.audioContext;
 	
 	// this stuff should be customizable
 	let bufSize = audioContext.sampleRate;
@@ -16,53 +18,51 @@ function addNoise(noiseNodeParams, audioContext){
 	let noise = audioContext.createBufferSource();
 	noise.buffer = this.noiseBuffer;
 	let noiseFilter = audioContext.createBiquadFilter();
-	noiseFilter.type = noiseNodeParams['noiseBufPassType1'];
-	noiseFilter.frequency.value = noiseNodeParams['noiseOscFreq1']; //1800;
+	noiseFilter.type = noiseNodeParams['noiseFilterPassType'];
+	noiseFilter.frequency.value = noiseNodeParams['noiseOscFreq'];
 	noise.connect(noiseFilter);
 
 	// add gain to the noise filter 
 	let noiseEnvelope = audioContext.createGain();
 	noiseFilter.connect(noiseEnvelope);
-	noiseEnvelope.connect(audioContext.destination);
+	
+	if(pianoRoll.recording){
+		noiseEnvelope.connect(pianoRoll.audioContextDestMediaStream);
+	}
+	noiseEnvelope.connect(pianoRoll.audioContextDestOriginal);
+	
+	
 	return [noise, noiseEnvelope];
 }
 
 
-function addWaveNode(waveNodeParams, audioContext){
+function addWaveNode(waveNodeParams, pianoRoll){
+	
+	let audioContext = pianoRoll.audioContext;
+	
 	let snapOsc = audioContext.createOscillator();
-	snapOsc.type = waveNodeParams['waveOscType1'];
+	snapOsc.type = waveNodeParams['waveOscType'];
 	
 	let snapOscEnv = audioContext.createGain();
 	snapOsc.connect(snapOscEnv);
-	snapOscEnv.connect(audioContext.destination);
+	
+	if(pianoRoll.recording){
+		snapOscEnv.connect(pianoRoll.audioContextDestMediaStream);
+	}
+	snapOscEnv.connect(pianoRoll.audioContextDestOriginal);
 	
 	return [snapOsc, snapOscEnv];
 }
 
 
-// for reference
-/*
-	let preset1 = {
-		'presetName': 'preset1',
-		'numWaveNodes': 0,//1,
-		'numNoiseNodes': 1,
-		'waveNodes': [
-			//waveNode1
-		],
-		'noiseNodes': [
-			noiseNode1
-		],
-		"comments": "this is neat"
-	};
-*/
-
-function processNote(freq, vol, timeStart, audioContext, currPreset){
+function processNote(freq, vol, timeStart, pianoRoll, currPreset){
 	// play the given note based on the current synth setup
 	let allNodes = [];
 	let time = timeStart;
+	//let audioContext = pianoRoll.audioContext;
 	
 	currPreset.waveNodes.forEach((node) => {
-		let snap = addWaveNode(node, audioContext);
+		let snap = addWaveNode(node, pianoRoll);
 		let snapOsc = snap[0];
 		let snapEnv = snap[1];
 		
@@ -72,7 +72,7 @@ function processNote(freq, vol, timeStart, audioContext, currPreset){
 	});
 	
 	currPreset.noiseNodes.forEach((node) => {
-		let noise = addNoise(node, audioContext);
+		let noise = addNoise(node, pianoRoll);
 		let noiseOsc = noise[0];
 		let noiseEnv = noise[1];
 		

@@ -212,7 +212,7 @@ function PianoRoll(){
 			}
 		})(this);
 		
-		this.PercussionManager = new PercussionManager(context);
+		this.PercussionManager = new PercussionManager(this);
 	}
 
 }
@@ -259,12 +259,12 @@ function ElementNode(domElement){
 
 /***** PERCUSSION CLASS ******/
 // thanks to: https://dev.opera.com/articles/drum-sounds-webaudio/
-function PercussionManager(context){
+function PercussionManager(pianoRollObject){
 	// set up a noise buffer
 	// used in hihat and snare drum 
-	this.context = context;
-	var bufSize = context.sampleRate;
-	var buffer = context.createBuffer(1, bufSize, bufSize);
+	this.context = pianoRollObject.audioContext;
+	var bufSize = this.context.sampleRate;
+	var buffer = this.context.createBuffer(1, bufSize, bufSize);
 	var output = buffer.getChannelData(0);
 	for(var i = 0; i < bufSize; i++){
 		output[i] = Math.random() * 2 - 1;
@@ -285,7 +285,11 @@ function PercussionManager(context){
 		osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.1);
 		gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
 		
-		gain.connect(context.destination);
+		if(pianoRollObject.recording){
+			gain.connect(pianoRoll.audioContextDestMediaStream);
+		}
+		gain.connect(pianoRoll.audioContextDestOriginal);
+		//gain.connect(context.destination);
 		
 		if(!returnBool){
 			// this is just for clicking on a note
@@ -311,7 +315,8 @@ function PercussionManager(context){
 		// add gain to the noise filter 
 		var noiseEnvelope = context.createGain();
 		noiseFilter.connect(noiseEnvelope);
-		noiseEnvelope.connect(context.destination);
+		//noiseEnvelope.connect(context.destination);
+
 		
 		// the pianoRollObject should have the noise buffer and envelope set up for the snare 
 		// we just need to trigger it 
@@ -321,7 +326,7 @@ function PercussionManager(context){
 		
 		var snapOscEnv = context.createGain(); //gainNode;
 		snapOsc.connect(snapOscEnv);
-		snapOscEnv.connect(context.destination);
+		//snapOscEnv.connect(context.destination);
 		
 		noiseEnvelope.gain.setValueAtTime(volume, time);
 		noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
@@ -329,6 +334,13 @@ function PercussionManager(context){
 		snapOsc.frequency.setValueAtTime(100, time);
 		snapOscEnv.gain.setValueAtTime(0.7, time);
 		snapOscEnv.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+		
+		if(pianoRollObject.recording){
+			noiseEnvelope.connect(pianoRoll.audioContextDestMediaStream);
+			snapOscEnv.connect(pianoRoll.audioContextDestMediaStream);
+		}
+		noiseEnvelope.connect(pianoRoll.audioContextDestOriginal);
+		snapOscEnv.connect(pianoRoll.audioContextDestOriginal);
 			
 		if(!returnBool){
 			// this is for clicking a note (not setting up a note for playback)
@@ -342,7 +354,6 @@ function PercussionManager(context){
 		}
 	}
 	
-	
 	this.hihatNote = function(volume, time, returnBool){
 		var context = this.context;
 		var noise = context.createBufferSource();
@@ -355,7 +366,12 @@ function PercussionManager(context){
 		// add gain to the noise filter 
 		var noiseEnvelope = context.createGain();
 		noiseFilter.connect(noiseEnvelope);
-		noiseEnvelope.connect(context.destination);
+		//noiseEnvelope.connect(context.destination);
+		if(pianoRollObject.recording){
+			noiseEnvelope.connect(pianoRoll.audioContextDestMediaStream);
+		}
+		noiseEnvelope.connect(pianoRoll.audioContextDestOriginal);
+		
 		
 		noiseEnvelope.gain.setValueAtTime(volume, time);
 		noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
@@ -369,7 +385,6 @@ function PercussionManager(context){
 			return [noise];
 		}
 	}
-	
 }
 
 try{
