@@ -5,10 +5,11 @@
 	<title> a piano roll in the browser </title>
 	<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
 	<script src='src/classes.js'></script>
-	<script src='src/context_menus.js'></script>
-	<script src='src/grid_builder.js'></script>
-	<script src='src/playback_functionality.js'></script>
-	<script src='src/dom_modification.js'></script>
+	<script src='src/contextMenus.js'></script>
+	<script src='src/gridBuilder.js'></script>
+	<script src='src/playbackFunctionality.js'></script>
+	<script src='src/domModification.js'></script>
+	<script src='src/instrumentPreset.js'></script>
 	
 	<!-- stuff needed for contextMenu -->
 	<link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/screen.css" type="text/css"/>
@@ -169,8 +170,12 @@
 		<li><button id='addInstrument' class='btn'> add new instrument </button></li>
 		<li><button id='clearGrid' class='btn'> clear grid </button></li>
 		<li><button class='btn' onclick='generateJSON()'> save & export data </button></li>
+		
 		<li><button class='btn' onclick='fileHandler()'> import data </button></li>
 		<input type='file' id='importFile' style='display: none'>
+		
+		<li><button id='importInstrumentPreset' class='btn'> import instrument preset </button></li>
+		<input type='file' id='importInstrumentPresetInput' style='display: none'>
 		
 		<li>
 			<label id='tempoLabel'> tempo: 
@@ -400,6 +405,41 @@ function bindButtons(pianoRollObject){
 		// update measure count 
 		$('#measures').text( "number of measures: " + pianoRollObject.numberOfMeasures );
 	});
+	
+	// import instrument preset
+	document.getElementById('importInstrumentPreset').addEventListener('click', function(){
+		importInstrumentPreset();
+	});
+}
+
+// import json of instrument preset 
+function importInstrumentPreset(){
+	var input = document.getElementById('importInstrumentPresetInput');
+	input.addEventListener('change', processInstrumentPreset, false);
+	input.click();
+}
+
+function processInstrumentPreset(e){
+	var reader = new FileReader();
+	var file = e.target.files[0];
+	
+	//when the image loads, put it on the canvas.
+	reader.onload = (function(theFile){
+	
+		return function(e){
+		
+			// parse JSON using JSON.parse 
+			var data = JSON.parse(e.target.result);
+			var presetName = data['presetName'];
+			//console.log(presetName);
+			
+			// store the preset in the PianoRoll obj 
+			pianoRoll.instrumentPresets[presetName] = data;
+		}
+	})(file);
+
+	//read the file as a URL
+	reader.readAsText(file);
 }
 
 

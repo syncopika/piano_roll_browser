@@ -1,0 +1,19 @@
+{
+  "presetName": "preset1",
+  "numWaveNodes": 1,
+  "numNoiseNodes": 1,
+  "waveNodes": [
+    {
+      "waveOscVolume": 0.08,
+      "waveOscType": "square"
+    }
+  ],
+  "noiseNodes": [
+    {
+      "noiseOscVolume": 0.1,
+      "noiseFilterPassType": "highpass",
+      "noiseOscFreq": 1800
+    }
+  ],
+  "comments": "this is neat"
+}

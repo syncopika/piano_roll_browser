@@ -9,9 +9,9 @@ var {	initGain,
 		stopPlay,
 		getCorrectLength,
 		createNewInstrument 
-} = require('../src/playback_functionality.js');
+} = require('../src/playbackFunctionality.js');
 
-describe('testing playback_functionality.js', function(){
+describe('testing playbackFunctionality.js', function(){
 
 	var pianoRoll;
 
