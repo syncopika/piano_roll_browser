@@ -1,0 +1,4 @@
+- for custom instrument presets, applying glide to a note doesn't produce the desired effect.
+- (maybe) figure out Edge bugs and how to fix (i.e. script 438, 5007 errors)
+- on Firefox: when playing my demos (except for the 3/4 example), the first note always seems to be skipped.
+  otherwise, performance on Firefox seems to have improved considerably from at least a year ago for my application.

@@ -59,7 +59,6 @@ function processNote(freq, vol, timeStart, pianoRoll, currPreset){
 	// play the given note based on the current synth setup
 	let allNodes = [];
 	let time = timeStart;
-	//let audioContext = pianoRoll.audioContext;
 	
 	currPreset.waveNodes.forEach((node) => {
 		let snap = addWaveNode(node, pianoRoll);
@@ -67,7 +66,17 @@ function processNote(freq, vol, timeStart, pianoRoll, currPreset){
 		let snapEnv = snap[1];
 		
 		snapOsc.frequency.setValueAtTime(freq, time);
+		
+		// here we're using the volume given by the current note's volume setting
+		// but that conflicts with the volume given by the preset for this particular node 
+		// can we reconcile the difference? like given the current note's volume, maybe we
+		// can come up with a corresponding ratio of separate node volumes?
 		snapEnv.gain.setValueAtTime(vol, time);
+		
+		if(node['waveOscDetune']){
+			snapOsc.detune.setValueAtTime(node['waveOscDetune'], time);
+		}			
+		
 		allNodes.push(snapOsc);
 	});
 	

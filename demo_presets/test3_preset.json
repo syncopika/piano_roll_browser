@@ -1,0 +1,25 @@
+{
+  "presetName": "test3",
+  "numWaveNodes": 2,
+  "numNoiseNodes": 1,
+  "waveNodes": [
+    {
+      "waveOscVolume": 0.08,
+      "waveOscDetune": 23,
+      "waveOscType": "square"
+    },
+    {
+      "waveOscVolume": 0.16,
+      "waveOscDetune": 55,
+      "waveOscType": "triangle"
+    }
+  ],
+  "noiseNodes": [
+    {
+      "noiseOscVolume": 0.02,
+      "noiseFilterPassType": "highpass",
+      "noiseOscFreq": 5000
+    }
+  ],
+  "notes": ""
+}
