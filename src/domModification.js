@@ -12,6 +12,36 @@ these functions affect what's being displayed on the DOM
 ***************/
 
 
+/*
+
+	PIANO ROLL V2 IMPLEMENTATION
+	
+	https://stackoverflow.com/questions/26233180/resize-a-div-on-border-drag-and-drop-without-adding-extra-markup
+	
+	NOTES =>
+		- div
+		- bordered
+		- green
+		- border resizeable ->
+		- movable -> onclick, mousemove
+		- has position!
+			- position calculated based on left border and distance from start of piano roll
+			- can't be too too fine-grained otherwise too complicated? i.e. .1 vs .2 in distance
+		
+	PianoRoll class
+	each instrument => {
+		'position1': [note objects...],
+		'position2': [note objects...]
+	}
+	
+	Rests
+		- rests will be determined based on distance between notes! 
+
+
+
+*/
+
+
 
 /****
 
