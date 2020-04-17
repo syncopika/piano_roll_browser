@@ -66,8 +66,12 @@ function addNote(id, pianoRollObject){
 	clickNote(id, waveType, pianoRollObject);
 	
 	var newNote = document.createElement('div');
+	newNote.setAttribute("volume", "0.3");
+	newNote.setAttribute("length", "eighth"); 
+	newNote.setAttribute("type", "default"); 
 	newNote.style.backgroundColor = "green";
 	newNote.classList.add("noteElement");
+	newNote.classList.add("context-menu-one");
 	newNote.style.border = "1px solid #000";
 	newNote.style.width = "36px"; //document.getElementById(id).style.width - 5;
 	newNote.style.height = document.getElementById(id).style.height;
