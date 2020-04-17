@@ -159,7 +159,7 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	column.setAttribute("volume", 0.3);		 	// set volume to 0.3 initially
 	column.setAttribute("length", "eighth"); 	// length of note (quarter, eighth?)
 	column.setAttribute("type", "default"); 	// type of note - set to default initially 
-	column.className = "context-menu-one";
+	//column.className = "context-menu-one";
 	
 	if((colNum + 1) % pianoRollObject.subdivision == 0){
 		column.style.borderRight = "3px solid #000";

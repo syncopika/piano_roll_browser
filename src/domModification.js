@@ -16,6 +16,10 @@ these functions affect what's being displayed on the DOM
 
 	PIANO ROLL V2 IMPLEMENTATION
 	
+	- following LMMS' example of taking into account note position
+	- should help do away with some confusing/convoluted logic I currently have	
+	
+	- can do drag to resize notes - don't have to do annoying subdividing stuff!
 	https://stackoverflow.com/questions/26233180/resize-a-div-on-border-drag-and-drop-without-adding-extra-markup
 	
 	NOTES =>
@@ -37,7 +41,7 @@ these functions affect what's being displayed on the DOM
 	Rests
 		- rests will be determined based on distance between notes! 
 
-
+	this implementation can hopefully simplify a lot of things.
 
 */
 
@@ -48,90 +52,51 @@ these functions affect what's being displayed on the DOM
 	make notes clickable / toggle active note (green) 
 
 ****/
+
+function helper(newNote, pos, e){
+	let diff = e.x - pos;
+	// maybe allow a setting that allows for resizing in perfect increments or arbitrary?
+	newNote.style.width = diff + "px";
+	console.log(newNote.style.width);
+}
+
+
 function addNote(id, pianoRollObject){
-	
-	// make sure concatenated note blocks are unclickable!
-	var blockHeader = document.getElementById(id.substring(id.indexOf("col_")));
-	if(blockHeader.getAttribute('hasnote') < 0){
-		var waveType = pianoRollObject.currentInstrument.waveType; 
-		clickNote(id, waveType, pianoRollObject);
-		return;
-	}
-	
-	// if note is already green 
-	if($('#' + id).css("background-color") === pianoRollObject.noteColor){
-	
-		// take away green color 
-		$('#' + id).css("background-color", "transparent");
-		
-		// update attributes
-		$('#' + id).attr("volume", 0.0);
-		
-		// change hasNote attribute to false (0) in column header
-		var headerId = id.substring(id.indexOf("col"));
-		document.getElementById(headerId).setAttribute("hasNote", 0);
-		
-		// update right border (this is only really needed for concatenated note blocks i.e. length = eighth-eighth)
-		// NOTE: the method changeRightBorder is defined in context_menus.js!!
-		changeRightBorder(id, "add", pianoRollObject.subdivision);
-		
-		// if neighbor is green, make sure their column's hasnote is 1!
-		// this is important only for concatenated note blocks 
-		if(document.getElementById(id).nextSibling){
-			var neighbor = document.getElementById(id).nextSibling.id;
-			var neighborHeader = document.getElementById(neighbor.substring(neighbor.indexOf("col_")));
-			if(neighborHeader.getAttribute("hasnote") < 0){
-				// change hasnote attribute to 1
-				neighborHeader.setAttribute("hasnote", 1);
-				
-				// truncate the current note's length attribute by 1 
-				// i.e. if currently eighth-eighth, make it eighth (remove the first one)
-				var currLength = document.getElementById(id).getAttribute("length");
-				
-				// use the removed substring and make it the current note's new length 
-				// in other words it just takes on its old length before concatenation
-				var oldLength = currLength.substring(0, currLength.indexOf('-'));
-				$('#' + id).attr("length", oldLength);
-				
-				var newLength = currLength.substring(currLength.indexOf('-') + 1);
-				document.getElementById(neighbor).setAttribute("length", newLength);
-				
-				// also add the neighbor's entry in activeNotes 
-				pianoRollObject.currentInstrument.activeNotes[neighbor] = newLength.split('-').length;
-			}
-		}
-		
-		// remove this note from currentInstrument's activeNotes assoc. array 
-		delete pianoRollObject.currentInstrument.activeNotes[id];
-		
-		// if you choose a same note for the current instrument as another instrument, that will wipe out the 
-		// 'onion-skin' of the other instrument's note. but if you delete that note for
-		// the current instrument later, calling showOnionSkin() here will put back the 'onion-skin' for
-		// the other instrument. there is no static 'onion-skin' layer. 
-		// it's just changing the background-color of note blocks
-		showOnionSkin(pianoRollObject); 
-		
-	}else{
-		// update attributes 
-		$('#' + id).attr("volume", pianoRollObject.currentInstrument.volume);
-		
-		// what if the user wants to add more than 1 note in a column? we can allow that, but extra notes will be discarded (can't do polyphony with same oscillator?)
-		var headerId = id.substring(id.indexOf("col"));
-		var currValue = parseInt(document.getElementById(headerId).getAttribute("hasNote"));
-		if(currValue !== 1){
-			// if no note added to this column yet
-			$('#' + id).css("background-color", pianoRollObject.noteColor);
-			
-			// add the note to the currentInstrument's activeNotes attribute (an associative array)
-			pianoRollObject.currentInstrument.activeNotes[id] = 1;
-		
-			//change hasNote attribute to true in column header
-			document.getElementById(headerId).setAttribute("hasNote", 1); // set it to 1, no matter how many notes are added to the column 
-		}
-	}
 	var waveType = pianoRollObject.currentInstrument.waveType; 
 	clickNote(id, waveType, pianoRollObject);
+	
+	var newNote = document.createElement('div');
+	newNote.style.backgroundColor = "green";
+	newNote.classList.add("noteElement");
+	newNote.style.border = "1px solid #000";
+	newNote.style.width = "36px"; //document.getElementById(id).style.width - 5;
+	newNote.style.height = document.getElementById(id).style.height;
+	newNote.style.position = "absolute";
+	newNote.style.paddingRight = "4px";
+	document.getElementById(id).appendChild(newNote);
+	
+	newNote.addEventListener("mousedown", function(e){
+		if(e.offsetX > 2){
+			let pos = e.x;
+			
+			function resizeNote(e){
+				helper(newNote, pos, e);
+			}
+			
+			document.addEventListener("mousemove", resizeNote);
+			
+			document.addEventListener("mouseup", (e) => {
+				document.removeEventListener("mousemove", resizeNote);
+			});
+		}else{
+			// TODO: mouse move to move the note. also allow for movement at perfect increments or arbitrarily
+		}
+	});
+	
 }
+
+
+
 
 
 /****
@@ -299,7 +264,7 @@ function addNewMeasure(pianoRollObject){
 			newColumn.setAttribute("volume", "0.3");
 			newColumn.setAttribute("length", "eighth"); 
 			newColumn.setAttribute("type", "default"); 
-			newColumn.className = "context-menu-one";
+			//newColumn.className = "context-menu-one";
 			
 			if((k + 1) % pianoRollObject.subdivision == 0){
 				newColumn.style.borderRight = "3px solid #000";
