@@ -163,26 +163,17 @@ function makeNoteContextMenu(pianoRollObject){
 										selectedNote.setAttribute("type", this.options[e.target.options[e.target.selectedIndex].value - 1].textContent );
 									}
 								}
-							}
-							/*
+							},
+							"sep2": "------------",
 							"Delete": {
 								name: "Delete", 
 								icon: "delete",
 								callback: function(key, options){
-									//console.log(options);
-									//alert(options.$trigger.attr("id") );
-									
-									// need to check if attempting to call delete on concatenated note block! if so, don't do anything! 
-									var id = options.$trigger.attr("id");
-									var blockHeader = document.getElementById( id.substring(id.indexOf("col_")) );
-									if(blockHeader.getAttribute("hasnote") == -1){
-										return;
-									}
-									
-									var block = document.getElementById(options.$trigger.attr("id"));
-									block.style.backgroundColor = "transparent";
+									var note = options.$trigger[0];
+									var parent = note.parentNode;
+									parent.removeChild(note);
 								}
-							}*/
+							}
 						}
 					}
 				}

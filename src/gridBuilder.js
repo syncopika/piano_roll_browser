@@ -156,9 +156,9 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	column.style.backgroundColor = "transparent";
 
 	// IMPORTANT! new attributes for each note
-	column.setAttribute("volume", 0.3);		 	// set volume to 0.3 initially
+	//column.setAttribute("volume", 0.3);		 	// set volume to 0.3 initially
 	column.setAttribute("length", "eighth"); 	// length of note (quarter, eighth?)
-	column.setAttribute("type", "default"); 	// type of note - set to default initially 
+	//column.setAttribute("type", "default"); 	// type of note - set to default initially 
 	//column.className = "context-menu-one";
 	
 	if((colNum + 1) % pianoRollObject.subdivision == 0){
@@ -168,7 +168,7 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	}
 
 	// hook up an event listener to allow for picking notes on the grid!
-	column.addEventListener("click", function(){ addNote(this.id, pianoRollObject) });
+	column.addEventListener("mousedown", function(){ if(column.childNodes.length === 0){addNote(this.id, pianoRollObject)} });
 	// allow for highlighting to make it clear which note a block is
 	column.addEventListener("mouseenter", function(){ highlightRow(this.id, pianoRollObject.highlightColor) });
 	column.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
@@ -289,7 +289,7 @@ function redrawCellBorders(pianoRollObject, headerId){
 		newColumnHead.style.width = '40px';
 		newColumnHead.style.height = '12px';
 		newColumnHead.style.fontSize = '10px';
-		newColumnHead.setAttribute("hasNote", 0);
+		//newColumnHead.setAttribute("hasNote", 0);
 		newColumnHead.textContent = currColHeadNum;
 		headerColumnRow.append(newColumnHead);
 		

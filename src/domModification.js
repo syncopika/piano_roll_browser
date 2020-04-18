@@ -53,11 +53,25 @@ these functions affect what's being displayed on the DOM
 
 ****/
 
-function helper(newNote, pos, e){
-	let diff = e.x - pos;
+function helper(newNote, pos, evt){
+	let diff = evt.x - pos;
+	let resize = false;
 	// maybe allow a setting that allows for resizing in perfect increments or arbitrary?
-	newNote.style.width = diff + "px";
-	console.log(newNote.style.width);
+	var currLockType = document.getElementById("lockType").selectedOptions[0].value;
+	if(currLockType === "quarter"){
+		if(diff % (parseInt(newNote.style.width) + 3) === 0){
+			resize = true;
+		}
+	}
+	
+	if(resize){
+		newNote.style.width = diff + "px";
+		resize = false;
+	}
+}
+
+function moveHelper(newNote, evt){
+	newNote.style.left = evt.x + "px";
 }
 
 
@@ -72,29 +86,40 @@ function addNote(id, pianoRollObject){
 	newNote.style.backgroundColor = "green";
 	newNote.classList.add("noteElement");
 	newNote.classList.add("context-menu-one");
-	newNote.style.border = "1px solid #000";
-	newNote.style.width = "36px"; //document.getElementById(id).style.width - 5;
+	//newNote.style.border = "1px solid #000";
+	newNote.style.width = "37px"; //document.getElementById(id).style.width - 5;
 	newNote.style.height = document.getElementById(id).style.height;
 	newNote.style.position = "absolute";
-	newNote.style.paddingRight = "4px";
+	newNote.style.paddingRight = "3px";
+
+
 	document.getElementById(id).appendChild(newNote);
 	
 	newNote.addEventListener("mousedown", function(e){
-		if(e.offsetX > 2){
+
+		if(e.offsetX > parseInt(newNote.style.width)){
 			let pos = e.x;
 			
-			function resizeNote(e){
-				helper(newNote, pos, e);
+			function resizeNote(evt){
+				helper(newNote, pos, evt);
 			}
 			
 			document.addEventListener("mousemove", resizeNote);
-			
 			document.addEventListener("mouseup", (e) => {
 				document.removeEventListener("mousemove", resizeNote);
 			});
 		}else{
 			// TODO: mouse move to move the note. also allow for movement at perfect increments or arbitrarily
+			function moveNote(evt){
+				moveHelper(newNote, evt);
+			}
+			
+			document.addEventListener("mousemove", moveNote);
+			document.addEventListener("mouseup", (e) => {
+				document.removeEventListener("mousemove", moveNote);
+			});
 		}
+		//e.preventDefault();
 	});
 	
 }
@@ -268,7 +293,7 @@ function addNewMeasure(pianoRollObject){
 			newColumn.setAttribute("volume", "0.3");
 			newColumn.setAttribute("length", "eighth"); 
 			newColumn.setAttribute("type", "default"); 
-			//newColumn.className = "context-menu-one";
+			newColumn.className = "context-menu-one";
 			
 			if((k + 1) % pianoRollObject.subdivision == 0){
 				newColumn.style.borderRight = "3px solid #000";
