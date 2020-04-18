@@ -38,6 +38,16 @@
 		table, tr, td{
 			border: 1px solid #000;
 		}
+		
+		.noteElement:after{
+			position: absolute;
+			width: 3px;
+			background-color: #ccc;
+			height: 100%;
+			cursor: w-resize;
+			content: " ";
+			right: 0;
+		}
 
 		#piano{
 			display: inline-block;
@@ -165,6 +175,14 @@
 		<li><button id='stopPlay' class='btn'> stop! </button></li>
 		<li><input type='checkbox' id='loop'><label>loop</label></li>
 		<li><button id='record' class='btn'> record </button></li>
+		
+		<label for="lockType">lock type: </label>
+		<select name="lockType" id="lockType">
+			<option>8th</option>
+			<option>16th</option>
+			<option>32nd</option>
+		</select>
+		
 		<li><button id='addMeasure' class='btn'> add new measure </button></li>
 		<li><button id='delMeasure' class='btn'> delete measure </button></li>
 		<li><button id='addInstrument' class='btn'> add new instrument </button></li>

@@ -168,7 +168,7 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	}
 
 	// hook up an event listener to allow for picking notes on the grid!
-	column.addEventListener("mousedown", function(){ if(column.childNodes.length === 0){addNote(this.id, pianoRollObject)} });
+	column.addEventListener("click", function(){ if(column.childNodes.length === 0){addNote(this.id, pianoRollObject)} });
 	// allow for highlighting to make it clear which note a block is
 	column.addEventListener("mouseenter", function(){ highlightRow(this.id, pianoRollObject.highlightColor) });
 	column.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });

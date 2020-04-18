@@ -21,6 +21,7 @@ these functions affect what's being displayed on the DOM
 	
 	- can do drag to resize notes - don't have to do annoying subdividing stuff!
 	https://stackoverflow.com/questions/26233180/resize-a-div-on-border-drag-and-drop-without-adding-extra-markup
+	https://stackoverflow.com/questions/45534302/jquery-how-to-disable-not-allowed-cursor-while-dragging
 	
 	NOTES =>
 		- div
@@ -42,8 +43,18 @@ these functions affect what's being displayed on the DOM
 		- rests will be determined based on distance between notes! 
 
 	this implementation can hopefully simplify a lot of things.
+	
+	// need a map for lockType (i.e. quarter, 16, 32, 8th) to size in px!
 
 */
+
+// assuming padding is 3
+var noteSizeMap = {
+	"8th": 37,
+	"16th": 17,
+	"32nd": 7
+}
+
 
 
 
@@ -53,25 +64,54 @@ these functions affect what's being displayed on the DOM
 
 ****/
 
-function helper(newNote, pos, evt){
-	let diff = evt.x - pos;
-	let resize = false;
+function resizeHelper(newNote, pos, evt){
+	
+	var diff = evt.x - pos;
+	var resize = false;
+	
 	// maybe allow a setting that allows for resizing in perfect increments or arbitrary?
 	var currLockType = document.getElementById("lockType").selectedOptions[0].value;
-	if(currLockType === "quarter"){
-		if(diff % (parseInt(newNote.style.width) + 3) === 0){
+	var paddingSize = 3; // the padding used for the section of a note used to resize the note
+	
+	if(currLockType === "8th"){
+		var noteSize = noteSizeMap["8th"];
+		if((diff % (noteSize + paddingSize)) === 0){
 			resize = true;
 		}
 	}
 	
 	if(resize){
-		newNote.style.width = diff + "px";
-		resize = false;
+		newNote.style.width = (parseInt(newNote.style.width) + paddingSize + diff) + "px";
+		console.log("changing width to: " + (parseInt(newNote.style.width) + paddingSize + diff));
 	}
 }
 
 function moveHelper(newNote, evt){
-	newNote.style.left = evt.x + "px";
+	
+	var currLockType = document.getElementById("lockType").selectedOptions[0].value;
+	var paddingSize = 3;
+	
+	if(currLockType === "8th"){
+		// can move to any new div (since 8th note fills whole div)
+		if(evt.target != newNote){
+			evt.target.appendChild(newNote);
+		}
+	}else if(currLockType === "16th"){
+		// allow the note to be moved up or down by 16th note-sized increments
+		
+		// if distance matches a 16th note length based on evt.x, move the note
+		// also, if the note is moving into a new div, make that div the new parent
+		var sixteenthNoteLength = noteSizeMap["16th"] + paddingSize;
+
+		if(evt.offsetX === sixteenthNoteLength){
+			var left = newNote.parentNode.getBoundingClientRect().left;
+			newNote.style.left = (left + sixteenthNoteLength) + "px";
+		}
+		if(evt.target != newNote){
+			evt.target.appendChild(newNote);
+		}
+	}
+	
 }
 
 
@@ -86,8 +126,7 @@ function addNote(id, pianoRollObject){
 	newNote.style.backgroundColor = "green";
 	newNote.classList.add("noteElement");
 	newNote.classList.add("context-menu-one");
-	//newNote.style.border = "1px solid #000";
-	newNote.style.width = "37px"; //document.getElementById(id).style.width - 5;
+	newNote.style.width = "37px";
 	newNote.style.height = document.getElementById(id).style.height;
 	newNote.style.position = "absolute";
 	newNote.style.paddingRight = "3px";
@@ -96,12 +135,14 @@ function addNote(id, pianoRollObject){
 	document.getElementById(id).appendChild(newNote);
 	
 	newNote.addEventListener("mousedown", function(e){
+		
+		e.preventDefault();
 
-		if(e.offsetX > parseInt(newNote.style.width)){
+		if(e.offsetX > parseInt(newNote.style.width) && e.which === 1){
 			let pos = e.x;
 			
 			function resizeNote(evt){
-				helper(newNote, pos, evt);
+				resizeHelper(newNote, pos, evt);
 			}
 			
 			document.addEventListener("mousemove", resizeNote);
@@ -109,7 +150,6 @@ function addNote(id, pianoRollObject){
 				document.removeEventListener("mousemove", resizeNote);
 			});
 		}else{
-			// TODO: mouse move to move the note. also allow for movement at perfect increments or arbitrarily
 			function moveNote(evt){
 				moveHelper(newNote, evt);
 			}
@@ -119,7 +159,7 @@ function addNote(id, pianoRollObject){
 				document.removeEventListener("mousemove", moveNote);
 			});
 		}
-		//e.preventDefault();
+
 	});
 	
 }
