@@ -88,28 +88,81 @@ function resizeHelper(newNote, pos, evt){
 
 function moveHelper(newNote, evt){
 	
+	evt.preventDefault();
+	
+	if(evt.target !== newNote){
+		return; // we want to make sure any mouse movement is taking into account the note div, not anything else
+	}
+	
 	var currLockType = document.getElementById("lockType").selectedOptions[0].value;
 	var paddingSize = 3;
 	
 	if(currLockType === "8th"){
 		// can move to any new div (since 8th note fills whole div)
-		if(evt.target != newNote){
-			evt.target.appendChild(newNote);
-		}
+
+		
 	}else if(currLockType === "16th"){
 		// allow the note to be moved up or down by 16th note-sized increments
+		
+		/*
+			let's say we can move the note arbitrarily
+			do we need to consider the y axis of movement?
+				- yes
+			
+			for x axis:
+				- if the mouse has moved reached a distance proportional to a 16th note, move it
+					- if the new position is at a new div, make that div the parent 
+					- else move it within the same div a distance equal to a 16th note (40 px)
+					- how do we handle continuous mouse movement?
+		
+					as the mouse moves right, evt.x gets larger.
+					when we click on the note to drag, evt.offsetX is only with respect to that note's div space.
+					evt.x is the x coord of the whole document space
+					
+					maybe use offsetX?
+					everytime we drag the note, take into account:
+						- where is the note right now? (getBoundingClientRect().left)
+						- where is it relative to the parent? (parentNode.getBoundingClientRect().left) - i.e. how far is it within the parent 
+						- what is the offsetX of the note we're dragging?
+							- if the offsetX reaches the lockType size, we should move the note.
+								- where do we move the note?
+									- if (currPos + lockType size > parentPos + parentWidth) -> if moving the note will move it beyond the current parent div
+										- then make the parent of this note the next sibling of the current parent 
+									- else move it up by lockType size 
+									
+				- also, maybe you should just look at the LMMS code to see how they did it?
+				
+				or allow arbitary movement of note.
+				BUT! WHEN mouseup, clamp appropriately
+				if evt.target is not a valid note element, don't do anything.
+				if it is, place the note based on current locktype
+		*/
 		
 		// if distance matches a 16th note length based on evt.x, move the note
 		// also, if the note is moving into a new div, make that div the new parent
 		var sixteenthNoteLength = noteSizeMap["16th"] + paddingSize;
+		var currNotePos = newNote.getBoundingClientRect().left;
+		var parentPos = newNote.parentNode.getBoundingClientRect().left;
+		var currNoteOffset = evt.offsetX;
+		var distanceMouseMove = evt.x - newNote.getBoundingClientRect().left;
+		
+		
+		if(distanceMouseMove < 0){
+			//moving backwards
+			console.log("moving backwards")
+		}else{
+			var newPos;
+			if(currNotePos + sixteenthNoteLength >= parentPos + parseInt(newNote.parentNode.style.width)){
+				var newParent = newNote.parentNode.nextSibling;
+				newParent.appendChild(newNote);
+				newPos = newParent.getBoundingClientRect().left;
+			}else{
+				newPos = newNote.parentNode.getBoundingClientRect().left + sixteenthNoteLength;
+			}
+			newNote.style.left = newPos + "px";
+		}
+		
 
-		if(evt.offsetX === sixteenthNoteLength){
-			var left = newNote.parentNode.getBoundingClientRect().left;
-			newNote.style.left = (left + sixteenthNoteLength) + "px";
-		}
-		if(evt.target != newNote){
-			evt.target.appendChild(newNote);
-		}
 	}
 	
 }
