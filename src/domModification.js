@@ -69,25 +69,27 @@ function resizeHelper(newNote, pos, evt){
 	evt.preventDefault();
 	evt.stopPropagation();
 
-	
-	var diff = evt.x - (newNote.getBoundingClientRect().left + parseInt(newNote.style.width) + 3);
-	console.log("current width: " + ( parseInt(newNote.style.width) + 3));
+	var blockSize = parseInt(newNote.parentNode.style.width);
+	var diff = evt.x - (newNote.getBoundingClientRect().left + blockSize);
+	console.log("current width: " + (parseInt(newNote.style.width) + 3));
 
 	// maybe allow a setting that allows for resizing in perfect increments or arbitrary?
+	// WE NEED TO TAKE BORDER SIZES INTO ACCOUNT!!! WHEN EXTENDING :<
+	
 	var currLockType = document.getElementById("lockType").selectedOptions[0].value;
-	var paddingSize = 3; // the padding used for the section of a note used to resize the note
-	var blockSize = parseInt(newNote.parentNode.style.width);
+	//var paddingSize = 3; // the padding used for the section of a note used to resize the note
+	
 	
 	if(currLockType === "8th"){
 		var noteSize = noteSizeMap["8th"];
-		if(diff === 40){
+		if(diff % blockSize === 0){
 			console.log("pos: " + pos);
 			console.log("diff: " + diff);
 			console.log("evt.x: " + evt.x);
 			console.log("block size: " + blockSize);
 			console.log("resizing!");
 			
-			newNote.style.width = (parseInt(newNote.style.width) + blockSize) + "px";
+			newNote.style.width = (parseInt(newNote.style.width) + blockSize + 1) + "px";
 		}
 	}
 	
@@ -213,6 +215,8 @@ function addNote(id, pianoRollObject){
 		e.stopPropagation();
 
 		if(e.offsetX > parseInt(newNote.style.width) && e.which === 1){
+			
+			// make sure there's space to extend! i.e. if on last measure, need to prevent resize 
 			
 			function resizeNote(evt){
 				var pos = evt.target.getBoundingClientRect().left;
