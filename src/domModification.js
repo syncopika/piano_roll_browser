@@ -66,105 +66,125 @@ var noteSizeMap = {
 
 function resizeHelper(newNote, pos, evt){
 	
-	var diff = evt.x - pos;
-	var resize = false;
+	evt.preventDefault();
+	evt.stopPropagation();
+
 	
+	var diff = evt.x - (newNote.getBoundingClientRect().left + parseInt(newNote.style.width) + 3);
+	console.log("current width: " + ( parseInt(newNote.style.width) + 3));
+
 	// maybe allow a setting that allows for resizing in perfect increments or arbitrary?
 	var currLockType = document.getElementById("lockType").selectedOptions[0].value;
 	var paddingSize = 3; // the padding used for the section of a note used to resize the note
+	var blockSize = parseInt(newNote.parentNode.style.width);
 	
 	if(currLockType === "8th"){
 		var noteSize = noteSizeMap["8th"];
-		if((diff % (noteSize + paddingSize)) === 0){
-			resize = true;
+		if(diff === 40){
+			console.log("pos: " + pos);
+			console.log("diff: " + diff);
+			console.log("evt.x: " + evt.x);
+			console.log("block size: " + blockSize);
+			console.log("resizing!");
+			
+			newNote.style.width = (parseInt(newNote.style.width) + blockSize) + "px";
 		}
 	}
 	
-	if(resize){
-		newNote.style.width = (parseInt(newNote.style.width) + paddingSize + diff) + "px";
-		console.log("changing width to: " + (parseInt(newNote.style.width) + paddingSize + diff));
-	}
+
 }
 
 function moveHelper(newNote, evt){
 	
-	evt.preventDefault();
-	
-	if(evt.target !== newNote){
-		return; // we want to make sure any mouse movement is taking into account the note div, not anything else
-	}
-	
 	var currLockType = document.getElementById("lockType").selectedOptions[0].value;
 	var paddingSize = 3;
-	
-	if(currLockType === "8th"){
-		// can move to any new div (since 8th note fills whole div)
 
+	
+	/*
+		let's say we can move the note arbitrarily
+		
+		for x axis:
+			- if the mouse has moved reached a distance proportional to a 16th note, move it
+				- if the new position is at a new div, make that div the parent 
+				- else move it within the same div a distance equal to a 16th note (40 px)
+				- how do we handle continuous mouse movement?
+	
+				as the mouse moves right, evt.x gets larger.
+				when we click on the note to drag, evt.offsetX is only with respect to that note's div space.
+				evt.x is the x coord of the whole document space
+				
+				maybe use offsetX?
+				everytime we drag the note, take into account:
+					- where is the note right now? (getBoundingClientRect().left)
+					- where is it relative to the parent? (parentNode.getBoundingClientRect().left) - i.e. how far is it within the parent 
+					- what is the offsetX of the note we're dragging?
+						- if the offsetX reaches the lockType size, we should move the note.
+							- where do we move the note?
+								- if (currPos + lockType size > parentPos + parentWidth) -> if moving the note will move it beyond the current parent div
+									- then make the parent of this note the next sibling of the current parent 
+								- else move it up by lockType size 
+								
+			- also, maybe you should just look at the LMMS code to see how they did it?
+			
+			or allow arbitary movement of note.
+			BUT! WHEN mouseup, clamp appropriately
+			if evt.target is not a valid note element, don't do anything.
+			if it is, place the note based on current locktype
+	*/
+
+	var placeNote = false;
+	var targetContainer = evt.target === newNote ? evt.target.parentNode : evt.target;
+	var targetContPos = targetContainer.getBoundingClientRect().left;
+	var currX = evt.x;
+
+	if(currLockType === "8th"){
+		placeNote = true; // there's more to do ...
+		
+		// need to validate target container 
+		// what if the note is halfway in the container already?
+		// need to move it proportionally.
+		
 		
 	}else if(currLockType === "16th"){
-		// allow the note to be moved up or down by 16th note-sized increments
 		
+		var sixteenthNoteLength = noteSizeMap["16th"] + paddingSize;
+		
+		// can we place the note in the target?
+		// make sure it's a valid container for the note
+		
+		// if so, where in the target do we place it?
+		// given the target container's size, and the x coord of the cursor,
+		// determine where in the container the note's position
+		// you may have to round.
 		/*
-			let's say we can move the note arbitrarily
-			do we need to consider the y axis of movement?
-				- yes
-			
-			for x axis:
-				- if the mouse has moved reached a distance proportional to a 16th note, move it
-					- if the new position is at a new div, make that div the parent 
-					- else move it within the same div a distance equal to a 16th note (40 px)
-					- how do we handle continuous mouse movement?
-		
-					as the mouse moves right, evt.x gets larger.
-					when we click on the note to drag, evt.offsetX is only with respect to that note's div space.
-					evt.x is the x coord of the whole document space
+			8th -> position of cursor in container doesn't matter. as long as we know the container,
+					we put the note at the beginning of the container.
 					
-					maybe use offsetX?
-					everytime we drag the note, take into account:
-						- where is the note right now? (getBoundingClientRect().left)
-						- where is it relative to the parent? (parentNode.getBoundingClientRect().left) - i.e. how far is it within the parent 
-						- what is the offsetX of the note we're dragging?
-							- if the offsetX reaches the lockType size, we should move the note.
-								- where do we move the note?
-									- if (currPos + lockType size > parentPos + parentWidth) -> if moving the note will move it beyond the current parent div
-										- then make the parent of this note the next sibling of the current parent 
-									- else move it up by lockType size 
-									
-				- also, maybe you should just look at the LMMS code to see how they did it?
-				
-				or allow arbitary movement of note.
-				BUT! WHEN mouseup, clamp appropriately
-				if evt.target is not a valid note element, don't do anything.
-				if it is, place the note based on current locktype
+			16th -> so either at the start of a neighboring container or halfway in the current container. which is the cursor closest to?
 		*/
 		
-		// if distance matches a 16th note length based on evt.x, move the note
-		// also, if the note is moving into a new div, make that div the new parent
-		var sixteenthNoteLength = noteSizeMap["16th"] + paddingSize;
-		var currNotePos = newNote.getBoundingClientRect().left;
-		var parentPos = newNote.parentNode.getBoundingClientRect().left;
-		var currNoteOffset = evt.offsetX;
-		var distanceMouseMove = evt.x - newNote.getBoundingClientRect().left;
-		
-		
-		if(distanceMouseMove < 0){
-			//moving backwards
-			console.log("moving backwards")
+		// is currX closer to the beginning of the target or the middle?
+		var begin = targetContPos;
+		var middle = targetContPos + sixteenthNoteLength;
+		if(Math.abs(begin - currX) <= Math.abs(middle - currX)){
+			// put at beginning of curr container
+			newNote.style.left = begin + "px";
+		}else if(currX >= (begin + sixteenthNoteLength)){
+			// move to next next container
+			targetContainer = targetContainer.nextSibling;
+			newNote.style.left = targetContainer.getBoundingClientRect().left + "px";
 		}else{
-			var newPos;
-			if(currNotePos + sixteenthNoteLength >= parentPos + parseInt(newNote.parentNode.style.width)){
-				var newParent = newNote.parentNode.nextSibling;
-				newParent.appendChild(newNote);
-				newPos = newParent.getBoundingClientRect().left;
-			}else{
-				newPos = newNote.parentNode.getBoundingClientRect().left + sixteenthNoteLength;
-			}
-			newNote.style.left = newPos + "px";
+			newNote.style.left = middle + "px";
 		}
 		
-
+		placeNote = true;
 	}
 	
+	if(placeNote){
+		targetContainer.appendChild(newNote);
+	}
+
+
 }
 
 
@@ -190,11 +210,12 @@ function addNote(id, pianoRollObject){
 	newNote.addEventListener("mousedown", function(e){
 		
 		e.preventDefault();
+		e.stopPropagation();
 
 		if(e.offsetX > parseInt(newNote.style.width) && e.which === 1){
-			let pos = e.x;
 			
 			function resizeNote(evt){
+				var pos = evt.target.getBoundingClientRect().left;
 				resizeHelper(newNote, pos, evt);
 			}
 			
