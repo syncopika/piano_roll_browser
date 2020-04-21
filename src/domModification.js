@@ -55,6 +55,10 @@ var noteSizeMap = {
 	"32nd": 7
 }
 
+function inRange(num, leftLim, rightLim){
+	return num >= leftLim && num <= rightLim;
+}
+
 
 
 
@@ -69,133 +73,72 @@ function resizeHelper(newNote, pos, evt){
 	evt.preventDefault();
 	evt.stopPropagation();
 
-	var blockSize = parseInt(newNote.parentNode.style.width);
-	var diff = evt.x - (newNote.getBoundingClientRect().left + blockSize);
-	console.log("current width: " + (parseInt(newNote.style.width) + 3));
+	var diff = evt.x - (newNote.getBoundingClientRect().left + parseInt(newNote.style.width));
 
-	// maybe allow a setting that allows for resizing in perfect increments or arbitrary?
-	// WE NEED TO TAKE BORDER SIZES INTO ACCOUNT!!! WHEN EXTENDING :<
-	
 	var currLockType = document.getElementById("lockType").selectedOptions[0].value;
-	//var paddingSize = 3; // the padding used for the section of a note used to resize the note
-	
-	
-	if(currLockType === "8th"){
-		var noteSize = noteSizeMap["8th"];
-		if(diff % blockSize === 0){
-			console.log("pos: " + pos);
-			console.log("diff: " + diff);
-			console.log("evt.x: " + evt.x);
-			console.log("block size: " + blockSize);
-			console.log("resizing!");
-			
-			newNote.style.width = (parseInt(newNote.style.width) + blockSize + 1) + "px";
+	var noteSize = noteSizeMap[currLockType] + 4;
+	var nextBlockPos = newNote.getBoundingClientRect().left + parseInt(newNote.style.width) + noteSize + 1;
+	var prevBlockPos = newNote.getBoundingClientRect().left + parseInt(newNote.style.width) - noteSize - 1;
+
+	if(diff > 0){
+		if(inRange(evt.x, nextBlockPos-1, nextBlockPos+1)){
+			// extending
+			newNote.style.width = parseInt(newNote.style.width) + noteSize + 1 + "px";
+		}
+	}else{
+		// minimizing
+		if(inRange(evt.x, prevBlockPos-1, prevBlockPos+1)){
+			newNote.style.width = (parseInt(newNote.style.width) - noteSize - 1) + "px";
 		}
 	}
-	
 
 }
 
 function moveHelper(newNote, evt){
 	
 	var currLockType = document.getElementById("lockType").selectedOptions[0].value;
-	var paddingSize = 3;
+	var paddingSize = 4;
 
-	
-	/*
-		let's say we can move the note arbitrarily
-		
-		for x axis:
-			- if the mouse has moved reached a distance proportional to a 16th note, move it
-				- if the new position is at a new div, make that div the parent 
-				- else move it within the same div a distance equal to a 16th note (40 px)
-				- how do we handle continuous mouse movement?
-	
-				as the mouse moves right, evt.x gets larger.
-				when we click on the note to drag, evt.offsetX is only with respect to that note's div space.
-				evt.x is the x coord of the whole document space
-				
-				maybe use offsetX?
-				everytime we drag the note, take into account:
-					- where is the note right now? (getBoundingClientRect().left)
-					- where is it relative to the parent? (parentNode.getBoundingClientRect().left) - i.e. how far is it within the parent 
-					- what is the offsetX of the note we're dragging?
-						- if the offsetX reaches the lockType size, we should move the note.
-							- where do we move the note?
-								- if (currPos + lockType size > parentPos + parentWidth) -> if moving the note will move it beyond the current parent div
-									- then make the parent of this note the next sibling of the current parent 
-								- else move it up by lockType size 
-								
-			- also, maybe you should just look at the LMMS code to see how they did it?
-			
-			or allow arbitary movement of note.
-			BUT! WHEN mouseup, clamp appropriately
-			if evt.target is not a valid note element, don't do anything.
-			if it is, place the note based on current locktype
-	*/
-
-	var placeNote = false;
 	var targetContainer = evt.target === newNote ? evt.target.parentNode : evt.target;
+	if(targetContainer.className !== "noteContainer"){
+		return;
+	}
+	
 	var targetContPos = targetContainer.getBoundingClientRect().left;
 	var currX = evt.x;
 
-	if(currLockType === "8th"){
-		placeNote = true; // there's more to do ...
-		
-		// need to validate target container 
-		// what if the note is halfway in the container already?
-		// need to move it proportionally.
-		
-		
-	}else if(currLockType === "16th"){
-		
-		var sixteenthNoteLength = noteSizeMap["16th"] + paddingSize;
-		
-		// can we place the note in the target?
-		// make sure it's a valid container for the note
-		
-		// if so, where in the target do we place it?
-		// given the target container's size, and the x coord of the cursor,
-		// determine where in the container the note's position
-		// you may have to round.
-		/*
-			8th -> position of cursor in container doesn't matter. as long as we know the container,
-					we put the note at the beginning of the container.
-					
-			16th -> so either at the start of a neighboring container or halfway in the current container. which is the cursor closest to?
-		*/
-		
-		// is currX closer to the beginning of the target or the middle?
-		var begin = targetContPos;
-		var middle = targetContPos + sixteenthNoteLength;
-		if(Math.abs(begin - currX) <= Math.abs(middle - currX)){
-			// put at beginning of curr container
-			newNote.style.left = begin + "px";
-		}else if(currX >= (begin + sixteenthNoteLength)){
-			// move to next next container
-			targetContainer = targetContainer.nextSibling;
-			newNote.style.left = targetContainer.getBoundingClientRect().left + "px";
-		}else{
-			newNote.style.left = middle + "px";
-		}
-		
-		placeNote = true;
+	var lockNoteLength = noteSizeMap[currLockType] + paddingSize;
+	
+	// is currX closer to the beginning of the target or the middle?
+	var begin = targetContPos;
+	var middle = targetContPos + lockNoteLength;
+	if(Math.abs(begin - currX) <= Math.abs(middle - currX)){
+		// put at beginning of curr container
+		newNote.style.left = begin + "px";
+	}else if(currX >= (begin + lockNoteLength)){
+		// move to next next container
+		targetContainer = targetContainer.nextSibling;
+		newNote.style.left = targetContainer.getBoundingClientRect().left + "px";
+	}else{
+		newNote.style.left = middle + "px";
 	}
 	
-	if(placeNote){
+	if(targetContainer !== newNote.parentNode){
 		targetContainer.appendChild(newNote);
 	}
-
 
 }
 
 
 function addNote(id, pianoRollObject){
+	
+	// depending on current note lock, should place note accordingly
+	
 	var waveType = pianoRollObject.currentInstrument.waveType; 
 	clickNote(id, waveType, pianoRollObject);
 	
 	var newNote = document.createElement('div');
-	newNote.setAttribute("volume", "0.3");
+	newNote.setAttribute("volume", pianoRollObject.currentInstrument.volume);
 	newNote.setAttribute("length", "eighth"); 
 	newNote.setAttribute("type", "default"); 
 	newNote.style.backgroundColor = "green";
@@ -206,17 +149,18 @@ function addNote(id, pianoRollObject){
 	newNote.style.position = "absolute";
 	newNote.style.paddingRight = "3px";
 
-
 	document.getElementById(id).appendChild(newNote);
 	
 	newNote.addEventListener("mousedown", function(e){
 		
 		e.preventDefault();
 		e.stopPropagation();
+		
+		if(e.which == 2){
+			newNote.parentNode.removeChild(newNote);
+		}
 
-		if(e.offsetX > parseInt(newNote.style.width) && e.which === 1){
-			
-			// make sure there's space to extend! i.e. if on last measure, need to prevent resize 
+		if(e.offsetX >= parseInt(newNote.style.width) && e.which === 1){
 			
 			function resizeNote(evt){
 				var pos = evt.target.getBoundingClientRect().left;
@@ -227,7 +171,9 @@ function addNote(id, pianoRollObject){
 			document.addEventListener("mouseup", (e) => {
 				document.removeEventListener("mousemove", resizeNote);
 			});
+			
 		}else{
+			
 			function moveNote(evt){
 				moveHelper(newNote, evt);
 			}
@@ -239,7 +185,6 @@ function addNote(id, pianoRollObject){
 		}
 
 	});
-	
 }
 
 
@@ -334,9 +279,6 @@ function clearGridAll(pianoRollObject){
 ****/
 function addNewMeasure(pianoRollObject){
 	
-	//console.log("adding new measure");
-	//console.log(pianoRollObject.numberOfMeasures)
-
 	// updating the measure count - notice specific id of element! 
 	$('#measures').text( "number of measures: " + (parseInt($('#measures').text().match(/[0-9]{1,}/g)[0]) + 1) );
 	
