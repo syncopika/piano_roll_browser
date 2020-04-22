@@ -70,25 +70,36 @@ function inRange(num, leftLim, rightLim){
 
 function resizeHelper(newNote, pos, evt){
 	
+	// TODO: take into account different border sizes somehow! that's what's screwing up resizing
+	
 	evt.preventDefault();
 	evt.stopPropagation();
 
 	var diff = evt.x - (newNote.getBoundingClientRect().left + parseInt(newNote.style.width));
 
 	var currLockType = document.getElementById("lockType").selectedOptions[0].value;
-	var noteSize = noteSizeMap[currLockType] + 4;
-	var nextBlockPos = newNote.getBoundingClientRect().left + parseInt(newNote.style.width) + noteSize + 1;
-	var prevBlockPos = newNote.getBoundingClientRect().left + parseInt(newNote.style.width) - noteSize - 1;
+	var resizeSectionSize = 3; // 3px for :after css element of the note
+	var currNoteWidth = parseInt(newNote.style.width) + resizeSectionSize; // we have to include the extra resize section that we added via css (3px currently)
+	var noteSize = noteSizeMap[currLockType]; // this is the size of a note container based on the curr lock type (exclude the resize section since it gets added automatically)
+	
+	var nextBlockPos = newNote.getBoundingClientRect().left + currNoteWidth + noteSize;
+	var prevBlockPos = newNote.getBoundingClientRect().left + currNoteWidth - noteSize;
 
 	if(diff > 0){
 		if(inRange(evt.x, nextBlockPos-1, nextBlockPos+1)){
 			// extending
-			newNote.style.width = parseInt(newNote.style.width) + noteSize + 1 + "px";
+			// we need to do this here because note container borders go beyond the container, i.e. they 
+			// actually add additional width by occupying an extra 1 or 3px between one note container and the next.
+			// when going backwards, it's different because you start at the end of a container.
+			if(evt.target.className === "noteContainer"){
+				noteSize += parseInt(evt.target.style.borderRight);
+			}
+			newNote.style.width = (currNoteWidth + noteSize) + "px";
 		}
 	}else{
 		// minimizing
 		if(inRange(evt.x, prevBlockPos-1, prevBlockPos+1)){
-			newNote.style.width = (parseInt(newNote.style.width) - noteSize - 1) + "px";
+			newNote.style.width = (currNoteWidth - noteSize - resizeSectionSize) + "px";
 		}
 	}
 
@@ -96,22 +107,52 @@ function resizeHelper(newNote, pos, evt){
 
 function moveHelper(newNote, evt){
 	
+	// TODO: need to be able to 'divide' a noteContainer based on current note lock type!
+	// we only need to divide the container, then figure out which division the 
+	// newNote.getBoundingClientRect().left lies closest to.
+	
 	var currLockType = document.getElementById("lockType").selectedOptions[0].value;
-	var paddingSize = 4;
+	var paddingSize = 3;
 
 	var targetContainer = evt.target === newNote ? evt.target.parentNode : evt.target;
+	
 	if(targetContainer.className !== "noteContainer"){
-		return;
+		if(targetContainer.classList.contains("noteElement")){
+			targetContainer = targetContainer.parentNode;
+		}else{
+			return;
+		}
 	}
 	
 	var targetContPos = targetContainer.getBoundingClientRect().left;
+
+	var subdivisionCount = Math.floor(parseInt(targetContainer.style.width) / (noteSizeMap[currLockType] + paddingSize));
+	var possibleNotePos = [];
+	for(var i = 0; i <= subdivisionCount; i++){
+		possibleNotePos.push(targetContPos + (i * (noteSizeMap[currLockType] + paddingSize)));
+	}
+	console.log(possibleNotePos);
+	
 	var currX = evt.x;
 
-	var lockNoteLength = noteSizeMap[currLockType] + paddingSize;
+	var lockNoteLength = noteSizeMap[currLockType] + paddingSize + 1;
 	
 	// is currX closer to the beginning of the target or the middle?
 	var begin = targetContPos;
 	var middle = targetContPos + lockNoteLength;
+	if(currX >= (begin + lockNoteLength)){
+		// move to next next container
+		targetContainer = targetContainer.nextSibling;
+		newNote.style.left = targetContainer.getBoundingClientRect().left + "px";
+	}else{
+		for(var i = 0; i < possibleNotePos.length; i++){
+			if(Math.abs(possibleNotePos[i] - currX) <= 1){
+				newNote.style.left = possibleNotePos[i] + "px";
+				break;
+			}
+		}
+	}
+	/*
 	if(Math.abs(begin - currX) <= Math.abs(middle - currX)){
 		// put at beginning of curr container
 		newNote.style.left = begin + "px";
@@ -121,7 +162,7 @@ function moveHelper(newNote, evt){
 		newNote.style.left = targetContainer.getBoundingClientRect().left + "px";
 	}else{
 		newNote.style.left = middle + "px";
-	}
+	}*/
 	
 	if(targetContainer !== newNote.parentNode){
 		targetContainer.appendChild(newNote);
