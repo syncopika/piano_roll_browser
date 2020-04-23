@@ -22,6 +22,7 @@ these functions affect what's being displayed on the DOM
 	- can do drag to resize notes - don't have to do annoying subdividing stuff!
 	https://stackoverflow.com/questions/26233180/resize-a-div-on-border-drag-and-drop-without-adding-extra-markup
 	https://stackoverflow.com/questions/45534302/jquery-how-to-disable-not-allowed-cursor-while-dragging
+	https://stackoverflow.com/questions/18094134/fixed-gradient-background-with-css
 	
 	NOTES =>
 		- div
@@ -50,16 +51,14 @@ these functions affect what's being displayed on the DOM
 
 // assuming padding is 3
 var noteSizeMap = {
-	"8th": 37,
-	"16th": 17,
-	"32nd": 7
+	"8th": 40,
+	"16th": 20,
+	"32nd": 10,
 }
 
 function inRange(num, leftLim, rightLim){
 	return num >= leftLim && num <= rightLim;
 }
-
-
 
 
 /****
@@ -73,24 +72,19 @@ function resizeHelper(newNote, pos, evt){
 	// TODO: take into account different border sizes somehow! that's what's screwing up resizing
 	
 	evt.preventDefault();
-	evt.stopPropagation();
 
 	var diff = evt.x - (newNote.getBoundingClientRect().left + parseInt(newNote.style.width));
 
 	var currLockType = document.getElementById("lockType").selectedOptions[0].value;
-	var resizeSectionSize = 3; // 3px for :after css element of the note
-	var currNoteWidth = parseInt(newNote.style.width) + resizeSectionSize; // we have to include the extra resize section that we added via css (3px currently)
-	var noteSize = noteSizeMap[currLockType]; // this is the size of a note container based on the curr lock type (exclude the resize section since it gets added automatically)
+	var currNoteWidth = parseInt(newNote.style.width);
+	var noteSize = noteSizeMap[currLockType];
 	
 	var nextBlockPos = newNote.getBoundingClientRect().left + currNoteWidth + noteSize;
 	var prevBlockPos = newNote.getBoundingClientRect().left + currNoteWidth - noteSize;
 
 	if(diff > 0){
-		if(inRange(evt.x, nextBlockPos-1, nextBlockPos+1)){
+		if(inRange(evt.x, nextBlockPos, nextBlockPos+3)){
 			// extending
-			// we need to do this here because note container borders go beyond the container, i.e. they 
-			// actually add additional width by occupying an extra 1 or 3px between one note container and the next.
-			// when going backwards, it's different because you start at the end of a container.
 			if(evt.target.className === "noteContainer"){
 				noteSize += parseInt(evt.target.style.borderRight);
 			}
@@ -98,8 +92,8 @@ function resizeHelper(newNote, pos, evt){
 		}
 	}else{
 		// minimizing
-		if(inRange(evt.x, prevBlockPos-1, prevBlockPos+1)){
-			newNote.style.width = (currNoteWidth - noteSize - resizeSectionSize) + "px";
+		if(inRange(evt.x, prevBlockPos-3, prevBlockPos)){
+			newNote.style.width = (currNoteWidth - noteSize) + "px";
 		}
 	}
 
@@ -107,16 +101,11 @@ function resizeHelper(newNote, pos, evt){
 
 function moveHelper(newNote, evt){
 	
-	// TODO: need to be able to 'divide' a noteContainer based on current note lock type!
-	// we only need to divide the container, then figure out which division the 
-	// newNote.getBoundingClientRect().left lies closest to.
-	
 	var currLockType = document.getElementById("lockType").selectedOptions[0].value;
-	var paddingSize = 3;
 
-	var targetContainer = evt.target === newNote ? evt.target.parentNode : evt.target;
+	var targetContainer = (evt.target === newNote) ? newNote.parentNode : evt.target;
 	
-	if(targetContainer.className !== "noteContainer"){
+	if(!targetContainer.classList.contains("noteContainer")){
 		if(targetContainer.classList.contains("noteElement")){
 			targetContainer = targetContainer.parentNode;
 		}else{
@@ -124,48 +113,28 @@ function moveHelper(newNote, evt){
 		}
 	}
 	
+	targetContainer.appendChild(newNote);
+	
 	var targetContPos = targetContainer.getBoundingClientRect().left;
-
-	var subdivisionCount = Math.floor(parseInt(targetContainer.style.width) / (noteSizeMap[currLockType] + paddingSize));
-	var possibleNotePos = [];
-	for(var i = 0; i <= subdivisionCount; i++){
-		possibleNotePos.push(targetContPos + (i * (noteSizeMap[currLockType] + paddingSize)));
+	var subdivisionCount = Math.floor(parseInt(targetContainer.style.width) / (noteSizeMap[currLockType]));
+	var possibleNotePos = []; // what if we use a tree for this lol
+	
+	for(var i = 0; i <= subdivisionCount-1; i++){
+		possibleNotePos.push(targetContPos + (i * (noteSizeMap[currLockType])));
 	}
+	
 	console.log(possibleNotePos);
+	console.log("parent container pos: " + targetContPos);
 	
 	var currX = evt.x;
 
-	var lockNoteLength = noteSizeMap[currLockType] + paddingSize + 1;
-	
-	// is currX closer to the beginning of the target or the middle?
-	var begin = targetContPos;
-	var middle = targetContPos + lockNoteLength;
-	if(currX >= (begin + lockNoteLength)){
-		// move to next next container
-		targetContainer = targetContainer.nextSibling;
-		newNote.style.left = targetContainer.getBoundingClientRect().left + "px";
-	}else{
-		for(var i = 0; i < possibleNotePos.length; i++){
-			if(Math.abs(possibleNotePos[i] - currX) <= 1){
-				newNote.style.left = possibleNotePos[i] + "px";
-				break;
-			}
+	var lockNoteLength = noteSizeMap[currLockType];
+
+	for(var i = 0; i < possibleNotePos.length; i++){
+		if(Math.abs(possibleNotePos[i] - currX) <= 8){
+			newNote.style.left = possibleNotePos[i] + "px";
+			break;
 		}
-	}
-	/*
-	if(Math.abs(begin - currX) <= Math.abs(middle - currX)){
-		// put at beginning of curr container
-		newNote.style.left = begin + "px";
-	}else if(currX >= (begin + lockNoteLength)){
-		// move to next next container
-		targetContainer = targetContainer.nextSibling;
-		newNote.style.left = targetContainer.getBoundingClientRect().left + "px";
-	}else{
-		newNote.style.left = middle + "px";
-	}*/
-	
-	if(targetContainer !== newNote.parentNode){
-		targetContainer.appendChild(newNote);
 	}
 
 }
@@ -173,7 +142,8 @@ function moveHelper(newNote, evt){
 
 function addNote(id, pianoRollObject){
 	
-	// depending on current note lock, should place note accordingly
+	// TODO: depending on current note lock, should place note accordingly!
+	// i.e. if current lock is 16th, I should be able to place a note on either half of a note block
 	
 	var waveType = pianoRollObject.currentInstrument.waveType; 
 	clickNote(id, waveType, pianoRollObject);
@@ -182,26 +152,34 @@ function addNote(id, pianoRollObject){
 	newNote.setAttribute("volume", pianoRollObject.currentInstrument.volume);
 	newNote.setAttribute("length", "eighth"); 
 	newNote.setAttribute("type", "default"); 
-	newNote.style.backgroundColor = "green";
+	newNote.style.background = "linear-gradient(90deg, rgba(83,181,52,1) 93%, rgba(149,218,141,1) 99%";
 	newNote.classList.add("noteElement");
 	newNote.classList.add("context-menu-one");
-	newNote.style.width = "37px";
+	newNote.style.width = "40px";
 	newNote.style.height = document.getElementById(id).style.height;
 	newNote.style.position = "absolute";
-	newNote.style.paddingRight = "3px";
 
 	document.getElementById(id).appendChild(newNote);
+	
+	newNote.addEventListener("mousemove", function(e){
+		e.preventDefault();
+		if(e.offsetX >= (parseInt(newNote.style.width) - 3)){
+			newNote.style.cursor = "w-resize";
+		}else{
+			newNote.style.cursor = "";
+		}
+	});
 	
 	newNote.addEventListener("mousedown", function(e){
 		
 		e.preventDefault();
-		e.stopPropagation();
 		
 		if(e.which == 2){
+			// middle mouse button
 			newNote.parentNode.removeChild(newNote);
 		}
 
-		if(e.offsetX >= parseInt(newNote.style.width) && e.which === 1){
+		if(newNote.style.cursor === "w-resize"){
 			
 			function resizeNote(evt){
 				var pos = evt.target.getBoundingClientRect().left;
@@ -446,7 +424,6 @@ function deleteMeasure(pianoRollObject){
 		for(var i = currColumns; i < currColumns + 8; i++){
 			// get all the columns that have the current number, i
 			var columns = $("div[id*='" + "col_" + i + "']");
-			//console.log(columns);
 			for(var j = 0; j < columns.length; j++){
 				columns[j].remove();
 			}

@@ -27,13 +27,13 @@ function buildGridHeader( columnHeaderRowId, pianoRollObject ){
 		columnHeader.style.display = "inline-block";
 		columnHeader.style.margin = "0 auto";
 		if(i > 0){
-			columnHeader.style.borderRight = "1px solid #000";
+			columnHeader.className = "thinBorder";
 			columnHeader.style.textAlign = "center";
 			
 			if(i < pianoRollObject.subdivision + 1){
 				// for the first measure
 				if(i === pianoRollObject.subdivision){
-					columnHeader.style.borderRight = '3px solid #000';
+					columnHeader.className = "thickBorder";
 				}
 				columnHeader.textContent = i;
 			}else if(i !== pianoRollObject.numberOfMeasures * pianoRollObject.subdivision + 1){
@@ -47,11 +47,11 @@ function buildGridHeader( columnHeaderRowId, pianoRollObject ){
 					measureNumber.style.margin = '0 0 0 0';
 					measureNumber.style.color = pianoRollObject.measureNumberColor;
 					columnHeader.appendChild(measureNumber);
-					columnHeader.style.borderRight = "1px solid transparent";
+					columnHeader.className = "";
 					measureCounter++;
 				}else{
 					if(pianoRollObject.subdivision === subdiv){
-						columnHeader.style.borderRight = '3px solid #000';
+						columnHeader.className = "thickBorder";
 					}
 					columnHeader.textContent = subdiv; 
 				}
@@ -156,19 +156,22 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	column.style.backgroundColor = "transparent";
 
 	// IMPORTANT! new attributes for each note
-	//column.setAttribute("volume", 0.3);		 	// set volume to 0.3 initially
 	column.setAttribute("length", "eighth"); 	// length of note (quarter, eighth?)
-	//column.setAttribute("type", "default"); 	// type of note - set to default initially 
 	column.className = "noteContainer";
 	
 	if((colNum + 1) % pianoRollObject.subdivision == 0){
-		column.style.borderRight = "3px solid #000";
+		column.classList.add("thickBorder");
 	}else{
-		column.style.borderRight = "1px solid #000";
+		column.classList.add("thinBorder");
 	}
 
 	// hook up an event listener to allow for picking notes on the grid!
-	column.addEventListener("click", function(){ if(column.childNodes.length === 0){addNote(this.id, pianoRollObject)} });
+	column.addEventListener("click", function(){ 
+		if(column.childNodes.length === 0){
+			addNote(this.id, pianoRollObject);
+		} 
+	});
+	
 	// allow for highlighting to make it clear which note a block is
 	column.addEventListener("mouseenter", function(){ highlightRow(this.id, pianoRollObject.highlightColor) });
 	column.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
@@ -205,7 +208,7 @@ function redrawCellBorders(pianoRollObject, headerId){
 		var columnHeader = headers[i];
 		var colNum = parseInt(headers[i].id.match(/\d+/g)[0]);
 		columnHeader.innerHTML = "";
-		columnHeader.style.borderRight = '1px solid #000';
+		columnHeader.className = "thinBorder";
 		
 		var subdiv = (i % subdivision) === 0 ? subdivision : (i % subdivision);
 		
@@ -215,7 +218,7 @@ function redrawCellBorders(pianoRollObject, headerId){
 		if(i < subdivision + 1){
 			// for the first measure
 			if(i === pianoRollObject.subdivision){
-				columnHeader.style.borderRight = '3px solid #000';
+				columnHeader.className = "thickBorder";
 			}
 			if(i !== 0){
 				// just in case columnHeader was set to next sibling, make sure to use the original column header
@@ -230,12 +233,10 @@ function redrawCellBorders(pianoRollObject, headerId){
 				measureNumber.style.color = pianoRollObject.measureNumberColor;
 				
 				columnHeader.appendChild(measureNumber);
-				
-				columnHeader.style.borderRight = "1px solid transparent";
-				
+				columnHeader.className = "";
 			}else{
 				if(subdivision === subdiv){
-					columnHeader.style.borderRight = '3px solid #000';
+					columnHeader.className = "thickBorder";
 				}
 				headers[i].textContent = subdiv; 
 			}
@@ -244,23 +245,11 @@ function redrawCellBorders(pianoRollObject, headerId){
 		// don't forget to correct each header's column as well!
 		// and also update the piano roll's number of measures!!
 		var columnCells = document.querySelectorAll('[id$=' + '\"' + columnHeader.id + '\"]');
-		//console.log(columnCells)
 		
 		// skip the first element, which is the column header (not a note on the grid)
 		for(var j = 1; j < columnCells.length; j++){
-			
 			var gridCell = columnCells[j];
-			
-			// apply the same border modifications as the column header
-			// need to be careful here: if a column is subdivided, we only look at the left half.
-			// but the left half border style should not inherit from the column header (instead, the right half should inherit from the column header)
-			// however, if the column header has a transparent right border, make it solid black 1px 
-			if(columnHeader.id.indexOf('-1') > 0){
-				gridCell.style.borderRight = '1px solid #000';
-				gridCell.nextSibling.style.borderRight = (columnHeader.style.borderRight === '1px solid transparent') ? '1px solid #000' : columnHeader.style.borderRight;
-			}else{
-				gridCell.style.borderRight = (columnHeader.style.borderRight === '1px solid transparent') ? '1px solid #000' : columnHeader.style.borderRight;
-			}
+			gridCell.className = (columnHeader.className === "") ? "thinBorder" : columnHeader.className;
 		};
 		
 		// update piano roll num measures 
@@ -284,7 +273,7 @@ function redrawCellBorders(pianoRollObject, headerId){
 		newColumnHead.id = "col_" + (lastColNum + 1); 
 		newColumnHead.style.display = "inline-block";
 		newColumnHead.style.margin = "0 auto";
-		newColumnHead.style.borderRight = ((lastColNum + 2) % subdivision === 0) ? '3px solid #000' : "1px solid #000";
+		newColumnHead.className = ((lastColNum + 2) % subdivision === 0) ? "thickBorder" : "thinBorder"; //'3px solid #000' : "1px solid #000";
 		newColumnHead.style.textAlign = "center";
 		newColumnHead.style.width = '40px';
 		newColumnHead.style.height = '12px';
