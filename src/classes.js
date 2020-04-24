@@ -227,8 +227,7 @@ function Instrument(name, gain, notesArray){
 	this.waveType = "sine"; 		//sine wave by default 
 	
 	// volume property so all notes for a particular instrument can be set to a certain volume
-	// float value!
-	this.volume = .2; 				// set default volume to .2 (I think that's probably loud enough)
+	this.volume = 0.2; 				// set default volume to .2 (I think that's probably loud enough)
 }
 
 /*****  NOTE CLASS ******/

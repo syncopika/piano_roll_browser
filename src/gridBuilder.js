@@ -156,7 +156,9 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	column.style.backgroundColor = "transparent";
 
 	// IMPORTANT! new attributes for each note
-	column.setAttribute("length", "eighth"); 	// length of note (quarter, eighth?)
+	column.setAttribute("length", "eighth");
+	column.setAttribute("type", "default"); 
+	column.setAttribute("volume", pianoRollObject.currentInstrument.volume);
 	column.className = "noteContainer";
 	
 	if((colNum + 1) % pianoRollObject.subdivision == 0){
@@ -166,7 +168,7 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	}
 
 	// hook up an event listener to allow for picking notes on the grid!
-	column.addEventListener("click", function(){ 
+	column.addEventListener("click", function(e){
 		if(column.childNodes.length === 0){
 			addNote(this.id, pianoRollObject);
 		} 
