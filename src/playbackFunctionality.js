@@ -171,61 +171,19 @@ function readInNotes(pianoRollObject){
 	var notePosMap = sortNotesByPosition(pianoRollObject.currentInstrument);
 	var tempo = pianoRollObject.currentTempo;
 	var allNotes = [];
-	var lastNote = null;
-	
+
 	var notePositions = Object.keys(notePosMap).sort(function(a, b){ return a - b });
-	//console.log(notePositions);
 	notePositions.forEach(function(position){
 		
 		var notes = notePosMap[position]; // a list of at least 1 note
-		var row;
-		var freq;
-		var noteWidth;
-		var diff = 0;
-		var currNote = notes[0];
-		var currNotePos = currNote.getBoundingClientRect().left;
-		
-		// figure out if rest is needed first 
-		if(lastNote === null){
-			// piano roll starts @ 60px in (so a getBoundingClientRect().left value of 60 means starting at the beginning
-			if(currNote.getBoundingClientRect().left > 60){
-				diff = currNotePos - 60;
-			}
-		}else if(currNotePos > (lastNote.getBoundingClientRect().left + parseInt(lastNote.style.width))){
-			diff = currNotePos - (lastNote.getBoundingClientRect().left + parseInt(lastNote.style.width));
-		}
-			
-		// add rest 
-		if(diff){
-			allNotes.push([new Note(0.0, getCorrectLength(diff, pianoRollObject), document.getElementById('C7col_0'))]);
-		}
-		
-		// update last note
-		// a little tricky - if notes is a list of more than 1 note, we take the note with the 
-		// shortest width.
-		if(notes.length > 1){
-			var minWidthNote = currNote;
-			var minWidth = parseInt(currNote.style.width);
-			
-			notes.forEach(function(n){
-				if(parseInt(n.style.width) < minWidth){
-					minWidth = parseInt(n.style.width);
-					minWidthNote = n;
-				}
-			});
-			
-			lastNote = minWidthNote;
-		}else{
-			lastNote = currNote;
-		}
 			
 		// single note or not, just put them all in lists so it'll be easier to process in the scheduler
 		var group = []; // these notes should be played at the same time 
 		
 		notes.forEach(function(note){
-			row = note.parentNode.parentNode.id;
-			freq = pianoRollObject.noteFrequencies[row.replace('s', '#')];
-			noteWidth = parseInt(note.style.width);
+			var row = note.parentNode.parentNode.id;
+			var freq = pianoRollObject.noteFrequencies[row.replace('s', '#')];
+			var noteWidth = parseInt(note.style.width);
 			group.push(new Note(freq, getCorrectLength(noteWidth, pianoRollObject), note));
 		});
 		
@@ -340,19 +298,22 @@ function scheduler(pianoRoll, allInstruments){
 			}
 			
 			if(nextTime[i] === 0){
+				// for the very first note
 				nextTime[i] = ctx.currentTime;
 			}
 			
 			var oscList = []; // list of nodes because some sounds have 2 parts (i.e. snare drum sound consists of 2 nodes to be played simultaneously)
-			
 			var notesArr = instruments[i].notes;
 			var currIndex = instrumentNotePointers[i];
 			var currNotes = notesArr[currIndex];
 			var osc = null;
-			var oscGainNode = instruments[i].gain;
-			
+			var oscGainNode = initGain(ctx);
 
 			currNotes.forEach(function(thisNote, index){
+				
+				/* 
+					TODO: remove instrument's gain node (since we create new gain nodes on the fly for each note)
+				*/
 			
 				var volume = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
 				
@@ -399,13 +360,9 @@ function scheduler(pianoRoll, allInstruments){
 					oscList = oscList.concat(instrumentPresetNodes);
 					
 				}else{	
-				
-					// make a new oscillator for this note 
+
 					osc = ctx.createOscillator();
-					
-					// don't forget gain! (use the already initialized gain nodes from each instrument)
-					osc.connect(oscGainNode); // connect the new oscillator to the instrument's gain node!
-						
+					osc.connect(oscGainNode);
 					osc.type = instruments[i].waveType;
 					
 					if(thisNote.freq < 440){
@@ -440,13 +397,15 @@ function scheduler(pianoRoll, allInstruments){
 					
 				}
 			
-				// we generally expect oscList to have 1 osc node. sometimes there may be 2 (i.e. snare drum)
+				// we generally expect oscList to have 1 osc node. sometimes there may be at least 2 (i.e. snare drum or a chord)
 				pianoRoll.timers = pianoRoll.timers.concat(oscList);
 
 				if(index === currNotes.length - 1){
+					
+					// we're at the last note of this chord (if multiple notes)
 					oscList.forEach(function(osc){
 						osc.start(nextTime[i]);
-						osc.stop(nextTime[i] + (realDuration / 1000));
+						osc.stop(nextTime[i] + (realDuration / 1000)); // why are we dividing by 1000?
 					});
 					
 					// update lastTime and nextTime
@@ -456,7 +415,21 @@ function scheduler(pianoRoll, allInstruments){
 					// if the next note starts before this current note ends, nextTime for that note will be wrong.
 					// this basically forces all notes at different positions to be played in order and only
 					// after a note finishes.
-					nextTime[i] += (thisNote.duration / 1000);
+					// so one way to solve this problem may be to get the difference in this note's position with the next note
+					// then get the duration from that difference
+					if((currIndex + 1) < notesArr.length){
+						// if there's another note after this note (or chord), figure out when that next note should be played
+						console.log(notesArr[currIndex]);
+						console.log(notesArr[currIndex+1]);
+						var nextNote = notesArr[currIndex+1][0];
+						var nextNotePos = document.getElementById(nextNote.block.id).getBoundingClientRect().left;
+						var thisNotePos = document.getElementById(thisNote.block.id).getBoundingClientRect().left;
+						var durationUntilNextNote = getCorrectLength(nextNotePos - thisNotePos, pianoRoll);
+						nextTime[i] += (durationUntilNextNote / 1000);
+						//console.log("next time start for next note: " + nextTime[i]);
+					}else{
+						nextTime[i] += (thisNote.duration / 1000);
+					}
 
 					// increment the note pointer for this instrument 
 					instrumentNotePointers[i]++;
