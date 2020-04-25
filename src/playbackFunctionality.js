@@ -297,24 +297,33 @@ function scheduler(pianoRoll, allInstruments){
 				continue;
 			}
 			
-			if(nextTime[i] === 0){
-				// for the very first note
-				nextTime[i] = ctx.currentTime;
-			}
-			
 			var oscList = []; // list of nodes because some sounds have 2 parts (i.e. snare drum sound consists of 2 nodes to be played simultaneously)
 			var notesArr = instruments[i].notes;
 			var currIndex = instrumentNotePointers[i];
 			var currNotes = notesArr[currIndex];
 			var osc = null;
 			var oscGainNode = initGain(ctx);
+			
+			if(nextTime[i] === 0){
+				// for the very first note
+				nextTime[i] = ctx.currentTime;
+			}
+			// the first note on the piano roll might not start at the beginning (i.e. there might be an initial rest)
+			// so let's account for that here 
+			if(currIndex === 0){
+				var firstNoteStart = document.getElementById(currNotes[0].block.id).getBoundingClientRect().left;
+				if(firstNoteStart !== 60){
+					// 60 is the x-position of the very first note 
+					var actualStart = getCorrectLength(firstNoteStart - 60, pianoRoll);
+					nextTime[i] += (actualStart / 1000);
+				}
+			}
 
 			currNotes.forEach(function(thisNote, index){
 				
 				/* 
-					TODO: remove instrument's gain node (since we create new gain nodes on the fly for each note)
+					TODO: remove instrument's gain node attribute (since we create new gain nodes on the fly for each note)
 				*/
-			
 				var volume = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
 				
 				// by default, ~70% of the note duration should be played 
@@ -411,21 +420,13 @@ function scheduler(pianoRoll, allInstruments){
 					// update lastTime and nextTime
 					pianoRoll.lastTime = nextTime[i];
 					
-					// this is incorrect. the nextTime depends on the position of the next note.
-					// if the next note starts before this current note ends, nextTime for that note will be wrong.
-					// this basically forces all notes at different positions to be played in order and only
-					// after a note finishes.
-					// so one way to solve this problem may be to get the difference in this note's position with the next note
-					// then get the duration from that difference
 					if((currIndex + 1) < notesArr.length){
 						// if there's another note after this note (or chord), figure out when that next note should be played
-						console.log(notesArr[currIndex]);
-						console.log(notesArr[currIndex+1]);
 						var nextNote = notesArr[currIndex+1][0];
 						var nextNotePos = document.getElementById(nextNote.block.id).getBoundingClientRect().left;
 						var thisNotePos = document.getElementById(thisNote.block.id).getBoundingClientRect().left;
-						var durationUntilNextNote = getCorrectLength(nextNotePos - thisNotePos, pianoRoll);
-						nextTime[i] += (durationUntilNextNote / 1000);
+						var durationUntilNextNoteStart = getCorrectLength(nextNotePos - thisNotePos, pianoRoll);
+						nextTime[i] += (durationUntilNextNoteStart / 1000);
 						//console.log("next time start for next note: " + nextTime[i]);
 					}else{
 						nextTime[i] += (thisNote.duration / 1000);
@@ -439,7 +440,6 @@ function scheduler(pianoRoll, allInstruments){
 						// when oscillator ends, highlight the note (if oscList contains more than 1 node, just pick the first one)
 						osc = oscList[0];
 						osc.onended = onendFunc(thisNote.block.id, pianoRoll);
-						
 						pianoRoll.currentInstrumentNoteQueue.push({"note": thisNote.block.id, "time": nextTime[i]});
 					}
 					
@@ -484,10 +484,9 @@ function play(pianoRollObject){
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
 		pianoRoll.isPlaying = true;
 		
-		// get the current notes 
 		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
 		
-		console.log(pianoRollObject.currentInstrument.notes);
+		//console.log(pianoRollObject.currentInstrument.notes);
 		scheduler(pianoRollObject, false);
 	}
 }
@@ -502,7 +501,7 @@ function playAll(pianoRollObject){
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
 		pianoRollObject.isPlaying = true;
 		
-		//pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
+		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
 		
 		// start the piano roll 
 		scheduler(pianoRollObject, true);

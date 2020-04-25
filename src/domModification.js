@@ -136,6 +136,7 @@ function addNote(id, pianoRollObject){
 	newNote.style.width = "40px";
 	newNote.style.height = document.getElementById(id).style.height;
 	newNote.style.position = "absolute";
+	newNote.style.opacity = 1.0;
 	newNote.classList.add("noteElement");
 	newNote.classList.add("context-menu-one");
 	newNote.id = "note" + pianoRollObject.noteIdNum++;
@@ -165,7 +166,7 @@ function addNote(id, pianoRollObject){
 		if(e.which == 2){
 			// middle mouse button
 			newNote.parentNode.removeChild(newNote);
-			// TODO: remove note from instrument's notes
+			delete pianoRollObject.currentInstrument.activeNotes[newNote.id];
 			return;
 		}
 
@@ -200,7 +201,6 @@ function addNote(id, pianoRollObject){
 			pianoRollInterface.addEventListener("mouseup", mouseUp);
 			
 		}
-
 	});
 	
 	// add the note to the current instrument
@@ -373,7 +373,17 @@ function addNewMeasure(pianoRollObject){
 				newColumn.addEventListener("click", function(e){
 					if(newColumn.childNodes.length === 0){
 						addNote(newColumn.id, pianoRollObject);
-					};
+					}else if(newColumn.childNodes.length > 0){
+						var onlyHasOther = true;
+						newColumn.childNodes.forEach(function(note){
+							if(note.style.opacity == 1){
+								onlyHasOther = false;
+							}
+						});
+						if(onlyHasOther){
+							addNote(newColumn.id, pianoRollObject);
+						}
+					}
 				}); 
 			})(newColumn);
 			
@@ -470,7 +480,11 @@ function chooseInstrument(thisElement, pianoRollObject){
 // takes an instrument object and uses its notes array data to draw back the notes
 function drawNotes(instrumentObject, pianoRollObject){
 	
-	var notes = instrumentObject.activeNotes; //instrumentObject.notes;
+	var notes = instrumentObject.activeNotes;
+	
+	for(var n in notes){
+		notes[n].style.opacity = 1;
+	}
 
 	// reset headers first (i.e. clear columns with hasnote === 1)
 	// do we want this anymore?
@@ -551,7 +565,7 @@ function changeTimeSignature(pianoRollObject, newTimeSig){
 var lastNote = null;
 var onendFunc = function(x, pianoRoll){ 
 	return function(){
-		
+
 		// take away highlight of previous note 
 		if(lastNote && pianoRoll.playMarker !== lastNote.id){
 			lastNote.style.backgroundColor = '#fff';
@@ -559,17 +573,12 @@ var onendFunc = function(x, pianoRoll){
 		
 		var column = x.substring(x.indexOf('col'));
 		if(document.getElementById(column) === null){
-			if(column.indexOf("-") < 0){
-				// get first subdivision
-				column = x.substring(x.indexOf('col')) + "-1";
-			}else{
-				column = x.substring(x.indexOf('col'), x.indexOf('-'));
-			}
+			column = x.substring(x.indexOf('col'), x.indexOf('-'));
 		}
 		
 		var currNote = document.getElementById(column);
 		if(pianoRoll.isPlaying && pianoRoll.playMarker !== currNote.id){
-			document.getElementById(column).style.backgroundColor = pianoRoll.currNotePlayingColor; // nice light blue color 
+			document.getElementById(column).style.backgroundColor = pianoRoll.currNotePlayingColor;
 		}
 
 		lastNote = currNote;
@@ -584,20 +593,13 @@ var onendFunc = function(x, pianoRoll){
 ****/
 // see where the other instruments' notes are 
 function showOnionSkin(pianoRollObject){
-	
 	for(var i = 0; i < pianoRollObject.instruments.length; i++){
-		
 		if(pianoRollObject.instruments[i].name !== pianoRollObject.currentInstrument.name){
-			
 			// go through each instrument's activeNotes
 			var activeNotes = pianoRollObject.instruments[i].activeNotes;
 			for(var activeNote in activeNotes){
-	
-				// get note
 				var note = activeNotes[activeNote];
-				
-				// do something
-
+				note.style.opacity = 0.5;
 			}
 		}
 	}

@@ -172,6 +172,7 @@ function makeNoteContextMenu(pianoRollObject){
 									var note = options.$trigger[0];
 									var parent = note.parentNode;
 									parent.removeChild(note);
+									delete pianoRollObject.currentInstrument.activeNotes[note.id];
 								}
 							}
 						}

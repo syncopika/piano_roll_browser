@@ -171,7 +171,20 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	column.addEventListener("click", function(e){
 		if(column.childNodes.length === 0){
 			addNote(this.id, pianoRollObject);
-		} 
+		}else if(column.childNodes.length > 0){
+			// if all of the child nodes are from other instruments,
+			// which we can know based on opacity,
+			// allow note placement for this instrument
+			var onlyHasOther = true;
+			column.childNodes.forEach(function(note){
+				if(note.style.opacity == 1){
+					onlyHasOther = false; // there is a note already for this instrument
+				}
+			});
+			if(onlyHasOther){
+				addNote(this.id, pianoRollObject);
+			}
+		}
 	});
 	
 	// allow for highlighting to make it clear which note a block is
