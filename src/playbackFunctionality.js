@@ -218,16 +218,6 @@ function readInNotes(pianoRollObject){
 		}else{
 			lastNote = currNote;
 		}
-		
-		// finally add the new note(s)
-		/*
-		if(notes.length === 1){
-			row = currNote.parentNode.parentNode.id;
-			freq = pianoRollObject.noteFrequencies[row.replace('s', '#')];
-			noteWidth = parseInt(currNote.style.width);
-			allNotes.push(new Note(freq, getCorrectLength(noteWidth, pianoRollObject), currNote));
-		}else{
-			*/
 			
 		// single note or not, just put them all in lists so it'll be easier to process in the scheduler
 		var group = []; // these notes should be played at the same time 
@@ -241,34 +231,6 @@ function readInNotes(pianoRollObject){
 		
 		allNotes.push(group);
 		
-		/*
-		var row = noteElement.parentNode.parentNode.id;
-		var freq = pianoRollObject.noteFrequencies[row.replace('s', '#')];
-		var noteWidth = parseInt(noteElement.style.width);
-		
-		// is a rest note needed? only if there's a gap between notes.
-		// how do we know if there's a gap? if currNote.style.left > lastNote.style.left + lastNote.style.width
-		var currNotePos = noteElement.getBoundingClientRect().left;
-		var diff = 0;
-		
-		if(lastNote === null){
-			// piano roll starts @ 60px in (so a getBoundingClientRect().left value of 60 means starting at the beginning)
-			if(noteElement.getBoundingClientRect().left > 60){
-				// need a rest 
-				diff = currNotePos - 60;
-			}
-		}else if(currNotePos > (lastNote.getBoundingClientRect().left + parseInt(lastNote.style.width))){
-			// need rest 
-			diff = currNotePos - (lastNote.getBoundingClientRect().left + parseInt(lastNote.style.width));
-		}
-		lastNote = noteElement;
-		
-		if(diff){
-			notes.push(new Note(0.0, getCorrectLength(diff, pianoRollObject), document.getElementById('C7col_0')));
-		}
-		
-		notes.push(new Note(freq, getCorrectLength(noteWidth, pianoRollObject), noteElement));
-		*/
 	});
 	
 	// update active notes
@@ -484,11 +446,16 @@ function scheduler(pianoRoll, allInstruments){
 				if(index === currNotes.length - 1){
 					oscList.forEach(function(osc){
 						osc.start(nextTime[i]);
-						osc.stop( nextTime[i] + (realDuration / 1000) );
+						osc.stop(nextTime[i] + (realDuration / 1000));
 					});
 					
 					// update lastTime and nextTime
 					pianoRoll.lastTime = nextTime[i];
+					
+					// this is incorrect. the nextTime depends on the position of the next note.
+					// if the next note starts before this current note ends, nextTime for that note will be wrong.
+					// this basically forces all notes at different positions to be played in order and only
+					// after a note finishes.
 					nextTime[i] += (thisNote.duration / 1000);
 
 					// increment the note pointer for this instrument 
