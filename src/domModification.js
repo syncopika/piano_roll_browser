@@ -11,45 +11,7 @@ these functions affect what's being displayed on the DOM
 
 ***************/
 
-
-/*
-
-	PIANO ROLL V2 IMPLEMENTATION
-	
-	- following LMMS' example of taking into account note position
-	- should help do away with some confusing/convoluted logic I currently have	
-	
-	- can do drag to resize notes - don't have to do annoying subdividing stuff!
-	https://stackoverflow.com/questions/26233180/resize-a-div-on-border-drag-and-drop-without-adding-extra-markup
-	https://stackoverflow.com/questions/45534302/jquery-how-to-disable-not-allowed-cursor-while-dragging
-	https://stackoverflow.com/questions/18094134/fixed-gradient-background-with-css
-	
-	NOTES =>
-		- div
-		- bordered
-		- green
-		- border resizeable ->
-		- movable -> onclick, mousemove
-		- has position!
-			- position calculated based on left border and distance from start of piano roll
-			- can't be too too fine-grained otherwise too complicated? i.e. .1 vs .2 in distance
-		
-	PianoRoll class
-	each instrument => {
-		'position1': [note objects...],
-		'position2': [note objects...]
-	}
-	
-	Rests
-		- rests will be determined based on distance between notes! 
-
-	this implementation can hopefully simplify a lot of things.
-	
-	// need a map for lockType (i.e. quarter, 16, 32, 8th) to size in px!
-
-*/
-
-// assuming padding is 3
+// TODO: add to pianoroll?
 var noteSizeMap = {
 	"8th": 40,
 	"16th": 20,
@@ -114,7 +76,7 @@ function moveHelper(newNote, pianoRoll, evt){
 	
 	var targetContPos = targetContainer.getBoundingClientRect().left;
 	var subdivisionCount = Math.floor(parseInt(targetContainer.style.width) / (noteSizeMap[currLockType]));
-	var possibleNotePos = []; // what if we use a tree for this lol
+	var possibleNotePos = [];
 	
 	for(var i = 0; i <= subdivisionCount-1; i++){
 		possibleNotePos.push(targetContPos + (i * (noteSizeMap[currLockType])));
@@ -136,14 +98,7 @@ function moveHelper(newNote, pianoRoll, evt){
 // newNote is an html element representing a note 
 // currNotes is a dictionary (activeNotes of an instrument)
 function addNoteToCurrInstrument(currNotes, newNote){
-	var notePos = parseInt(newNote.style.left);
-	if(currNotes[notePos] === undefined){
-		currNotes[notePos] = [newNote];
-	}else{
-		if(!currNotes[notePos].find((el) => el === newNote)){
-			currNotes[notePos].push(newNote);
-		}
-	}
+	currNotes[newNote.id] = newNote;
 }
 
 function removeNoteFromCurrInstrument(currNotes, newNote){
@@ -151,13 +106,12 @@ function removeNoteFromCurrInstrument(currNotes, newNote){
 	// TODO: finish me
 }
 
-
+// can we move back to addEventListener as a named function?
 function mouseupHelper(newNote, pianoRoll, pianoRollInterface, eventsToRemove){
 
 	var currNotes = pianoRoll.currentInstrument.activeNotes;
 	
 	addNoteToCurrInstrument(currNotes, newNote);
-	//console.log(pianoRoll.currentInstrument);
 	
 	for(var event in eventsToRemove){
 		pianoRollInterface.removeEventListener(event, eventsToRemove[event]);
@@ -184,6 +138,7 @@ function addNote(id, pianoRollObject){
 	newNote.style.position = "absolute";
 	newNote.classList.add("noteElement");
 	newNote.classList.add("context-menu-one");
+	newNote.id = "note" + pianoRollObject.noteIdNum++;
 	
 	var pianoRollInterface = document.getElementById("piano");
 
@@ -191,7 +146,8 @@ function addNote(id, pianoRollObject){
 	newNote.style.left = newNote.getBoundingClientRect().left + "px";
 	
 	newNote.addEventListener("mousemove", function(e){
-
+		// allow resize cursor to show when the mouse moves over the right edge
+		// of the note
 		e.preventDefault();
 		
 		if(e.offsetX >= (parseInt(newNote.style.width) - 3)){
@@ -249,7 +205,6 @@ function addNote(id, pianoRollObject){
 	
 	// add the note to the current instrument
 	addNoteToCurrInstrument(pianoRollObject.currentInstrument.activeNotes, newNote);
-	//console.log(pianoRollObject.currentInstrument);
 }
 
 
@@ -268,13 +223,7 @@ function highlightRow(id, color){
 
 /****
 
-	delete all notes - clear the grid
-	- does not alter subdivisions
-	- does not clear onion skin!
-	- only clears current instrument's notes 
-    - don't forget active notes of current instrument!
-	
-	- just remove any child nodes, if any
+	just remove any child nodes, if any for current instrument
 	
 ****/
 function clearGrid(pianoRollObject){
@@ -303,7 +252,7 @@ function clearGrid(pianoRollObject){
 
 /****
 
-	like clearGrid, but clears EVERYTHING and rejoins any subdivisions 
+	like clearGrid, but clears EVERYTHING
 
 ****/
 function clearGridAll(pianoRollObject){
@@ -442,8 +391,6 @@ function addNewMeasure(pianoRollObject){
 /****
 
 	delete a measure 
-
-	WHAT IF THERE ARE NOTES IN IT??
 	
 ****/
 function deleteMeasure(pianoRollObject){
@@ -453,32 +400,8 @@ function deleteMeasure(pianoRollObject){
 		return;
 	}
 	
-	var confirmDelete = confirm('Are you sure? Please make sure all notes are deleted from the measure first.');
+	// delete all current instrument notes
 	
-	if(confirmDelete){
-	
-		// take current number of measures and multiply
-		// by 8 to know how many columns there are 
-		var currColumns = pianoRollObject.numberOfMeasures * 8;
-		
-		// subtract 8 from currColumns - because 8 eighth notes per measure (4 quarter notes)
-		currColumns -= 8;
-		
-		// so currColumns is now the number of the first 
-		// column to remove 
-		for(var i = currColumns; i < currColumns + 8; i++){
-			// get all the columns that have the current number, i
-			var columns = $("div[id*='" + "col_" + i + "']");
-			for(var j = 0; j < columns.length; j++){
-				columns[j].remove();
-			}
-		}
-
-		pianoRollObject.numberOfMeasures--;
-		// update text
-		var mtext = document.getElementById('measures');
-		mtext.textContent = "number of measures: " + pianoRollObject.numberOfMeasures;
-	}
 }
 
 

@@ -10,7 +10,7 @@ function PianoRoll(){
 	this.numberOfMeasures = 4; 	// 4 measures by default
 	this.subdivision = 8; 		// number of eighth notes per measure (8 for 4 quarter notes per measure, 6 for 3/4)
 	this.timeSignature = "4/4"; 
-	this.currentTempo = 500; 	// hold the current tempo - in milliseconds!! ((1000 ms/sec. * 60 sec./min.) / 120 beats/min. = 500 ms/beat) default is 120 bpm
+	this.currentTempo = 250; 	// hold the current tempo - in milliseconds!! ((1000 ms/sec. * 60 sec./min.) / 120 beats/min. = 500 ms/beat) default is 120 bpm
 	this.instruments = [];		// list of instruments will be an array
 	this.timers = [];			// keep track of setTimeouts so all can be ended at once 
 	this.currentInstrument; 	// need to keep track of what current instrument is!
@@ -32,6 +32,7 @@ function PianoRoll(){
 	this.onionSkinNote = "rgba(0, 178, 0, 0.2)";
 	this.instrumentTableColor = 'rgb(188, 223, 70)';
 	this.currNotePlayingColor = 'rgb(112, 155, 224)';
+	this.noteIdNum = 0; // use this to create a unique number for each added note's id
 	this.instrumentPresets = {};// a dictionary to keep track of imported instrument presets
 								// i.e. {'name': 
 								//				{

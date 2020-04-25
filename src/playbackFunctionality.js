@@ -120,6 +120,47 @@ function clickPercussionNote(id, pianoRollObject){
 }
 
 
+function sortNotesByPosition(instrument){
+	
+	// given a map of note ids to note elements,
+	// sort them based on element.style.left 
+	// and return a list of those elements 
+
+	//var all_notes = [];
+
+	/*
+	for(var noteId in instrument.activeNotes){
+		all_notes.push(instrument.activeNotes[noteId]);
+	}
+	
+	all_notes.sort(function(note1, note2){
+		var n1 = parseFloat(note1.style.left);
+		var n2 = parseFloat(note2.style.left);
+		return n1 - n2;
+	});
+	*/
+	
+	// organize notes by position
+	var positionMapping = {};
+	for(var noteId in instrument.activeNotes){
+		
+		var note = instrument.activeNotes[noteId];
+		var position = parseInt(note.style.left);
+		
+		if(positionMapping[position] === undefined){
+			positionMapping[position] = [note];
+		}else{
+			positionMapping[position].push(note);
+		}
+	}
+
+	return positionMapping;
+}
+
+
+
+
+
 /****
 
 	this will read all the notes, put them in an array and returns the array 
@@ -127,74 +168,111 @@ function clickPercussionNote(id, pianoRollObject){
 ****/
 function readInNotes(pianoRollObject){
 	
-	var notes = []; // creating a new list of notes based on what's on the grid currently  
+	var notePosMap = sortNotesByPosition(pianoRollObject.currentInstrument);
 	var tempo = pianoRollObject.currentTempo;
+	var allNotes = [];
+	var lastNote = null;
 	
-	// first find what the last column with a note (hasnote === 1) is 
-	// this will aid performance and prevent unnecessary column look-throughs 
-	var columnHeaders = document.getElementById("columnHeaderRow").children;
-	var lastColumn = -1;
-	var columnsWithNotes = [];
-	
-	for(var k = 0; k < columnHeaders.length; k++){
-		if(columnHeaders[k].getAttribute('hasnote') === '1'){
-			lastColumn = k;
-			columnsWithNotes.push(1);
-		}else{
-			columnsWithNotes.push(0);
-		}
-	}
-	
-	// start at 1 to skip 0th index, which is not a valid note column
-	for(var i = 1; i <= lastColumn; i++){
-		if(columnsWithNotes[i] === 1){
-			var column = $("div[id$='" + columnHeaders[i].id + "']").get(); //get all the blocks in each column
-			// go down each column and look for green. if found, stop and add to array. then move on.
-			for(var j = 0; j < column.length; j++){
-				// look for green background! 
-				if(column[j].style.backgroundColor === pianoRollObject.noteColor){
-					// make any corrections to id string before matching with freq key
-					var freq = pianoRollObject.noteFrequencies[ (column[j].parentNode.id).replace('s', '#') ];
-					// add note to array
-					notes.push(new Note(freq, getCorrectLength(column[j].getAttribute("length"), pianoRollObject), column[j]));
-					
-					/* 
-					    there's a weird bug(?) that I haven't figured out yet - for instrument 2 of the intrada demo, if you switch from instrument 2 to 3, some of the notes
-						from instrument 2 show up with instrument 3's notes (should be just instrument 3's notes). then if you check instrument 2's activeNotes, you'll see that 
-						the 2nd note (G5_col5) is somehow removed (along with some other notes presumably). really weird. for now I'll just ensure that activeNotes reflects 
-						the current notes by adding them here if they're not in activeNotes (although I'm pretty sure I shouldn't have to do this).
-					*/
-					if(pianoRollObject.currentInstrument.activeNotes[column[j].id] === undefined){
-						pianoRollObject.currentInstrument.activeNotes[column[j].id] = 1;
-					}
-					
-					// important! since an arbitrary number of notes can be rejoined, remember that notes that get joined have their column header's hasnote attribute set to -1.
-					// but, we need to ignore those columns and not count them as rests (as we would do normally)
-					// for this current note, we need to know how many notes have been concatenated. then take that number and add to i, the counter. that way those concatenated notes 
-					// won't be treated as rests and added to the notes array. 
-					if(column[j].getAttribute("length").indexOf("-") > 0){
-						// the presence of the hyphen indicates a concatenation of multiple notes 
-						var numNotes = (column[j].getAttribute("length")).split('-').length;
-						i += numNotes - 1; // increment i 
-					}
-					
-					// note found, stop 
-					break;
-				}
-			}		
-		}else{
-			// for rests 
-			if(columnHeaders[i].id.indexOf("-1") > 0 || columnHeaders[i].id.indexOf("-2") > 0){
-				// just pass in the C7 note of the column id for rests 
-				notes.push(new Note(0.0, Math.round(tempo / pianoRollObject.noteLengths["sixteenth"]), document.getElementById( 'C7' + columnHeaders[i].id )));
-			}else{
-				notes.push(new Note(0.0, Math.round(tempo / pianoRollObject.noteLengths["eighth"]), document.getElementById( 'C7' + columnHeaders[i].id )));
+	var notePositions = Object.keys(notePosMap).sort(function(a, b){ return a - b });
+	//console.log(notePositions);
+	notePositions.forEach(function(position){
+		
+		var notes = notePosMap[position]; // a list of at least 1 note
+		var row;
+		var freq;
+		var noteWidth;
+		var diff = 0;
+		var currNote = notes[0];
+		var currNotePos = currNote.getBoundingClientRect().left;
+		
+		// figure out if rest is needed first 
+		if(lastNote === null){
+			// piano roll starts @ 60px in (so a getBoundingClientRect().left value of 60 means starting at the beginning
+			if(currNote.getBoundingClientRect().left > 60){
+				diff = currNotePos - 60;
 			}
+		}else if(currNotePos > (lastNote.getBoundingClientRect().left + parseInt(lastNote.style.width))){
+			diff = currNotePos - (lastNote.getBoundingClientRect().left + parseInt(lastNote.style.width));
 		}
-	}
+			
+		// add rest 
+		if(diff){
+			allNotes.push([new Note(0.0, getCorrectLength(diff, pianoRollObject), document.getElementById('C7col_0'))]);
+		}
+		
+		// update last note
+		// a little tricky - if notes is a list of more than 1 note, we take the note with the 
+		// shortest width.
+		if(notes.length > 1){
+			var minWidthNote = currNote;
+			var minWidth = parseInt(currNote.style.width);
+			
+			notes.forEach(function(n){
+				if(parseInt(n.style.width) < minWidth){
+					minWidth = parseInt(n.style.width);
+					minWidthNote = n;
+				}
+			});
+			
+			lastNote = minWidthNote;
+		}else{
+			lastNote = currNote;
+		}
+		
+		// finally add the new note(s)
+		/*
+		if(notes.length === 1){
+			row = currNote.parentNode.parentNode.id;
+			freq = pianoRollObject.noteFrequencies[row.replace('s', '#')];
+			noteWidth = parseInt(currNote.style.width);
+			allNotes.push(new Note(freq, getCorrectLength(noteWidth, pianoRollObject), currNote));
+		}else{
+			*/
+			
+		// single note or not, just put them all in lists so it'll be easier to process in the scheduler
+		var group = []; // these notes should be played at the same time 
+		
+		notes.forEach(function(note){
+			row = note.parentNode.parentNode.id;
+			freq = pianoRollObject.noteFrequencies[row.replace('s', '#')];
+			noteWidth = parseInt(note.style.width);
+			group.push(new Note(freq, getCorrectLength(noteWidth, pianoRollObject), note));
+		});
+		
+		allNotes.push(group);
+		
+		/*
+		var row = noteElement.parentNode.parentNode.id;
+		var freq = pianoRollObject.noteFrequencies[row.replace('s', '#')];
+		var noteWidth = parseInt(noteElement.style.width);
+		
+		// is a rest note needed? only if there's a gap between notes.
+		// how do we know if there's a gap? if currNote.style.left > lastNote.style.left + lastNote.style.width
+		var currNotePos = noteElement.getBoundingClientRect().left;
+		var diff = 0;
+		
+		if(lastNote === null){
+			// piano roll starts @ 60px in (so a getBoundingClientRect().left value of 60 means starting at the beginning)
+			if(noteElement.getBoundingClientRect().left > 60){
+				// need a rest 
+				diff = currNotePos - 60;
+			}
+		}else if(currNotePos > (lastNote.getBoundingClientRect().left + parseInt(lastNote.style.width))){
+			// need rest 
+			diff = currNotePos - (lastNote.getBoundingClientRect().left + parseInt(lastNote.style.width));
+		}
+		lastNote = noteElement;
+		
+		if(diff){
+			notes.push(new Note(0.0, getCorrectLength(diff, pianoRollObject), document.getElementById('C7col_0')));
+		}
+		
+		notes.push(new Note(freq, getCorrectLength(noteWidth, pianoRollObject), noteElement));
+		*/
+	});
 	
 	// update active notes
-	return notes;
+	return allNotes;
 }
 
 
@@ -220,6 +298,7 @@ function scheduler(pianoRoll, allInstruments){
 	
 	var ctx = pianoRoll.audioContext;
 	var startMarker = pianoRoll.playMarker; // if user specified a certain column to start playing at 
+	var startPos = 0;
 	
 	// each instrument may have a different number of notes.
 	// keep an array of numbers, where each array index corresponds to an instrument 
@@ -260,13 +339,7 @@ function scheduler(pianoRoll, allInstruments){
 	
 	// in the case where the user specified a measure to start playing at
 	if(startMarker){
-		// if the header clicked on is a subdivision, truncate the headerId to just the col num 
-		// this is because each instrument may or may not have the exact same headerId but we want them all 
-		// to start playing at the same place. just truncating the id to the column number will help since 
-		// even subdivisions have the column number, which we can use to match against
-		if(startMarker.indexOf('-') > 0){
-			startMarker = startMarker.substring(0, startMarker.indexOf('-'));
-		}
+		startPos = document.getElementById(startMarker).getBoundingClientRect().left;
 	
 		for(var k = 0; k < pianoRoll.instruments.length; k++){
 			// have each instrument start with the note at index given by startMarker
@@ -309,122 +382,130 @@ function scheduler(pianoRoll, allInstruments){
 			}
 			
 			var oscList = []; // list of nodes because some sounds have 2 parts (i.e. snare drum sound consists of 2 nodes to be played simultaneously)
-			var osc = null;
-			var oscGainNode = instruments[i].gain;
 			
 			var notesArr = instruments[i].notes;
 			var currIndex = instrumentNotePointers[i];
-			var thisNote = notesArr[currIndex];
-			var volume = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
+			var currNotes = notesArr[currIndex];
+			var osc = null;
+			var oscGainNode = instruments[i].gain;
 			
-			// by default, ~70% of the note duration should be played 
-			// the rest of the time can be devoted to the spacer 
-			var realDuration;
+
+			currNotes.forEach(function(thisNote, index){
 			
-			if(thisNote.block.style === "staccato"){
-				realDuration = (0.50 * thisNote.duration);
-			}else if(thisNote.block.style === "legato"){
-				realDuration = (0.95 * thisNote.duration);
-			}else{
-				realDuration = (0.70 * thisNote.duration);
-			}
+				var volume = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
+				
+				// by default, ~70% of the note duration should be played 
+				// the rest of the time can be devoted to the spacer 
+				var realDuration;
+				
+				if(thisNote.block.style === "staccato"){
+					realDuration = (0.50 * thisNote.duration);
+				}else if(thisNote.block.style === "legato"){
+					realDuration = (0.95 * thisNote.duration);
+				}else{
+					realDuration = (0.70 * thisNote.duration);
+				}
+				
+				// don't forget any specified attributes for this particular instrument 
+				// check wave type
+				if(instruments[i].waveType === "percussion"){	
+					// articulation DOES apply to percussion IF STACCATO OR LEGATO? ignore for now 
 			
-			// don't forget any specified attributes for this particular instrument 
-			// check wave type
-			if(instruments[i].waveType === "percussion"){	
-				// articulation DOES apply to percussion IF STACCATO OR LEGATO? ignore for now 
-		
-				// find out what octave the note is in 
-				// note that the note might be a rest! so it has no block id!
-				if(thisNote.block.id){
-					var octave = parseInt(thisNote.block.id.match(/[0-9]/g)[0]);
-					if(octave >= 2 && octave <= 4){
-						osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
-					}else if(octave === 5){
-						osc = pianoRoll.PercussionManager.snareDrumNote(thisNote.freq, volume, nextTime[i], true);
+					// find out what octave the note is in 
+					// note that the note might be a rest! so it has no block id!
+					if(thisNote.block.id){
+						var octave = parseInt(thisNote.block.id.match(/[0-9]/g)[0]);
+						if(octave >= 2 && octave <= 4){
+							osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
+						}else if(octave === 5){
+							osc = pianoRoll.PercussionManager.snareDrumNote(thisNote.freq, volume, nextTime[i], true);
+						}else{
+							osc = pianoRoll.PercussionManager.hihatNote(volume, nextTime[i], true);
+						}
 					}else{
-						osc = pianoRoll.PercussionManager.hihatNote(volume, nextTime[i], true);
+						// this is a rest
+						osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
 					}
-				}else{
-					// this is a rest
-					osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
-				}
-				
-				oscList = oscList.concat(osc);	
-				
-			}else if(pianoRoll.instrumentPresets[instruments[i].waveType]){
-				
-				// custom intrument preset!
-				var currPreset = pianoRoll.instrumentPresets[instruments[i].waveType];
-				var instrumentPresetNodes = processNote(thisNote.freq, volume, nextTime[i], pianoRoll, currPreset); 
-				oscList = oscList.concat(instrumentPresetNodes);
-				
-			}else{	
-			
-				// make a new oscillator for this note 
-				osc = ctx.createOscillator();
-				
-				// don't forget gain! (use the already initialized gain nodes from each instrument)
-				osc.connect(oscGainNode); // connect the new oscillator to the instrument's gain node!
 					
-				osc.type = instruments[i].waveType;
+					oscList = oscList.concat(osc);	
+					
+				}else if(pianoRoll.instrumentPresets[instruments[i].waveType]){
+					
+					// custom intrument preset!
+					var currPreset = pianoRoll.instrumentPresets[instruments[i].waveType];
+					var instrumentPresetNodes = processNote(thisNote.freq, volume, nextTime[i], pianoRoll, currPreset); 
+					oscList = oscList.concat(instrumentPresetNodes);
+					
+				}else{	
 				
-				if(thisNote.freq < 440){
-					// need to set initial freq to 0 for low notes (C3 and below)
-					// otherwise gliding will be messed up for notes on one end of the spectrum
-					osc.frequency.setValueAtTime(0, 0);
+					// make a new oscillator for this note 
+					osc = ctx.createOscillator();
+					
+					// don't forget gain! (use the already initialized gain nodes from each instrument)
+					osc.connect(oscGainNode); // connect the new oscillator to the instrument's gain node!
+						
+					osc.type = instruments[i].waveType;
+					
+					if(thisNote.freq < 440){
+						// need to set initial freq to 0 for low notes (C3 and below)
+						// otherwise gliding will be messed up for notes on one end of the spectrum
+						osc.frequency.setValueAtTime(0, 0);
+					}
+					
+					if(thisNote.block.style === "glide"){
+						osc.frequency.setTargetAtTime(thisNote.freq, nextTime[i], 0.025);
+					}else{
+						//osc.frequency.setTargetAtTime(thisNote.freq, nextTime[i], 0);
+						osc.frequency.setValueAtTime(thisNote.freq, nextTime[i]);
+					}
+					
+					// check volume 
+					// setting gain value here depending on condition allows for the 'articulation' of notes without 
+					// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
+					// this is fixed by always setting gain to 0 if a note's frequency is 0.
+					oscGainNode.gain.setTargetAtTime(volume, nextTime[i], 0.0045); 
+					
+					// change gain to 0 after a really small amount of time to give the impression of articulation
+					oscGainNode.gain.setTargetAtTime(0, (nextTime[i]) + (realDuration / 1000) - .0025, 0.0010);		
+					
+					oscList.push(osc);
+					
+					// use right context destination for recording
+					if(pianoRoll.recording){
+						oscGainNode.connect(pianoRoll.audioContextDestMediaStream);
+					}
+					oscGainNode.connect(pianoRoll.audioContextDestOriginal);
+					
 				}
-				
-				if(notesArr[currIndex].block.style === "glide"){
-					osc.frequency.setTargetAtTime(thisNote.freq, nextTime[i], 0.025);
-				}else{
-					//osc.frequency.setTargetAtTime(thisNote.freq, nextTime[i], 0);
-					osc.frequency.setValueAtTime(thisNote.freq, nextTime[i]);
-				}
-				
-				// check volume 
-				// setting gain value here depending on condition allows for the 'articulation' of notes without 
-				// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
-				// this is fixed by always setting gain to 0 if a note's frequency is 0.
-				oscGainNode.gain.setTargetAtTime(volume, nextTime[i], 0.0045); 
-				
-				// change gain to 0 after a really small amount of time to give the impression of articulation
-				oscGainNode.gain.setTargetAtTime(0, (nextTime[i]) + (realDuration / 1000) - .0025, 0.0010);		
-				
-				oscList.push(osc);
-				
-				// use right context destination for recording
-				if(pianoRoll.recording){
-					oscGainNode.connect(pianoRoll.audioContextDestMediaStream);
-				}
-				oscGainNode.connect(pianoRoll.audioContextDestOriginal);
-				
-			}
-		
-			// we generally expect oscList to have 1 osc node. sometimes there may be 2 (i.e. snare drum)
-			pianoRoll.timers = pianoRoll.timers.concat(oscList);
-
-			oscList.forEach(function(osc){
-				osc.start(nextTime[i]);
-				osc.stop( nextTime[i] + (realDuration / 1000) );
-			});
 			
-			// update lastTime and nextTime
-			pianoRoll.lastTime = nextTime[i];
-			nextTime[i] += (thisNote.duration / 1000);
+				// we generally expect oscList to have 1 osc node. sometimes there may be 2 (i.e. snare drum)
+				pianoRoll.timers = pianoRoll.timers.concat(oscList);
 
-			// increment the note pointer for this instrument 
-			instrumentNotePointers[i]++;
+				if(index === currNotes.length - 1){
+					oscList.forEach(function(osc){
+						osc.start(nextTime[i]);
+						osc.stop( nextTime[i] + (realDuration / 1000) );
+					});
+					
+					// update lastTime and nextTime
+					pianoRoll.lastTime = nextTime[i];
+					nextTime[i] += (thisNote.duration / 1000);
+
+					// increment the note pointer for this instrument 
+					instrumentNotePointers[i]++;
+					
+					// add note to play into currentInstrumentNoteQueue
+					if(instruments[i] === pianoRoll.currentInstrument){
+						// when oscillator ends, highlight the note (if oscList contains more than 1 node, just pick the first one)
+						osc = oscList[0];
+						osc.onended = onendFunc(thisNote.block.id, pianoRoll);
+						
+						pianoRoll.currentInstrumentNoteQueue.push({"note": thisNote.block.id, "time": nextTime[i]});
+					}
+					
+				}
 			
-			// add note to play into currentInstrumentNoteQueue
-			if(instruments[i] === pianoRoll.currentInstrument){
-				
-				// when oscillator ends, highlight the note (if oscList contains more than 1 node, just pick the first one)
-				osc = oscList[0];
-				osc.onended = onendFunc(thisNote.block.id, pianoRoll);
-				
-				pianoRoll.currentInstrumentNoteQueue.push({"note": thisNote.block.id, "time": nextTime[i]});
-			}
+			}); // end forEach currNotes 
 			
 		} // end for	
 	} // end while 
@@ -466,6 +547,7 @@ function play(pianoRollObject){
 		// get the current notes 
 		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
 		
+		console.log(pianoRollObject.currentInstrument.notes);
 		scheduler(pianoRollObject, false);
 	}
 }
@@ -480,7 +562,7 @@ function playAll(pianoRollObject){
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
 		pianoRollObject.isPlaying = true;
 		
-		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
+		//pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
 		
 		// start the piano roll 
 		scheduler(pianoRollObject, true);
@@ -555,38 +637,7 @@ function stopPlay(pianoRollObject){
 ***/
 function getCorrectLength(length, pianoRollObject){
 	var currentTempo = pianoRollObject.currentTempo;
-	if(length === "quarter"){
-		return Math.round(currentTempo);
-	}else if(length === "eighth"){
-		return Math.round(currentTempo / pianoRollObject.noteLengths["eighth"]);
-	}else if(length === "sixteenth"){
-		return Math.round(currentTempo / pianoRollObject.noteLengths["sixteenth"]);
-	}else if(length.indexOf('-') > 0){
-		
-		// in this case if there's a hyphen, the length is a concatenation of multiple lengths,
-		// i.e. 'eighth-eighth' or 'eighth-sixteenth' 
-		var splitLength = length.split('-');
-	    
-		// keep a count of how many eighth and sixteenth notes are part of this note
-		var lengths = {'eighth': 0, 'sixteenth': 0};
-		
-		splitLength.forEach(function(aLength){
-			if(aLength === 'eighth'){
-				lengths['eighth'] = ++lengths['eighth']; 
-			}else if(aLength === 'sixteenth'){
-				lengths['sixteenth'] = ++lengths['sixteenth']; 
-			}
-		});
-		
-		// calculate the length of this note depending on how many eighths and sixteenths
-		// add the number of eighth notes divided by 2, the number of sixteenth notes divided by 4
-		var total = (lengths['eighth'] / pianoRollObject.noteLengths["eighth"]) + (lengths['sixteenth'] / pianoRollObject.noteLengths["sixteenth"]);
-		
-		return Math.round(currentTempo * total);
-	}else{
-		// this shouldn't happen?
-		return 0;
-	}
+	return Math.round((currentTempo / 40) * length); // 40 px == 1 eighth note.
 }
 
 
