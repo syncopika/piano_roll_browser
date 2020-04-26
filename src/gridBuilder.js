@@ -157,7 +157,7 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 
 	column.setAttribute("length", "eighth");
 	column.setAttribute("type", "default"); 
-	column.setAttribute("volume", pianoRollObject.currentInstrument.volume);
+	column.setAttribute("volume", 0.2);
 	column.className = "noteContainer";
 	
 	if((colNum + 1) % pianoRollObject.subdivision == 0){

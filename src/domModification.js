@@ -78,9 +78,13 @@ function moveHelper(newNote, pianoRoll, evt){
 	var subdivisionCount = Math.floor(parseInt(targetContainer.style.width) / (noteSizeMap[currLockType]));
 	var possibleNotePos = [];
 	
-	for(var i = 0; i <= subdivisionCount-1; i++){
+	// a little tricky but note that the last entry in possibleNotePos will be the start position 
+	// of the neighboring note container to the right!
+	for(var i = 0; i <= subdivisionCount; i++){
 		possibleNotePos.push(targetContPos + (i * (noteSizeMap[currLockType])));
 	}
+	//console.log(currPos);
+	//console.log(possibleNotePos);
 	
 	var currX = evt.x;
 	var lockNoteLength = noteSizeMap[currLockType];
@@ -88,6 +92,11 @@ function moveHelper(newNote, pianoRoll, evt){
 	for(var i = 0; i < possibleNotePos.length; i++){
 		if(Math.abs(possibleNotePos[i] - currX) <= 8){
 			newNote.style.left = possibleNotePos[i] + "px";
+			if(i === possibleNotePos.length - 1){
+				// if the closest boundary is the last entry in possibleNotePos,
+				// it's the next note container over to the right.
+				targetContainer = targetContainer.nextSibling;
+			}
 			targetContainer.appendChild(newNote);
 			break;
 		}
@@ -101,10 +110,6 @@ function addNoteToCurrInstrument(currNotes, newNote){
 	currNotes[newNote.id] = newNote;
 }
 
-function removeNoteFromCurrInstrument(currNotes, newNote){
-	var notePos = parseInt(newNote.style.left);
-	// TODO: finish me
-}
 
 // can we move back to addEventListener as a named function?
 function mouseupHelper(newNote, pianoRoll, pianoRollInterface, eventsToRemove){
@@ -188,7 +193,6 @@ function addNote(id, pianoRollObject){
 				pianoRollInterface.removeEventListener("mousemove", resizeNote);
 				pianoRollInterface.removeEventListener("mouseup", mouseup);
 			});
-			
 		}else{
 			
 			function moveNote(evt){
@@ -206,7 +210,6 @@ function addNote(id, pianoRollObject){
 			
 			pianoRollInterface.addEventListener("mousemove", moveNote);
 			pianoRollInterface.addEventListener("mouseup", mouseUp);
-			
 		}
 	});
 	
