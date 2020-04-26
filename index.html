@@ -182,7 +182,7 @@
 		<li><button id='play' class='btn'> play! </button></li>
 		<li><button id='playAll' class='btn'> play <b>all</b>! </button></li>
 		<li><button id='stopPlay' class='btn'> stop! </button></li>
-		<li><input type='checkbox' id='loop'><label>loop</label></li>
+		<li><button id='loop' class='btn'>loop</button></li>
 		<li><button id='record' class='btn'> record </button></li>
 		<li><button id='addMeasure' class='btn'> add new measure </button></li>
 		<li><button id='delMeasure' class='btn'> delete measure </button></li>
@@ -201,9 +201,7 @@
 				<input id='changeTempo' type='text'>
 			</label>
 		</li>
-		<li>
-			<button class='btn' id='changeTempoBtn'> change tempo </button>
-		</li>
+		<li><button class='btn' id='changeTempoBtn'> change tempo </button></li>
 	</ul>
 
 	<div id='demo'>
@@ -247,7 +245,7 @@
 
 
 <div class='footer'>
-	<p> 2017-2018 nch works | <a href='https://github.com/syncopika/piano_roll_browser'> source </a> </p>
+	<p> 2017-2020 nch works | <a href='https://github.com/syncopika/piano_roll_browser'> source </a> </p>
 </div>
 
 
@@ -412,7 +410,12 @@ function bindButtons(pianoRollObject){
 	});
 	
 	document.getElementById('loop').addEventListener('click', function(){
-		pianoRoll.loopFlag = this.checked;
+		pianoRoll.loopFlag = !pianoRoll.loopFlag;
+		if(pianoRoll.loopFlag){
+			this.style.border = "2px solid green";
+		}else{
+			this.style.border = "";
+		}
 	});
 	
 	// toggle time signature 

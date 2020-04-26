@@ -303,7 +303,10 @@ function addNewMeasure(pianoRollObject){
 		if(i + 1 === pianoRollObject.subdivision){
 			newHeader.className = "thickBorder";
 		}else{
-			newHeader.className = "thinBorder";
+			if(i !== 0){
+				// no border for the first column header in a measure
+				newHeader.className = "thinBorder";
+			}
 		}
 		
 		newHeader.style.textAlign = "center";

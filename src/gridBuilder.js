@@ -210,12 +210,8 @@ function replaceSharp(string){
 // headerId = the id of the element that holds all the column header elements
 function redrawCellBorders(pianoRollObject, headerId){
 
-	var subdivision = pianoRollObject.subdivision;
-	
-	// filter out any right halves (i.e. id contains '-2') of any subdivided columns 
-	var headers = Array.from(document.getElementById(headerId).children).filter(function(element){
-		return element.id.indexOf('-2') < 0;
-	});
+	var subdivision = pianoRollObject.subdivision; 
+	var headers = Array.from(document.getElementById(headerId).children);
 	
 	var measureCounter = 2;
 	
@@ -264,7 +260,7 @@ function redrawCellBorders(pianoRollObject, headerId){
 		// skip the first element, which is the column header (not a note on the grid)
 		for(var j = 1; j < columnCells.length; j++){
 			var gridCell = columnCells[j];
-			gridCell.className = (columnHeader.className === "") ? "thinBorder" : columnHeader.className;
+			gridCell.className = "noteContainer " + ((columnHeader.className === "") ? "thinBorder" : columnHeader.className);
 		};
 		
 		// update piano roll num measures 
@@ -288,12 +284,11 @@ function redrawCellBorders(pianoRollObject, headerId){
 		newColumnHead.id = "col_" + (lastColNum + 1); 
 		newColumnHead.style.display = "inline-block";
 		newColumnHead.style.margin = "0 auto";
-		newColumnHead.className = ((lastColNum + 2) % subdivision === 0) ? "thickBorder" : "thinBorder"; //'3px solid #000' : "1px solid #000";
+		newColumnHead.className = ((lastColNum + 2) % subdivision === 0) ? "thickBorder" : "thinBorder";
 		newColumnHead.style.textAlign = "center";
 		newColumnHead.style.width = '40px';
 		newColumnHead.style.height = '12px';
 		newColumnHead.style.fontSize = '10px';
-		//newColumnHead.setAttribute("hasNote", 0);
 		newColumnHead.textContent = currColHeadNum;
 		headerColumnRow.append(newColumnHead);
 		

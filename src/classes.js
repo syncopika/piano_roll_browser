@@ -45,7 +45,6 @@ function PianoRoll(){
 	// instrument-related stuff 
 	this.noiseBuffer; // for percussion 
 
-
 	// NOTE FREQUENCIES WITH A @ 440Hz
 	this.noteFrequencies = {
 	/*
@@ -289,12 +288,10 @@ function PercussionManager(pianoRollObject){
 			gain.connect(pianoRoll.audioContextDestMediaStream);
 		}
 		gain.connect(pianoRoll.audioContextDestOriginal);
-		//gain.connect(context.destination);
 		
 		if(!returnBool){
 			// this is just for clicking on a note
 			osc.start(0);
-			//gain.gain.setTargetAtTime(0.0, time + 0.08, 0.0045);
 			osc.stop(time + 0.1);
 		}else{
 			// this is for a note that needs to be played.
