@@ -152,7 +152,7 @@
 			</label>
 			<select name="lockType" id="lockType">
 				<option>8th</option>
-				<option>16th</option>
+				<option selected="selected">16th</option>
 				<option>32nd</option>
 			</select>
 		</li>
@@ -346,7 +346,7 @@ function bindButtons(pianoRollObject){
 	});
 	
 	document.getElementById('clearGrid').addEventListener('click', function(){
-		clearGrid(pianoRollObject);
+		clearGrid(pianoRollObject.currentInstrument);
 		showOnionSkin(pianoRollObject);
 	});
 	

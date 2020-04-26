@@ -121,25 +121,6 @@ function clickPercussionNote(id, pianoRollObject){
 
 
 function sortNotesByPosition(instrument){
-	
-	// given a map of note ids to note elements,
-	// sort them based on element.style.left 
-	// and return a list of those elements 
-
-	//var all_notes = [];
-
-	/*
-	for(var noteId in instrument.activeNotes){
-		all_notes.push(instrument.activeNotes[noteId]);
-	}
-	
-	all_notes.sort(function(note1, note2){
-		var n1 = parseFloat(note1.style.left);
-		var n2 = parseFloat(note2.style.left);
-		return n1 - n2;
-	});
-	*/
-	
 	// organize notes by position
 	var positionMapping = {};
 	for(var noteId in instrument.activeNotes){
@@ -439,7 +420,7 @@ function scheduler(pianoRoll, allInstruments){
 					if(instruments[i] === pianoRoll.currentInstrument){
 						// when oscillator ends, highlight the note (if oscList contains more than 1 node, just pick the first one)
 						osc = oscList[0];
-						osc.onended = onendFunc(thisNote.block.id, pianoRoll);
+						osc.onended = onendFunc(document.getElementById(thisNote.block.id).parentNode.id, pianoRoll);
 						pianoRoll.currentInstrumentNoteQueue.push({"note": thisNote.block.id, "time": nextTime[i]});
 					}
 					
@@ -483,10 +464,7 @@ function play(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
 		pianoRoll.isPlaying = true;
-		
 		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
-		
-		//console.log(pianoRollObject.currentInstrument.notes);
 		scheduler(pianoRollObject, false);
 	}
 }
@@ -500,9 +478,7 @@ function playAll(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
 		pianoRollObject.isPlaying = true;
-		
 		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
-		
 		// start the piano roll 
 		scheduler(pianoRollObject, true);
 	}

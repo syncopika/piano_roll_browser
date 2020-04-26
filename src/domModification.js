@@ -146,6 +146,13 @@ function addNote(id, pianoRollObject){
 	document.getElementById(id).appendChild(newNote);
 	newNote.style.left = newNote.getBoundingClientRect().left + "px";
 	
+	newNote.addEventListener("click", function(e){
+		// allow user to click on an already-placed note to hear it again
+		//console.log("beep!");
+		var waveType = pianoRollObject.currentInstrument.waveType; 
+		clickNote(id, waveType, pianoRollObject);
+	});
+	
 	newNote.addEventListener("mousemove", function(e){
 		// allow resize cursor to show when the mouse moves over the right edge
 		// of the note
@@ -226,57 +233,24 @@ function highlightRow(id, color){
 	just remove any child nodes, if any for current instrument
 	
 ****/
-function clearGrid(pianoRollObject){
-	var columns = document.getElementById("columnHeaderRow").children;
-
-	// start at 1 to ignore the column before 1 (the blank one)
-	for(var i = 1; i < columns.length; i++){
-		if(columns[i].getAttribute("hasnote") !== "0"){
-			// change hasnote attribute back to 0!
-			columns[i].setAttribute("hasnote", "0");
-			var columnToCheck = $("div[id$='" + columns[i].id + "']").get();
-			for(var j = 0; j < columnToCheck.length; j++){
-				if(columnToCheck[j].style.backgroundColor === pianoRollObject.noteColor){
-					columnToCheck[j].style.backgroundColor = "transparent";
-				}
-				if(columnToCheck[j].style.background !== ""){
-					columnToCheck[j].style.background = "";
-				}
-			}
-		}
+function clearGrid(instrument){
+	var currNotes = instrument.activeNotes;
+	for(var noteId in currNotes){
+		var note = document.getElementById(noteId);
+		note.parentNode.removeChild(note);
 	}
-	
-	// reset activeNotes for current instrument
-	pianoRollObject.currentInstrument.activeNotes = {};
+	instrument.activeNotes = {};
+	instrument.notes = [];
 }
 
 /****
 
-	like clearGrid, but clears EVERYTHING
+	clears all instruments' notes
 
 ****/
 function clearGridAll(pianoRollObject){
-	var columns = document.getElementById("columnHeaderRow").children;
-
-	// start at 1 to ignore the column before 1 (the blank one)
-	for(var i = 1; i < columns.length; i++){
-
-		// change hasnote attribute back to 0!
-		columns[i].setAttribute("hasnote", "0");
-		var columnToCheck = $("div[id$='" + columns[i].id + "']").get();
-		for(var j = 0; j < columnToCheck.length; j++){
-			if(columnToCheck[j].style.backgroundColor !== "transparent"){
-				columnToCheck[j].style.backgroundColor = "transparent";
-			}
-			if(columnToCheck[j].style.background !== ""){
-				columnToCheck[j].style.background = "";
-			}
-		}
-	}
-	
-	// reset activeNotes for all instruments
-	for(var j = 0; j < pianoRollObject.instruments.length; j++){
-		pianoRollObject.instruments[j].activeNotes = {};
+	for(var i = 0; i < pianoRollObject.instruments.length; i++){
+		clearGrid(pianoRollObject.instruments[i]);
 	}
 }
 
@@ -304,7 +278,7 @@ function addNewMeasure(pianoRollObject){
 			newHeader.className = "thickBorder";
 		}else{
 			if(i !== 0){
-				// no border for the first column header in a measure
+				// no border just for the first column header (when i == 0) in a measure
 				newHeader.className = "thinBorder";
 			}
 		}
@@ -398,7 +372,7 @@ function addNewMeasure(pianoRollObject){
 		// adjust width of row 
 		noteRows[j].style.width = parseInt(noteRows[j].style.width) + 20 + "%";
 	}
-	pianoRollObject.numberOfMeasures++; // increment measure variable of piano roll
+	pianoRollObject.numberOfMeasures++;
 }
 
 /****

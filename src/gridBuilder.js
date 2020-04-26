@@ -155,7 +155,6 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	column.style.verticalAlign = "middle";
 	column.style.backgroundColor = "transparent";
 
-	// IMPORTANT! new attributes for each note
 	column.setAttribute("length", "eighth");
 	column.setAttribute("type", "default"); 
 	column.setAttribute("volume", pianoRollObject.currentInstrument.volume);
@@ -222,10 +221,7 @@ function redrawCellBorders(pianoRollObject, headerId){
 		columnHeader.className = "thinBorder";
 		
 		var subdiv = (i % subdivision) === 0 ? subdivision : (i % subdivision);
-		
-		// take into account any subdivided columns because the right border of the left half can be different from the right half
-		// the left half holds the column number while the right half border change might be needed
-		
+				
 		if(i < subdivision + 1){
 			// for the first measure
 			if(i === pianoRollObject.subdivision){
@@ -252,9 +248,7 @@ function redrawCellBorders(pianoRollObject, headerId){
 				headers[i].textContent = subdiv; 
 			}
 		}
-		
-		// don't forget to correct each header's column as well!
-		// and also update the piano roll's number of measures!!
+
 		var columnCells = document.querySelectorAll('[id$=' + '\"' + columnHeader.id + '\"]');
 		
 		// skip the first element, which is the column header (not a note on the grid)
