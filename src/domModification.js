@@ -25,6 +25,10 @@ function inRange(num, leftLim, rightLim){
 
 function resizeHelper(newNote, evt){
 	
+	if(newNote.style.opacity != 1){
+		return;
+	}
+	
 	evt.preventDefault();
 
 	var diff = evt.x - (newNote.getBoundingClientRect().left + parseInt(newNote.style.width));
@@ -56,6 +60,10 @@ function resizeHelper(newNote, evt){
 function moveHelper(newNote, pianoRoll, evt){
 	
 	evt.preventDefault();
+	
+	if(newNote.style.opacity != 1){
+		return;
+	}
 	
 	var currPos = evt.target.getBoundingClientRect().left;
 	var currNotes = pianoRoll.currentInstrument.activeNotes;
@@ -128,9 +136,6 @@ function mouseupHelper(newNote, pianoRoll, pianoRollInterface, eventsToRemove){
 ****/
 function addNote(id, pianoRollObject){
 	
-	var waveType = pianoRollObject.currentInstrument.waveType; 
-	clickNote(id, waveType, pianoRollObject);
-	
 	var newNote = document.createElement('div');
 	newNote.setAttribute("volume", pianoRollObject.currentInstrument.volume);
 	newNote.setAttribute("length", "eighth"); 
@@ -169,6 +174,10 @@ function addNote(id, pianoRollObject){
 	});
 	
 	newNote.addEventListener("mousedown", function(e){
+		
+		if(newNote.style.opacity != 1){
+			return;
+		}
 		
 		e.preventDefault();
 		e.stopPropagation();
@@ -351,6 +360,10 @@ function addNewMeasure(pianoRollObject){
 			// hook up an event listener to allow for selecting notes on the grid!
 			(function(newColumn){
 				newColumn.addEventListener("click", function(e){
+					
+					var waveType = pianoRollObject.currentInstrument.waveType; 
+					clickNote(newColumn.id, waveType, pianoRollObject);
+	
 					if(newColumn.childNodes.length === 0){
 						addNote(newColumn.id, pianoRollObject);
 					}else if(newColumn.childNodes.length > 0){
@@ -404,7 +417,7 @@ function chooseInstrument(thisElement, pianoRollObject){
 	
 	// look at grid, collect the notes, save them to the current instrument, and
 	// move on to the clicked-on instrument
-	pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
+	pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject.currentInstrument, pianoRollObject);
 	
 	// reset the playMarker because the previously-set marker might be a column header 
 	// that doesn't exist anymore (i.e. because of subdivision or rejoining)
@@ -443,10 +456,10 @@ function chooseInstrument(thisElement, pianoRollObject){
 	// attach new context menu only to current instrument via class name
 	document.getElementById('instrumentTable').children[index].classList.add("context-menu-instrument");
 	
-	// then draw the previously-saved notes, if any, onto the grid of the clicked-on instrument
-	drawNotes(pianoRollObject.currentInstrument, pianoRollObject); 
-	
 	showOnionSkin(pianoRollObject);
+	
+	// then draw the previously-saved notes, if any, onto the grid of the clicked-on instrument
+	drawNotes(pianoRollObject.currentInstrument); 
 	
 	$('#' + thisElement).css('background-color', pianoRollObject.instrumentTableColor);
 	
@@ -454,16 +467,17 @@ function chooseInstrument(thisElement, pianoRollObject){
 
 /****
 
-	draw notes back on to grid
+	sets the notes of the passed-in instrument to opacity of 1.0
 
 ****/
-// takes an instrument object and uses its notes array data to draw back the notes
-function drawNotes(instrumentObject, pianoRollObject){
+function drawNotes(instrumentObject){
 	
 	var notes = instrumentObject.activeNotes;
 	
 	for(var n in notes){
-		notes[n].style.opacity = 1;
+		notes[n].style.opacity = 1.0;
+		notes[n].classList.add("context-menu-one");
+		notes[n].style.zIndex = 100;
 	}
 
 	// reset headers first (i.e. clear columns with hasnote === 1)
@@ -580,6 +594,8 @@ function showOnionSkin(pianoRollObject){
 			for(var activeNote in activeNotes){
 				var note = activeNotes[activeNote];
 				note.style.opacity = 0.5;
+				note.classList.remove("context-menu-one");
+				note.style.zIndex = 0;
 			}
 		}
 	}

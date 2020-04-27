@@ -5,13 +5,4 @@
   
   
 current things to do now:
-	- onion-skin notes shouldn't be deletable!
-		- can we do a check of some sort on opacity?
-		- no context-menu for them also?
-		
-	- importing project and then playing seems to give a slower tempo? 
-	
-	- move clickNote out of addNote. addNote should just be adding a note.
-		- this should get rid of the click sound that occurs when importing a project also.
-		
 	- redo demos 

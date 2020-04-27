@@ -147,9 +147,9 @@ function sortNotesByPosition(instrument){
 	this will read all the notes, put them in an array and returns the array 
 
 ****/
-function readInNotes(pianoRollObject){
+function readInNotes(instrument, pianoRollObject){
 	
-	var notePosMap = sortNotesByPosition(pianoRollObject.currentInstrument);
+	var notePosMap = sortNotesByPosition(instrument);
 	var tempo = pianoRollObject.currentTempo;
 	var allNotes = [];
 
@@ -464,7 +464,7 @@ function play(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
 		pianoRoll.isPlaying = true;
-		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
+		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject.currentInstrument, pianoRollObject);
 		scheduler(pianoRollObject, false);
 	}
 }
@@ -478,7 +478,7 @@ function playAll(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
 		pianoRollObject.isPlaying = true;
-		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
+		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject.currentInstrument, pianoRollObject);
 		// start the piano roll 
 		scheduler(pianoRollObject, true);
 	}

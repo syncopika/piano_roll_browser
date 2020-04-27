@@ -560,7 +560,7 @@ function processData(data){
 	// set new tempo acording to json data
 	var tempoText = document.getElementById("tempo");
 	tempoText.innerHTML = data.tempo + " bpm";
-	pianoRoll.currentTempo = ((Math.round((60000 / data.tempo) * 1000)) / 1000 );
+	pianoRoll.currentTempo = ((1/(data.tempo / 60000))/2) // length of 8th note in ms. based on tempo
 	
 	// now put the data on the grid 
 	var measures = data.measures;
@@ -609,7 +609,7 @@ function processData(data){
 			newNote.style.opacity = (i === 0) ? 1.0 : 0.5;
 			newInstrument.activeNotes[newNote.id] = newNote;
 		}
-		newInstrument.notes = [];
+		newInstrument.notes = readInNotes(newInstrument, pianoRoll);
 		
 		// add new instrument to array
 		pianoRoll.instruments.push(newInstrument);
@@ -622,8 +622,6 @@ function processData(data){
 	instrument1.classList.add("context-menu-instrument");
 	
 	pianoRoll.currentInstrument = pianoRoll.instruments[0];
-	drawNotes(pianoRoll.currentInstrument, pianoRoll);
-	showOnionSkin(pianoRoll);
 }
 
 function fileHandler(){
