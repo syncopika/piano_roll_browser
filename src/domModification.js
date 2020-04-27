@@ -83,8 +83,6 @@ function moveHelper(newNote, pianoRoll, evt){
 	for(var i = 0; i <= subdivisionCount; i++){
 		possibleNotePos.push(targetContPos + (i * (noteSizeMap[currLockType])));
 	}
-	//console.log(currPos);
-	//console.log(possibleNotePos);
 	
 	var currX = evt.x;
 	var lockNoteLength = noteSizeMap[currLockType];
@@ -215,6 +213,8 @@ function addNote(id, pianoRollObject){
 	
 	// add the note to the current instrument
 	addNoteToCurrInstrument(pianoRollObject.currentInstrument.activeNotes, newNote);
+	
+	return newNote;
 }
 
 
@@ -467,7 +467,7 @@ function drawNotes(instrumentObject, pianoRollObject){
 	}
 
 	// reset headers first (i.e. clear columns with hasnote === 1)
-	// do we want this anymore?
+	// TODO: remove? do we want this anymore?
 	resetHeaders();
 }
 

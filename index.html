@@ -490,7 +490,7 @@ function generateJSON(){
 	var data = {};
 	
 	// add metadata first 
-	data["measures"] = pianoRoll.numberOfMeasures; //parseInt( document.getElementById('measures').textContent.match(/[0-9]{1,}/g)[0] );
+	data["measures"] = pianoRoll.numberOfMeasures;
 	data["tempo"] = parseInt( document.getElementById("tempo").textContent );
 	
 	// put in composer info, name of piece 
@@ -506,18 +506,24 @@ function generateJSON(){
 	// each instrument's data will be in an array mapped to the "instruments" key 
 	data["instruments"] = [];
 	for(var i = 0; i < pianoRoll.instruments.length; i++){
-		data["instruments"].push(  pianoRoll.instruments[i]  );
+		var instrumentData = {};
+		var currInstrument = pianoRoll.instruments[i];
+		instrumentData["name"] = currInstrument["name"];
+		instrumentData["volume"] = currInstrument["volume"];
+		instrumentData["waveType"] = currInstrument["waveType"];
+		instrumentData["notes"] = {};
+		for(var note in currInstrument.activeNotes){
+			var noteElement = currInstrument.activeNotes[note];
+			var noteContainer = noteElement.parentNode;
+			instrumentData["notes"][noteContainer.id] = {
+				"width": noteElement.style.width,
+				"left": noteElement.style.left
+			}
+		}
+		data["instruments"].push(instrumentData);
 	}
 
-	jsonData = JSON.stringify(data);
-	
-	// for all commas preceded by 2 curly brackets, add a newline 
-	jsonData = jsonData.replace(/}},/g, '}},\n'); 
-	// also add a line break after opening left square brackets 
-	jsonData = jsonData.replace(/\[/g, '[\n'); 
-	
-	// also add an extra line to separate instruments 
-	jsonData = jsonData.replace(/\[\n{"name"/g, '\n[{"name"');
+	jsonData = JSON.stringify(data, null, 4);
 	
 	var blob = new Blob([jsonData], {type: "application/json"});
 	var url = URL.createObjectURL(blob);
@@ -539,6 +545,87 @@ function generateJSON(){
 import JSON data from file
 
 ****/
+function processData(data){
+	// update metadata 
+	document.getElementById("composer").textContent = data.composer; // could be undefined!
+	document.getElementById("pieceTitle").textContent = data.title; // could be undefined!
+	var timesig = data.timeSignature || "4/4";
+	document.getElementById('timeSig').value = timesig;
+	
+	pianoRoll.subdivision = data.subdivision || 8;
+	
+	// reset measure boundaries if time sig is not 4/4 
+	redrawCellBorders(pianoRoll, 'columnHeaderRow');
+	
+	// set new tempo acording to json data
+	var tempoText = document.getElementById("tempo");
+	tempoText.innerHTML = data.tempo + " bpm";
+	pianoRoll.currentTempo = ((Math.round((60000 / data.tempo) * 1000)) / 1000 );
+	
+	// now put the data on the grid 
+	var measures = data.measures;
+	
+	// add new measures first - todo: delete measures if too many!
+	var measuresToAdd = measures - pianoRoll.numberOfMeasures;
+	if(measures > pianoRoll.numberOfMeasures){
+		for(var i = 0; i < measuresToAdd; i++){
+			addNewMeasure(pianoRoll); // add new measures as needed 
+		}
+	}
+	
+	// update num of measures 
+	$('#measures').text( "number of measures: " + pianoRoll.numberOfMeasures );
+
+	// then assign instruments array the data 
+	pianoRoll.instruments = []; // clear instruments array 
+	
+	// clear the current instrument table in the dom
+	var instrumentsGrid = document.getElementById("instrumentTable");
+	while(instrumentsGrid.firstChild){
+		instrumentsGrid.removeChild(instrumentsGrid.firstChild);
+	}
+	
+	for(var i = 0; i < data.instruments.length; i++){
+		// put each instrument into the instrument grid 
+		addNewInstrument(data.instruments[i].name, false, pianoRoll);
+		
+		var newInstrument = data.instruments[i];
+		
+		// set up a fresh new gain node for each instrument 
+		var newGain = initGain(pianoRoll.audioContext);
+		newInstrument.gain = newGain;
+		newGain.connect(context.destination);
+		
+		// add their notes to the grid
+		newInstrument.activeNotes = {};
+		for(var noteContainer in newInstrument.notes){
+			// newInstrument.notes is a mapping of noteContainer ids to 
+			// the length and left pos of the actual note that will go in
+			// the containers
+			var noteAttr = newInstrument.notes[noteContainer];
+			var newNote = addNote(noteContainer, pianoRoll); //TODO: fix pls; this causes clicks b/c addNote 
+			newNote.style.width = noteAttr.width;
+			newNote.style.left = noteAttr.left;
+			newNote.style.opacity = (i === 0) ? 1.0 : 0.5;
+			newInstrument.activeNotes[newNote.id] = newNote;
+		}
+		newInstrument.notes = [];
+		
+		// add new instrument to array
+		pianoRoll.instruments.push(newInstrument);
+	}
+	
+	// make 1st instrument active
+	var instrument1 = document.getElementById("instrumentTable").firstChild;
+	instrument1.style.backgroundColor = "rgb(188,223,70)";
+	instrument1.setAttribute("selected", "1");
+	instrument1.classList.add("context-menu-instrument");
+	
+	pianoRoll.currentInstrument = pianoRoll.instruments[0];
+	drawNotes(pianoRoll.currentInstrument, pianoRoll);
+	showOnionSkin(pianoRoll);
+}
+
 function fileHandler(){
 	//initiate file choosing after button click
 	var input = document.getElementById('importFile');
@@ -550,89 +637,16 @@ function getFile(e){
 	var reader = new FileReader();
 	var file = e.target.files[0];
 	
-	// check for json file?
+	// TODO: check for json file? file validation of some sort?
 	
 	//when the image loads, put it on the canvas.
 	reader.onload = (function(theFile){
-	
 		return function(e){
-		
 			// clear grid first
 			// note that I'm relying on my pianoRoll variable
 			clearGridAll(pianoRoll);
-		
-			// parse JSON using JSON.parse 
 			var data = JSON.parse(e.target.result);
-			//console.log(jsonData);
-			
-			// update metadata 
-			document.getElementById("composer").textContent = data.composer; // could be undefined!
-			document.getElementById("pieceTitle").textContent = data.title; // could be undefined!
-			var timesig = data.timeSignature || "4/4";
-			document.getElementById('timeSig').value = timesig;
-			
-			pianoRoll.subdivision = data.subdivision || 8;
-			
-			// reset measure boundaries if time sig is not 4/4 
-			redrawCellBorders(pianoRoll, 'columnHeaderRow');
-			
-			// set new tempo acording to json data
-			var tempoText = document.getElementById("tempo");
-			tempoText.innerHTML = data.tempo + " bpm";
-			pianoRoll.currentTempo = ((Math.round((60000 / data.tempo) * 1000)) / 1000 );
-			
-			// now put the data on the grid 
-			var measures = data.measures;
-			
-			// add new measures first - todo: delete measures if too many!
-			var measuresToAdd = measures - pianoRoll.numberOfMeasures;
-			if(measures > pianoRoll.numberOfMeasures){
-				for(var i = 0; i < measuresToAdd; i++){
-					addNewMeasure(pianoRoll); // add new measures as needed 
-				}
-			}
-			
-			// update num of measures 
-			$('#measures').text( "number of measures: " + pianoRoll.numberOfMeasures );
-		
-			// then assign instruments array the data 
-			pianoRoll.instruments = []; // clear instruments array 
-			
-			// clear the current instrument table in the dom
-			var instrumentsGrid = document.getElementById("instrumentTable");
-			while(instrumentsGrid.firstChild){
-				instrumentsGrid.removeChild(instrumentsGrid.firstChild);
-			}
-			
-			for(var i = 0; i < data.instruments.length; i++){
-				// put each instrument into the instrument grid 
-				addNewInstrument(data.instruments[i].name, false, pianoRoll);
-				
-				// set up a fresh new gain node for each instrument 
-				var newGain = initGain(context);
-				
-				var newInstrument = data.instruments[i];
-				newInstrument.gain = newGain;
-				
-				// connect gain to audio context 
-				// note that this context here has been declared at the very beginning!
-				// only one context per program 
-				newGain.connect(context.destination);
-				
-				// add new instrument to array
-				pianoRoll.instruments.push(newInstrument);
-			}
-			
-			// make 1st instrument active
-			var instrument1 = document.getElementById("instrumentTable").firstChild;
-			instrument1.style.backgroundColor = "rgb(188,223,70)";
-			instrument1.setAttribute("selected", "1");
-			instrument1.classList.add("context-menu-instrument");
-			
-			pianoRoll.currentInstrument = pianoRoll.instruments[0];
-			drawNotes(pianoRoll.currentInstrument, pianoRoll);
-			showOnionSkin(pianoRoll);
-			
+			processData(data);
 		}
 	})(file);
 
@@ -674,84 +688,15 @@ function getDemo(selectedDemo){
 	httpRequest.open("GET", selectedDemo);
 	
 	httpRequest.onload = function(){
-
-		// request was successful. process json data now.
-	
 		// clear grid first
 		clearGridAll(pianoRoll);
-		
 		// reset playMarker if set 
 		pianoRoll.playMarker = null;
-	
 		var data = JSON.parse(httpRequest.responseText);
-		
-		// update metadata 
-		document.getElementById("composer").textContent = data.composer; // could be undefined!
-		document.getElementById("pieceTitle").textContent = data.title; // could be undefined!
-		var timesig = data.timeSignature || "4/4";
-		document.getElementById('timeSig').value = timesig;
-			
-		pianoRoll.subdivision = data.subdivision || 8;
-			
-		// reset measure boundaries
-		redrawCellBorders(pianoRoll, 'columnHeaderRow'); 
-		
-		// set new tempo acording to json data
-		var tempoText = document.getElementById("tempo");
-		tempoText.innerHTML = data.tempo + " bpm";
-		pianoRoll.currentTempo = ((Math.round((60000 / data.tempo) * 1000)) / 1000 );
-		
-		// now put the data on the grid 
-		var measures = data.measures;
-		
-		// add new measures first
-		if(measures > pianoRoll.numberOfMeasures){
-			var measuresToAdd = measures - pianoRoll.numberOfMeasures;
-			for(var j = 0; j < measuresToAdd; j++){
-				addNewMeasure(pianoRoll); // add new measures as needed 
-			}
-		}
-		
-		// update num of measures 
-		$('#measures').text( "number of measures: " + pianoRoll.numberOfMeasures );
-
-		// then assign instruments array the data 
-		pianoRoll.instruments = []; // clear instruments array 
-
-		var instrumentsGrid = document.getElementById("instrumentTable");
-		while(instrumentsGrid.firstChild){
-			instrumentsGrid.removeChild(instrumentsGrid.firstChild);
-		}
-		
-		for(var i = 0; i < data.instruments.length; i++){
-			// put each instrument into the instrument grid 
-			addNewInstrument(data.instruments[i].name, false, pianoRoll);
-
-			// set up a fresh new gain node for each instrument 
-			var newGain = initGain(pianoRoll.audioContext);
-			
-			var newInstrument = data.instruments[i];
-			newInstrument.gain = newGain;
-			
-			newGain.connect(context.destination);
-			
-			// add new instrument to array
-			pianoRoll.instruments.push(newInstrument);
-		}
-		
-		// make 1st instrument active
-		var instrument1 = document.getElementById("instrumentTable").firstChild;
-		instrument1.style.backgroundColor = "rgb(188,223,70)";
-		instrument1.setAttribute("selected", "1");
-		instrument1.classList.add("context-menu-instrument");
-		
-		pianoRoll.currentInstrument = pianoRoll.instruments[0];
-		drawNotes(pianoRoll.currentInstrument, pianoRoll);
-		showOnionSkin(pianoRoll);
+		processData(data);
 	}
 	
 	httpRequest.send();
-
 }
 
 

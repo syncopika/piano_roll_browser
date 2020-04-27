@@ -2,3 +2,16 @@
 - (maybe) figure out Edge bugs and how to fix (i.e. script 438, 5007 errors)
 - on Firefox: when playing my demos (except for the 3/4 example), the first note always seems to be skipped.
   otherwise, performance on Firefox seems to have improved considerably from at least a year ago for my application.
+  
+  
+current things to do now:
+	- onion-skin notes shouldn't be deletable!
+		- can we do a check of some sort on opacity?
+		- no context-menu for them also?
+		
+	- importing project and then playing seems to give a slower tempo? 
+	
+	- move clickNote out of addNote. addNote should just be adding a note.
+		- this should get rid of the click sound that occurs when importing a project also.
+		
+	- redo demos 
