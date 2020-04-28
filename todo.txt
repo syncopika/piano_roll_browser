@@ -5,4 +5,6 @@
   
   
 current things to do now:
+	- double click sound when resizing and cursor is on note container
+	- allow user to set default note size for note placement as current note lock size
 	- redo demos 

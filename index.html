@@ -485,7 +485,7 @@ function generateJSON(){
 
 	var jsonData;
 
-	pianoRoll.currentInstrument.notes = readInNotes(pianoRoll);
+	pianoRoll.currentInstrument.notes = readInNotes(pianoRoll.currentInstrument, pianoRoll);
 	
 	var data = {};
 	

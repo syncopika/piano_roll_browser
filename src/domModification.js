@@ -31,17 +31,18 @@ function resizeHelper(newNote, evt){
 	
 	evt.preventDefault();
 
-	var diff = evt.x - (newNote.getBoundingClientRect().left + parseInt(newNote.style.width));
+	var pos = evt.x + window.pageXOffset;
+	var diff = pos - (newNote.getBoundingClientRect().left + parseInt(newNote.style.width) + window.pageXOffset);
 
 	var currLockType = document.getElementById("lockType").selectedOptions[0].value;
 	var currNoteWidth = parseInt(newNote.style.width);
 	var noteSize = noteSizeMap[currLockType];
 	
-	var nextBlockPos = newNote.getBoundingClientRect().left + currNoteWidth + noteSize;
-	var prevBlockPos = newNote.getBoundingClientRect().left + currNoteWidth - noteSize;
+	var nextBlockPos = window.pageXOffset + newNote.getBoundingClientRect().left + currNoteWidth + noteSize;
+	var prevBlockPos = window.pageXOffset + newNote.getBoundingClientRect().left + currNoteWidth - noteSize;
 
 	if(diff > 0){
-		if(inRange(evt.x, nextBlockPos, nextBlockPos+3)){
+		if(inRange(pos, nextBlockPos, nextBlockPos+3)){
 			// extending
 			if(evt.target.className === "noteContainer"){
 				noteSize += parseInt(evt.target.style.borderRight);
@@ -50,7 +51,7 @@ function resizeHelper(newNote, evt){
 		}
 	}else{
 		// minimizing
-		if(inRange(evt.x, prevBlockPos-3, prevBlockPos)){
+		if(inRange(pos, prevBlockPos-3, prevBlockPos)){
 			newNote.style.width = (currNoteWidth - noteSize) + "px";
 		}
 	}
@@ -65,7 +66,7 @@ function moveHelper(newNote, pianoRoll, evt){
 		return;
 	}
 	
-	var currPos = evt.target.getBoundingClientRect().left;
+	var currPos = evt.target.getBoundingClientRect().left + window.pageXOffset;
 	var currNotes = pianoRoll.currentInstrument.activeNotes;
 	if(currNotes[currPos]){
 		currNotes[currPos] = currNotes[currPos].filter((note) => note !== newNote);
@@ -82,7 +83,7 @@ function moveHelper(newNote, pianoRoll, evt){
 		}
 	}
 	
-	var targetContPos = targetContainer.getBoundingClientRect().left;
+	var targetContPos = targetContainer.getBoundingClientRect().left + window.pageXOffset;
 	var subdivisionCount = Math.floor(parseInt(targetContainer.style.width) / (noteSizeMap[currLockType]));
 	var possibleNotePos = [];
 	
@@ -92,7 +93,7 @@ function moveHelper(newNote, pianoRoll, evt){
 		possibleNotePos.push(targetContPos + (i * (noteSizeMap[currLockType])));
 	}
 	
-	var currX = evt.x;
+	var currX = evt.x + window.pageXOffset;
 	var lockNoteLength = noteSizeMap[currLockType];
 
 	for(var i = 0; i < possibleNotePos.length; i++){
@@ -152,7 +153,7 @@ function addNote(id, pianoRollObject){
 	var pianoRollInterface = document.getElementById("piano");
 
 	document.getElementById(id).appendChild(newNote);
-	newNote.style.left = newNote.getBoundingClientRect().left + "px";
+	newNote.style.left = newNote.getBoundingClientRect().left + window.pageXOffset + "px";
 	
 	newNote.addEventListener("click", function(e){
 		// allow user to click on an already-placed note to hear it again
@@ -360,6 +361,10 @@ function addNewMeasure(pianoRollObject){
 			// hook up an event listener to allow for selecting notes on the grid!
 			(function(newColumn){
 				newColumn.addEventListener("click", function(e){
+					
+					console.log("evt.x: " + e.x);
+					console.log("evt.pageX: " + e.pageX);
+					console.log(e.target);
 					
 					var waveType = pianoRollObject.currentInstrument.waveType; 
 					clickNote(newColumn.id, waveType, pianoRollObject);

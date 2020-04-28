@@ -22,8 +22,8 @@ describe('testing playbackFunctionality.js', function(){
 	});
 
 	it('testing getCorrectLength', function(){
-		// make sure pianoRoll has default tempo of 240 ms per eigth note
-		assert.equal(pianoRoll.currentTempo, 240);
+		// make sure pianoRoll has default tempo of 250 ms per eigth note
+		assert.equal(pianoRoll.currentTempo, 250);
 		
 		// check quarter note length (we're assuming an 8th note has length of 40px)
 		var quarter = 80;

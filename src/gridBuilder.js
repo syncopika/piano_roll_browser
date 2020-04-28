@@ -169,6 +169,9 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	// hook up an event listener to allow for picking notes on the grid!
 	column.addEventListener("click", function(e){
 		
+		console.log("evt.x: " + e.x);
+		console.log("evt.pageX: " + e.pageX);
+		
 		var waveType = pianoRollObject.currentInstrument.waveType; 
 		clickNote(column.id, waveType, pianoRollObject);
 					
