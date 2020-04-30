@@ -27,13 +27,13 @@ describe('testing playbackFunctionality.js', function(){
 		
 		// check quarter note length (we're assuming an 8th note has length of 40px)
 		var quarter = 80;
-		expect(getCorrectLength(quarter, pianoRoll)).to.equal(480);
+		expect(getCorrectLength(quarter, pianoRoll)).to.equal(500);
 		
 		// check eighth note at 120bpm
-		expect(getCorrectLength(40, pianoRoll)).to.equal(240);
+		expect(getCorrectLength(40, pianoRoll)).to.equal(250);
 		
 		// check 16th note at 120bpm
-		expect(getCorrectLength(20, pianoRoll)).to.equal(120);
+		expect(getCorrectLength(20, pianoRoll)).to.equal(125);
 	});
 	
 

@@ -120,6 +120,13 @@ function addNoteToCurrInstrument(currNotes, newNote){
 
 // can we move back to addEventListener as a named function?
 function mouseupHelper(newNote, pianoRoll, pianoRollInterface, eventsToRemove){
+	
+	// allow user to click on an already-placed note to hear it again
+	// but not when resizing
+	if(newNote.style.cursor !== "w-resize"){
+		var waveType = pianoRoll.currentInstrument.waveType; 
+		clickNote(newNote.parentNode.id, waveType, pianoRoll);
+	}
 
 	var currNotes = pianoRoll.currentInstrument.activeNotes;
 	
@@ -155,12 +162,9 @@ function addNote(id, pianoRollObject){
 	document.getElementById(id).appendChild(newNote);
 	newNote.style.left = newNote.getBoundingClientRect().left + window.pageXOffset + "px";
 	
-	newNote.addEventListener("click", function(e){
-		// allow user to click on an already-placed note to hear it again
-		//console.log("beep!");
-		var waveType = pianoRollObject.currentInstrument.waveType; 
-		clickNote(id, waveType, pianoRollObject);
-	});
+	var waveType = pianoRoll.currentInstrument.waveType; 
+	clickNote(newNote.parentNode.id, waveType, pianoRoll);
+	
 	
 	newNote.addEventListener("mousemove", function(e){
 		// allow resize cursor to show when the mouse moves over the right edge
@@ -362,12 +366,12 @@ function addNewMeasure(pianoRollObject){
 			(function(newColumn){
 				newColumn.addEventListener("click", function(e){
 					
-					console.log("evt.x: " + e.x);
-					console.log("evt.pageX: " + e.pageX);
-					console.log(e.target);
+					//console.log("evt.x: " + e.x);
+					//console.log("evt.pageX: " + e.pageX);
+					//console.log(e.target);
 					
-					var waveType = pianoRollObject.currentInstrument.waveType; 
-					clickNote(newColumn.id, waveType, pianoRollObject);
+					//var waveType = pianoRollObject.currentInstrument.waveType; 
+					//clickNote(newColumn.id, waveType, pianoRollObject);
 	
 					if(newColumn.childNodes.length === 0){
 						addNote(newColumn.id, pianoRollObject);
