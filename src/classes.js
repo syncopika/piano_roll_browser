@@ -32,7 +32,9 @@ function PianoRoll(){
 	this.onionSkinNote = "rgba(0, 178, 0, 0.2)";
 	this.instrumentTableColor = 'rgb(188, 223, 70)';
 	this.currNotePlayingColor = 'rgb(112, 155, 224)';
+	this.addNoteSize = "last"; // last selected note size (changes based on last resize). other options = "8th", "16th", "32nd". used in addNote()
 	this.noteIdNum = 0; // use this to create a unique number for each added note's id
+	
 	this.instrumentPresets = {};// a dictionary to keep track of imported instrument presets
 								// i.e. {'name': 
 								//				{

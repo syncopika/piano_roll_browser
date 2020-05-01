@@ -3,8 +3,13 @@
 - on Firefox: when playing my demos (except for the 3/4 example), the first note always seems to be skipped.
   otherwise, performance on Firefox seems to have improved considerably from at least a year ago for my application.
   
+- onion-skin sometimes prevents resizing ability? (can't reproduce currrently :/)
   
 current things to do now:
-	- double click sound when resizing and cursor is on note container
-	- allow user to set default note size for note placement as current note lock size
+	- when a current note lock size is set, the positions a note can be placed should reflect that lock size.
+	- specify play marker needs to work
+	- same instrument, one really long note and one short note at same time - long note duration not right.
+	- don't use document.get for finding current note lock type. move that outside of moveNote and update pianoRollObject instead.
+	- separate out css
+	- separate out index.html javascript
 	- redo demos 

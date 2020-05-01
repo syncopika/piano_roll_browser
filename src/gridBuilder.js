@@ -170,7 +170,7 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	column.addEventListener("click", function(e){
 					
 		if(column.childNodes.length === 0){
-			addNote(this.id, pianoRollObject);
+			addNote(this.id, pianoRollObject, true);
 		}else if(column.childNodes.length > 0){
 			// if all of the child nodes are from other instruments,
 			// which we can know based on opacity,
@@ -182,7 +182,7 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 				}
 			});
 			if(onlyHasOther){
-				addNote(this.id, pianoRollObject);
+				addNote(this.id, pianoRollObject, true);
 			}
 		}
 	});

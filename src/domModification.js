@@ -142,14 +142,25 @@ function mouseupHelper(newNote, pianoRoll, pianoRollInterface, eventsToRemove){
 	make notes clickable / toggle active note (green) 
 
 ****/
-function addNote(id, pianoRollObject){
+function addNote(id, pianoRollObject, clickSound){
 	
 	var newNote = document.createElement('div');
 	newNote.setAttribute("volume", pianoRollObject.currentInstrument.volume);
 	newNote.setAttribute("length", "eighth"); 
 	newNote.setAttribute("type", "default"); 
-	newNote.style.background = "linear-gradient(90deg, rgba(83,181,52,1) 93%, rgba(149,218,141,1) 99%";
-	newNote.style.width = "40px";
+	newNote.style.background = "linear-gradient(90deg, rgba(83,181,52,1) 90%, rgba(149,218,141,1) 99%";
+	
+	//TODO: refactor this 
+	if(pianoRollObject.addNoteSize === "8th"){ 
+		newNote.style.width = "40px";
+	}else if(pianoRollObject.addNoteSize === "16th"){
+		newNote.style.width = "20px";
+	}else if(pianoRollObject.addNoteSize === "32nd"){
+		newNote.style.width = "10px";
+	}else{
+		newNote.style.width = "40px";
+	}
+	
 	newNote.style.height = document.getElementById(id).style.height;
 	newNote.style.position = "absolute";
 	newNote.style.opacity = 1.0;
@@ -162,9 +173,10 @@ function addNote(id, pianoRollObject){
 	document.getElementById(id).appendChild(newNote);
 	newNote.style.left = newNote.getBoundingClientRect().left + window.pageXOffset + "px";
 	
-	var waveType = pianoRoll.currentInstrument.waveType; 
-	clickNote(newNote.parentNode.id, waveType, pianoRoll);
-	
+	if(clickSound){
+		var waveType = pianoRoll.currentInstrument.waveType; 
+		clickNote(newNote.parentNode.id, waveType, pianoRoll);
+	}
 	
 	newNote.addEventListener("mousemove", function(e){
 		// allow resize cursor to show when the mouse moves over the right edge
@@ -374,7 +386,7 @@ function addNewMeasure(pianoRollObject){
 					//clickNote(newColumn.id, waveType, pianoRollObject);
 	
 					if(newColumn.childNodes.length === 0){
-						addNote(newColumn.id, pianoRollObject);
+						addNote(newColumn.id, pianoRollObject, true);
 					}else if(newColumn.childNodes.length > 0){
 						var onlyHasOther = true;
 						newColumn.childNodes.forEach(function(note){
@@ -383,7 +395,7 @@ function addNewMeasure(pianoRollObject){
 							}
 						});
 						if(onlyHasOther){
-							addNote(newColumn.id, pianoRollObject);
+							addNote(newColumn.id, pianoRollObject, true);
 						}
 					}
 				}); 

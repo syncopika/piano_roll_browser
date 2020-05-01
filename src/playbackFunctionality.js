@@ -240,19 +240,21 @@ function scheduler(pianoRoll, allInstruments){
 	
 	// in the case where the user specified a measure to start playing at
 	if(startMarker){
-		startPos = document.getElementById(startMarker).getBoundingClientRect().left;
+		startPos = document.getElementById(startMarker).getBoundingClientRect().left + window.pageXOffset;
 	
 		for(var k = 0; k < pianoRoll.instruments.length; k++){
 			// have each instrument start with the note at index given by startMarker
 			for(var l = 0; l < pianoRoll.instruments[k].notes.length; l++){
 				try{
-					if(pianoRoll.instruments[k].notes[l].block.id.indexOf(startMarker) > -1){
+					// so each note in the notes array is itself an array! hence the [0]
+					var header = document.getElementById(pianoRoll.instruments[k].notes[l][0].block.id).parentNode.id;
+					if(header.indexOf(startMarker) > -1){
 						instrumentNotePointers[k] = l;
 						break;
 					}
 				}catch(error){
 					console.error(error);
-					console.error(pianoRoll.instruments[k].notes[l]);
+					console.error(pianoRoll.instruments[k].notes[l].block.id);
 				}
 			}
 		}

@@ -158,6 +158,18 @@
 		</li>
 		<li>|</li>
 		<li>
+			<label for="addNoteSize">
+				note size: 
+			</label>
+			<select name="addNoteSize" id="addNoteSize" onchange="updateAddNoteSize(this)">
+				<option selected="selected">last selected</option>
+				<option>8th</option>
+				<option>16th</option>
+				<option>32nd</option>
+			</select>
+		</li>
+		<li>|</li>
+		<li>
 			<label>
 				time signature:
 			</label>
@@ -464,6 +476,10 @@ function processInstrumentPreset(e){
 	reader.readAsText(file);
 }
 
+function updateAddNoteSize(el){
+	pianoRoll.addNoteSize = (el.options[el.options.selectedIndex]).textContent;
+}
+
 
 
 /****
@@ -603,7 +619,7 @@ function processData(data){
 			// the length and left pos of the actual note that will go in
 			// the containers
 			var noteAttr = newInstrument.notes[noteContainer];
-			var newNote = addNote(noteContainer, pianoRoll); //TODO: fix pls; this causes clicks b/c addNote 
+			var newNote = addNote(noteContainer, pianoRoll, false);
 			newNote.style.width = noteAttr.width;
 			newNote.style.left = noteAttr.left;
 			newNote.style.opacity = (i === 0) ? 1.0 : 0.5;
