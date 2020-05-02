@@ -42,17 +42,19 @@ function placeNoteAtPosition(pianoRoll, newNote, evt){
 	var lockNoteLength = pianoRoll.noteSizeMap[currLockType];
 
 	for(var i = 0; i < possibleNotePos.length; i++){
-		if(Math.abs(possibleNotePos[i] - currX) <= 4){
-			newNote.style.left = possibleNotePos[i] + "px";
-			if(i === possibleNotePos.length - 1){
-				// if the closest boundary is the last entry in possibleNotePos,
-				// it's the next note container over to the right.
-				targetContainer = targetContainer.nextSibling;
+		if(i < possibleNotePos.length - 1){
+			if(currX >= possibleNotePos[i] && currX < possibleNotePos[i+1]){
+				newNote.style.left = possibleNotePos[i] + "px";
+				break;
 			}
-			targetContainer.appendChild(newNote);
-			break;
+		}else{
+			// the closest boundary is the last entry in possibleNotePos,
+			// so it's the next note container over to the right.
+			newNote.style.left = possibleNotePos[i] + "px";
+			targetContainer = targetContainer.nextSibling;
 		}
 	}
+	targetContainer.appendChild(newNote);
 
 }
 

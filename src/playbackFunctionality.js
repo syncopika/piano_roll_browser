@@ -255,8 +255,8 @@ function scheduler(pianoRoll, allInstruments){
 						instrumentNotePointers[k] = l;
 						break;
 					}else if(cellPos > startPos){
-						// find the first note that appears after the selected column to start playing from 
-						// insert a new rest note that starts from the column up to this note and start there for this instrument
+						// this is the first note that appears after the selected column to start playing from 
+						instrumentNotePointers[k] = l;
 						break;
 					}
 				}catch(error){
@@ -296,14 +296,18 @@ function scheduler(pianoRoll, allInstruments){
 			if(nextTime[i] === 0){
 				// for the very first note
 				nextTime[i] = ctx.currentTime;
-			}
-			// the first note on the piano roll might not start at the beginning (i.e. there might be an initial rest)
-			// so let's account for that here 
-			if(currIndex === 0){
+
+				// the first note on the piano roll might not start at the beginning (i.e. there might be an initial rest)
+				// so let's account for that here 
+				// if startMarker is specified, we can use its position to figure out the initial rest
+				var startPos = 60; // 60 is the x-position of the very first note of the piano roll
+				if(startMarker){
+					startPos = document.getElementById(startMarker).getBoundingClientRect().left + window.pageXOffset;
+				}
+				
 				var firstNoteStart = document.getElementById(currNotes[0].block.id).getBoundingClientRect().left + window.pageXOffset;
-				if(firstNoteStart !== 60){
-					// 60 is the x-position of the very first note 
-					var actualStart = getCorrectLength(firstNoteStart - 60, pianoRoll);
+				if(firstNoteStart !== startPos){
+					var actualStart = getCorrectLength(firstNoteStart - startPos, pianoRoll);
 					nextTime[i] += (actualStart / 1000);
 				}
 			}

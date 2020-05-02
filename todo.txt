@@ -6,7 +6,7 @@
 - onion-skin sometimes prevents resizing ability? (can't reproduce currrently :/)
   
 current things to do now:
-	- specify play marker needs to work
+	- onendFunc -> don't tie it to a note but rather maybe make a silent oscillator for every column for consistency?
 	- separate out index.html javascript
 	- redo demos
-	- scrolling right makes playall start not at the beginning but the left of wherever the scroll is at.
+	- add a readme for with_db folder
