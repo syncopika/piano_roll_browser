@@ -15,47 +15,87 @@ function inRange(num, leftLim, rightLim){
 	return num >= leftLim && num <= rightLim;
 }
 
-function placeNoteAtPosition(pianoRoll, newNote, evt){
+// newNote is an html element representing a note 
+// currNotes is a dictionary (activeNotes of an instrument)
+function addNoteToCurrInstrument(currNotes, newNote){
+	currNotes[newNote.id] = newNote;
+}
+
+function getSubdivisionPositions(containerElement, pianoRoll){
 	
+	var targetContPos = containerElement.getBoundingClientRect().left + window.pageXOffset;
 	var currLockType = pianoRoll.lockNoteSize;
-	var targetContainer = (evt.target === newNote) ? newNote.parentNode : evt.target;
+	var subdivisionCount = Math.floor(parseInt(containerElement.style.width) / (pianoRoll.noteSizeMap[currLockType]));
+	var possibleNotePos = [];
+	
+	for(var i = 0; i <= subdivisionCount; i++){
+		possibleNotePos.push(targetContPos + (i * (pianoRoll.noteSizeMap[currLockType])));
+	}
+	
+	return possibleNotePos;
+}
+
+function canPlaceNote(posToPlace, currContainerChildren){
+	// check to make sure posToPlace doesn't equal the left position of any of the 
+	// children of the target container to place in - also, we only care about
+	// children that are part of this current instrument's notes, so check opacity
+	for(var i = 0; i < currContainerChildren.length; i++){
+		var note = currContainerChildren[i];
+		if((note.getBoundingClientRect().left + window.pageXOffset) === posToPlace &&
+			note.style.opacity == 1){
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+function placeNoteAtPosition(pianoRollObject, evt, note){
+	
+	var targetContainer = evt.target;
 	
 	if(!targetContainer.classList.contains("noteContainer")){
 		if(targetContainer.classList.contains("noteElement")){
 			targetContainer = targetContainer.parentNode;
 		}else{
-			return;
+			return null;
 		}
 	}
 	
-	var targetContPos = targetContainer.getBoundingClientRect().left + window.pageXOffset;
-	var subdivisionCount = Math.floor(parseInt(targetContainer.style.width) / (pianoRoll.noteSizeMap[currLockType]));
-	var possibleNotePos = [];
-	
 	// a little tricky but note that the last entry in possibleNotePos will be the start position 
 	// of the neighboring note container to the right!
-	for(var i = 0; i <= subdivisionCount; i++){
-		possibleNotePos.push(targetContPos + (i * (pianoRoll.noteSizeMap[currLockType])));
-	}
-	
+	var possibleNotePos = getSubdivisionPositions(targetContainer, pianoRollObject);
 	var currX = evt.x + window.pageXOffset;
-	var lockNoteLength = pianoRoll.noteSizeMap[currLockType];
+	var lockNoteLength = pianoRollObject.noteSizeMap[pianoRollObject.lockNoteSize];
+	var posToPlace = null;
 
 	for(var i = 0; i < possibleNotePos.length; i++){
 		if(i < possibleNotePos.length - 1){
 			if(currX >= possibleNotePos[i] && currX < possibleNotePos[i+1]){
-				newNote.style.left = possibleNotePos[i] + "px";
+				posToPlace = possibleNotePos[i];
 				break;
 			}
 		}else{
 			// the closest boundary is the last entry in possibleNotePos,
 			// so it's the next note container over to the right.
-			newNote.style.left = possibleNotePos[i] + "px";
+			posToPlace = possibleNotePos[possibleNotePos.length-1];
 			targetContainer = targetContainer.nextSibling;
 		}
 	}
-	targetContainer.appendChild(newNote);
+	
+	// create a new note if no note was passed in (i.e. in addNote)
+	if(!note){
+		note = createNewNoteElement(pianoRollObject);
+	}
+	
+	// make sure this current instrument doesn't already have a note in position to place
+	if(canPlaceNote(posToPlace, targetContainer.children)){
+		note.style.left = possibleNotePos[i] + "px";
+		targetContainer.appendChild(note);
+		return note;
+	}
 
+	return null;
 }
 
 function resizeHelper(newNote, pianoRoll, evt){
@@ -108,16 +148,9 @@ function moveHelper(newNote, pianoRoll, evt){
 		currNotes[currPos] = currNotes[currPos].filter((note) => note !== newNote);
 	}
 	
-	placeNoteAtPosition(pianoRoll, newNote, evt);
+	placeNoteAtPosition(pianoRoll, evt, newNote);
 
 }
-
-// newNote is an html element representing a note 
-// currNotes is a dictionary (activeNotes of an instrument)
-function addNoteToCurrInstrument(currNotes, newNote){
-	currNotes[newNote.id] = newNote;
-}
-
 
 // can we move back to addEventListener as a named function?
 function mouseupHelper(newNote, pianoRoll, pianoRollInterface, eventsToRemove){
@@ -138,39 +171,27 @@ function mouseupHelper(newNote, pianoRoll, pianoRollInterface, eventsToRemove){
 	}
 }
 
-/****
+// pass in a hashmap for defined values?
+function createNewNoteElement(pianoRollObject){
 
-	make notes clickable / toggle active note (green) 
-
-****/
-function addNote(id, pianoRollObject, evt, clickSound){
-	
 	var newNote = document.createElement('div');
 	newNote.setAttribute("volume", pianoRollObject.currentInstrument.volume);
 	newNote.setAttribute("type", "default"); 
 	newNote.style.background = "linear-gradient(90deg, rgba(0,158,52,1) 90%, rgba(52,208,0,1) 99%";
-	newNote.style.height = document.getElementById(id).style.height;
+	newNote.style.height = "15px";
 	newNote.style.position = "absolute";
 	newNote.style.opacity = 1.0;
 	newNote.classList.add("noteElement");
 	newNote.classList.add("context-menu-one");
 	newNote.id = "note" + pianoRollObject.noteIdNum++;
 	
-	if(pianoRoll.addNoteSize === "last selected"){
-		newNote.style.width = pianoRoll.lastNoteSize + "px";
+	if(pianoRollObject.addNoteSize === "last selected"){
+		newNote.style.width = pianoRollObject.lastNoteSize + "px";
 	}else{
-		newNote.style.width = pianoRoll.noteSizeMap[pianoRoll.addNoteSize] + "px";
+		newNote.style.width = pianoRollObject.noteSizeMap[pianoRollObject.addNoteSize] + "px";
 	}
 	
 	var pianoRollInterface = document.getElementById("piano");
-
-	document.getElementById(id).appendChild(newNote);
-	newNote.style.left = newNote.getBoundingClientRect().left + window.pageXOffset + "px";
-	
-	if(clickSound){
-		var waveType = pianoRoll.currentInstrument.waveType; 
-		clickNote(newNote.parentNode.id, waveType, pianoRoll);
-	}
 	
 	newNote.addEventListener("mousemove", function(e){
 		// allow resize cursor to show when the mouse moves over the right edge of the note
@@ -200,6 +221,7 @@ function addNote(id, pianoRollObject, evt, clickSound){
 		}
 		
 		if(e.which === 3){
+			// don't let right-click do anything
 			return;
 		}
 
@@ -236,16 +258,24 @@ function addNote(id, pianoRollObject, evt, clickSound){
 		}
 	});
 	
-	// add the note to the current instrument
-	addNoteToCurrInstrument(pianoRollObject.currentInstrument.activeNotes, newNote);
-	
-	// place the note based on current note lock type only if placed by user 
-	// this function is also used to load in notes from a project, so evt would be undefined.
-	if(evt){
-		placeNoteAtPosition(pianoRoll, newNote, evt);
-	}
-	
 	return newNote;
+}
+
+
+/****
+
+	make notes clickable / toggle active note (green) 
+
+****/
+function addNote(id, pianoRollObject, evt){
+	var waveType = pianoRollObject.currentInstrument.waveType; 
+	clickNote(id, waveType, pianoRollObject);
+	
+	var newNote = placeNoteAtPosition(pianoRollObject, evt);
+	if(newNote){
+		// add the note to the current instrument
+		addNoteToCurrInstrument(pianoRollObject.currentInstrument.activeNotes, newNote);
+	}
 }
 
 
@@ -379,19 +409,7 @@ function addNewMeasure(pianoRollObject){
 			// hook up an event listener to allow for selecting notes on the grid!
 			(function(newColumn){
 				newColumn.addEventListener("click", function(evt){
-					if(newColumn.childNodes.length === 0){
-						addNote(newColumn.id, pianoRollObject, evt, true);
-					}else if(newColumn.childNodes.length > 0){
-						var onlyHasOther = true;
-						newColumn.childNodes.forEach(function(note){
-							if(note.style.opacity == 1){
-								onlyHasOther = false;
-							}
-						});
-						if(onlyHasOther){
-							addNote(newColumn.id, pianoRollObject, evt, true);
-						}
-					}
+					addNote(newColumn.id, pianoRollObject, evt, true);
 				}); 
 			})(newColumn);
 			
@@ -408,7 +426,7 @@ function addNewMeasure(pianoRollObject){
 
 /****
 
-	delete a measure 
+	TODO: delete a measure 
 	
 ****/
 function deleteMeasure(pianoRollObject){
@@ -418,8 +436,7 @@ function deleteMeasure(pianoRollObject){
 		return;
 	}
 	
-	// delete all current instrument notes
-	
+	// TODO: finish me
 }
 
 
@@ -455,11 +472,6 @@ function chooseInstrument(thisElement, pianoRollObject){
 		}
 	}
 
-	// change current instrument's notes to onion skin 
-	for(activeNote in pianoRollObject.currentInstrument.activeNotes){
-		
-	}
-
 	// get index of clicked-on instrument in instrumentTable and subtract 1 to
 	// account for 0-index when we use it to look in pianoRoll object 'instruments' 
 	// array for the corresponding instrument object
@@ -490,8 +502,8 @@ function drawNotes(instrumentObject){
 	var notes = instrumentObject.activeNotes;
 	
 	for(var n in notes){
-		notes[n].style.opacity = 1.0;
 		notes[n].classList.add("context-menu-one");
+		notes[n].style.opacity = 1.0;
 		notes[n].style.zIndex = 100;
 	}
 
@@ -607,8 +619,8 @@ function showOnionSkin(pianoRollObject){
 			var activeNotes = pianoRollObject.instruments[i].activeNotes;
 			for(var activeNote in activeNotes){
 				var note = activeNotes[activeNote];
-				note.style.opacity = 0.3;
 				note.classList.remove("context-menu-one");
+				note.style.opacity = 0.3;
 				note.style.zIndex = 0;
 			}
 		}

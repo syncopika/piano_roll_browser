@@ -23,7 +23,7 @@ function buildGridHeader( columnHeaderRowId, pianoRollObject ){
 	// this will provide the headers for each column in the grid (i.e. number for each beat/subbeat) 
 	for(var i = 0; i < pianoRollObject.numberOfMeasures * pianoRollObject.subdivision + 1; i++){
 		var columnHeader = document.createElement('div');
-		columnHeader.id = "col_" + (i - 1); // the - 1 here is so that the very first column header block is col_-1, which won't be looked at when reading in notes 
+		columnHeader.id = "col_" + (i - 1); // the - 1 here is so that the very first column header block is col_-1, which won't be looked at when reading in notes (edit: irrelevant now to current implementation) 
 		columnHeader.style.display = "inline-block";
 		columnHeader.style.margin = "0 auto";
 		if(i > 0){
@@ -166,23 +166,7 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 
 	// hook up an event listener to allow for picking notes on the grid!
 	column.addEventListener("click", function(evt){
-					
-		if(column.childNodes.length === 0){
-			addNote(this.id, pianoRollObject, evt, true);
-		}else if(column.childNodes.length > 0){
-			// if all of the child nodes are from other instruments,
-			// which we can know based on opacity,
-			// allow note placement for this instrument
-			var onlyHasOther = true;
-			column.childNodes.forEach(function(note){
-				if(note.style.opacity == 1){
-					onlyHasOther = false; // there is a note already for this instrument
-				}
-			});
-			if(onlyHasOther){
-				addNote(this.id, pianoRollObject, evt, true);
-			}
-		}
+		addNote(this.id, pianoRollObject, evt, true);
 	});
 	
 	// allow for highlighting to make it clear which note a block is
@@ -263,10 +247,7 @@ function redrawCellBorders(pianoRollObject, headerId){
 		
 	// now we have to check if changing the meter altered the last measure in such a way that 
 	// we have to add more columns (i.e. going from 4/4 to 3/4 may leave the last measure consisting of only 2 columns!)
-	/* 
-	    edge case: 
-		what if user keeps switching between 4/4 and 3/4? the total number of measures will keep increasing
-	*/
+	// what if user keeps switching between 4/4 and 3/4? the total number of measures will keep increasing
 	
 	var lastColNum = parseInt(headers[headers.length-1].id.match(/\d+/g)[0]);
 	var headerColumnRow = document.getElementById(headerId);

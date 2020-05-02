@@ -15,9 +15,6 @@
 	
 	<!-- stuff needed for contextMenu -->
 	<link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/screen.css" type="text/css"/>
-    <!-- <link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/theme.css" type="text/css"/> -->
-    <!-- <link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/theme-fixes.css" type="text/css"/> -->
-    <!-- <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css"> -->
     <link href="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.css" rel="stylesheet" type="text/css" />
     <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
     <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.ui.position.min.js" type="text/javascript"></script>
@@ -86,7 +83,9 @@
 		<li><button id='loop' class='btn'>loop</button></li>
 		<li><button id='record' class='btn'> record </button></li>
 		<li><button id='addMeasure' class='btn'> add new measure </button></li>
+		<!--
 		<li><button id='delMeasure' class='btn'> delete measure </button></li>
+		-->
 		<li><button id='addInstrument' class='btn'> add new instrument </button></li>
 		<li><button id='clearGrid' class='btn'> clear grid </button></li>
 		<li><button class='btn' onclick='generateJSON()'> save & export project </button></li>
@@ -96,14 +95,14 @@
 		
 		<li><button id='importInstrumentPreset' class='btn'> import instrument preset </button></li>
 		<input type='file' id='importInstrumentPresetInput' style='display: none'>
-		
-		<li>
-			<label id='tempoLabel'> tempo: 
-				<input id='changeTempo' type='text'>
-			</label>
-		</li>
-		<li><button class='btn' id='changeTempoBtn'> change tempo </button></li>
 	</ul>
+	
+	<li>
+		<label id='tempoLabel'> tempo: 
+			<input id='changeTempo' type='text'>
+		</label>
+	</li>
+	<li><button class='btn' id='changeTempoBtn'> change tempo </button></li>
 
 	<div id='demo'>
 		<label> demo: </label>
@@ -238,9 +237,10 @@ $(window).scroll(function(){
 // add event listeners to buttons (and other clickable elements)
 function bindButtons(pianoRollObject){
 
+	/*
 	document.getElementById('delMeasure').addEventListener('click', function(){
 		deleteMeasure(pianoRollObject);
-	});
+	});*/
 
 	document.getElementById('addMeasure').addEventListener('click', function(){
 		addNewMeasure(pianoRollObject);
@@ -422,9 +422,16 @@ function generateJSON(){
 		for(var note in currInstrument.activeNotes){
 			var noteElement = currInstrument.activeNotes[note];
 			var noteContainer = noteElement.parentNode;
-			instrumentData["notes"][noteContainer.id] = {
+			var noteData = {
 				"width": noteElement.style.width,
-				"left": noteElement.style.left
+				"left": noteElement.style.left,
+				"volume": noteElement.getAttribute("volume"),
+				"type": noteElement.getAttribute("type")
+			};
+			if(!instrumentData["notes"][noteContainer.id]){
+				instrumentData["notes"][noteContainer.id] = [noteData];
+			}else{
+				instrumentData["notes"][noteContainer.id].push(noteData);
 			}
 		}
 		data["instruments"].push(instrumentData);
@@ -509,13 +516,17 @@ function processData(data){
 			// newInstrument.notes is a mapping of noteContainer ids to 
 			// the length and left pos of the actual note that will go in
 			// the containers
-			var noteAttr = newInstrument.notes[noteContainer];
-			var newNote = addNote(noteContainer, pianoRoll, null, false);
-			newNote.style.width = noteAttr.width;
-			newNote.style.left = noteAttr.left;
-			newNote.style.opacity = (i === 0) ? 1.0 : 0.3;
-			newNote.style.zIndex = (i === 0) ? 100 : 0;
-			newInstrument.activeNotes[newNote.id] = newNote;
+			newInstrument.notes[noteContainer].forEach((noteAttr) => {
+				var newNote = createNewNoteElement(pianoRoll);
+				newNote.style.width = noteAttr.width;
+				newNote.style.left = noteAttr.left;
+				newNote.style.opacity = (i === 0) ? 1.0 : 0.3;
+				newNote.style.zIndex = (i === 0) ? 100 : 0;
+				newNote.setAttribute("volume", noteAttr.volume);
+				newNote.setAttribute("type", noteAttr.type);
+				newInstrument.activeNotes[newNote.id] = newNote;
+				document.getElementById(noteContainer).appendChild(newNote);
+			});
 		}
 		newInstrument.notes = readInNotes(newInstrument, pianoRoll);
 		

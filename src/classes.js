@@ -36,8 +36,8 @@ function PianoRoll(){
 		"16th": 20,
 		"32nd": 10,
 	}
-	this.lockNoteSize = "16th"; //
-	this.addNoteSize = "last selected"; // default size of note to add (changes based on last resize). other options = "8th", "16th", "32nd". used in addNote()
+	this.lockNoteSize = "16th"; // the note-size increment to be used when moving/placing notes
+	this.addNoteSize = "last selected"; // default note-size to use when adding notes (changes based on last resize). other options = "8th", "16th", "32nd". used in addNote()
 	this.lastNoteSize = 40; // last clicked-on note size in px as integer 
 	this.noteIdNum = 0; // use this to create a unique number for each added note's id
 	

@@ -8,5 +8,5 @@
 current things to do now:
 	- onendFunc -> don't tie it to a note but rather maybe make a silent oscillator for every column for consistency?
 	- separate out index.html javascript
-	- redo demos
 	- add a readme for with_db folder
+	- redo demos
