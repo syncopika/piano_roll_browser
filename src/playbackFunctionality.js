@@ -240,6 +240,7 @@ function scheduler(pianoRoll, allInstruments){
 	
 	// in the case where the user specified a measure to start playing at
 	if(startMarker){
+
 		startPos = document.getElementById(startMarker).getBoundingClientRect().left + window.pageXOffset;
 	
 		for(var k = 0; k < pianoRoll.instruments.length; k++){
@@ -247,9 +248,15 @@ function scheduler(pianoRoll, allInstruments){
 			for(var l = 0; l < pianoRoll.instruments[k].notes.length; l++){
 				try{
 					// so each note in the notes array is itself an array! hence the [0]
-					var header = document.getElementById(pianoRoll.instruments[k].notes[l][0].block.id).parentNode.id;
-					if(header.indexOf(startMarker) > -1){
+					var columnCell = document.getElementById(pianoRoll.instruments[k].notes[l][0].block.id).parentNode;
+					var cellId = columnCell.id;
+					var cellPos = columnCell.getBoundingClientRect().left + window.pageXOffset;
+					if(cellId.indexOf(startMarker) > -1){
 						instrumentNotePointers[k] = l;
+						break;
+					}else if(cellPos > startPos){
+						// find the first note that appears after the selected column to start playing from 
+						// insert a new rest note that starts from the column up to this note and start there for this instrument
 						break;
 					}
 				}catch(error){
@@ -280,12 +287,11 @@ function scheduler(pianoRoll, allInstruments){
 				continue;
 			}
 			
-			var oscList = []; // list of nodes because some sounds have 2 parts (i.e. snare drum sound consists of 2 nodes to be played simultaneously)
+			var oscList = [];
 			var notesArr = instruments[i].notes;
 			var currIndex = instrumentNotePointers[i];
 			var currNotes = notesArr[currIndex];
 			var osc = null;
-			var oscGainNode = initGain(ctx);
 			
 			if(nextTime[i] === 0){
 				// for the very first note
@@ -294,7 +300,7 @@ function scheduler(pianoRoll, allInstruments){
 			// the first note on the piano roll might not start at the beginning (i.e. there might be an initial rest)
 			// so let's account for that here 
 			if(currIndex === 0){
-				var firstNoteStart = document.getElementById(currNotes[0].block.id).getBoundingClientRect().left;
+				var firstNoteStart = document.getElementById(currNotes[0].block.id).getBoundingClientRect().left + window.pageXOffset;
 				if(firstNoteStart !== 60){
 					// 60 is the x-position of the very first note 
 					var actualStart = getCorrectLength(firstNoteStart - 60, pianoRoll);
@@ -302,11 +308,10 @@ function scheduler(pianoRoll, allInstruments){
 				}
 			}
 
+			// currNotes is a list that has at least 1 note. can have multiple notes (i.e. snare drum or a chord)
 			currNotes.forEach(function(thisNote, index){
 				
-				/* 
-					TODO: remove instrument's gain node attribute (since we create new gain nodes on the fly for each note)
-				*/
+				var oscGainNode = initGain(ctx); // new gain node for each oscillator
 				var volume = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
 				
 				// by default, ~70% of the note duration should be played 
@@ -389,7 +394,6 @@ function scheduler(pianoRoll, allInstruments){
 					
 				}
 			
-				// we generally expect oscList to have 1 osc node. sometimes there may be at least 2 (i.e. snare drum or a chord)
 				pianoRoll.timers = pianoRoll.timers.concat(oscList);
 
 				if(index === currNotes.length - 1){
@@ -397,7 +401,7 @@ function scheduler(pianoRoll, allInstruments){
 					// we're at the last note of this chord (if multiple notes)
 					oscList.forEach(function(osc){
 						osc.start(nextTime[i]);
-						osc.stop(nextTime[i] + (realDuration / 1000)); // why are we dividing by 1000?
+						osc.stop(nextTime[i] + (realDuration / 1000)); // converting to seconds here - thus divide by 1000
 					});
 					
 					// update lastTime and nextTime
@@ -406,8 +410,8 @@ function scheduler(pianoRoll, allInstruments){
 					if((currIndex + 1) < notesArr.length){
 						// if there's another note after this note (or chord), figure out when that next note should be played
 						var nextNote = notesArr[currIndex+1][0];
-						var nextNotePos = document.getElementById(nextNote.block.id).getBoundingClientRect().left;
-						var thisNotePos = document.getElementById(thisNote.block.id).getBoundingClientRect().left;
+						var nextNotePos = document.getElementById(nextNote.block.id).getBoundingClientRect().left + window.pageXOffset;
+						var thisNotePos = document.getElementById(thisNote.block.id).getBoundingClientRect().left + window.pageXOffset;
 						var durationUntilNextNoteStart = getCorrectLength(nextNotePos - thisNotePos, pianoRoll);
 						nextTime[i] += (durationUntilNextNoteStart / 1000);
 						//console.log("next time start for next note: " + nextTime[i]);
@@ -425,7 +429,6 @@ function scheduler(pianoRoll, allInstruments){
 						osc.onended = onendFunc(document.getElementById(thisNote.block.id).parentNode.id, pianoRoll);
 						pianoRoll.currentInstrumentNoteQueue.push({"note": thisNote.block.id, "time": nextTime[i]});
 					}
-					
 				}
 			
 			}); // end forEach currNotes 

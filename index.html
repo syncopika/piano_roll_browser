@@ -11,6 +11,8 @@
 	<script src='src/domModification.js'></script>
 	<script src='src/instrumentPreset.js'></script>
 	
+	<link rel="stylesheet" href="style.css" type="text/css"/>
+	
 	<!-- stuff needed for contextMenu -->
 	<link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/screen.css" type="text/css"/>
     <!-- <link rel="stylesheet" href="https://swisnl.github.io/jQuery-contextMenu/css/theme.css" type="text/css"/> -->
@@ -20,119 +22,6 @@
     <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.contextMenu.js" type="text/javascript"></script>
     <script src="https://swisnl.github.io/jQuery-contextMenu/dist/jquery.ui.position.min.js" type="text/javascript"></script>
     <script src="https://swisnl.github.io/jQuery-contextMenu/js/main.js" type="text/javascript"></script>
-
-	<style>
-		html{
-			font-family: Arial;
-		}
-		
-		/* override padding-bottom from contextMenu/css/screen.css */
-		html body{
-			padding-bottom: 0;
-		}
-		
-		body, #pianoNotes{
-			display: none;
-		}
-		
-		table, tr, td{
-			border: 1px solid #000;
-		}
-		
-		.thinBorder{
-			background: linear-gradient(to right, rgba(255,255,255,0) 97%, rgba(0,0,0,1) 3%);
-		}
-		
-		.thickBorder{
-			background: linear-gradient(to right, rgba(255,255,255,0) 93%, rgba(0,0,0,1) 7%);
-		}
-
-		#piano{
-			display: inline-block;
-			
-			/* this is important for letting the grid expand horizontally */
-			white-space: nowrap;
-		}
-		
-		#wavetypeLabel, #tempoLabel{
-			font-family: 'arial', 'gothic ms';
-			font-size: 14px;
-			padding-left: 10px;
-		}
-		
-		#changeTempo{
-			width: 40px;
-		}
-		
-		#title{
-			margin: 0 auto;
-			text-align: center;
-		}
-		
-		#toolbar{
-			/* border: 1px solid #000; */
-			position: relative;
-			width: 60%;
-			margin: 0 auto;
-			text-align: center;
-		}
-		
-		#toolbar ul{
-			text-align: center;
-			margin-top: 0;
-			margin-bottom: 0;
-			padding-bottom: 0;
-		}
-		
-		#toolbar li{
-			list-style-type: none;
-			display: inline-block; 
-		}
-		
-		#toolbar li h2, label{
-			font-size: 12px;
-			font-weight: bold;
-		}
-		
-		#pianoNotes{
-			position: absolute;
-			width: 50px;
-			z-index: 100;
-			background-color: #fff;
-		}
-		
-		#instrumentGrid{
-			position: relative;
-		}
-		
-		#demo{
-			margin-top: 10px;
-		}
-		
-		.footer{
-			position: relative;
-			text-align: center;
-			margin-top: 3%;
-			font-size: 12px;
-			font-family: 'arial';
-			border-top: 1px solid #000;
-		}
-		
-		.btn{
-			border: 1px solid #000;
-			border-radius: 2px;
-			padding: 4px;
-			box-shadow: .1em .1em #d3d3d3;
-		}
-		
-		.btn:hover{
-			background-color: #d0d0d0;
-		}
-		
-		select, option{
-			height: 24px;
-		}
-	</style>
 	
 </head>
 
@@ -150,7 +39,7 @@
 			<label for="lockType">
 				lock type: 
 			</label>
-			<select name="lockType" id="lockType">
+			<select name="lockType" id="lockType" onchange="updateLockNoteSize(this)">
 				<option>8th</option>
 				<option selected="selected">16th</option>
 				<option>32nd</option>
@@ -480,7 +369,9 @@ function updateAddNoteSize(el){
 	pianoRoll.addNoteSize = (el.options[el.options.selectedIndex]).textContent;
 }
 
-
+function updateLockNoteSize(el){
+	pianoRoll.lockNoteSize = (el.options[el.options.selectedIndex]).textContent;
+}
 
 /****
 
@@ -619,10 +510,11 @@ function processData(data){
 			// the length and left pos of the actual note that will go in
 			// the containers
 			var noteAttr = newInstrument.notes[noteContainer];
-			var newNote = addNote(noteContainer, pianoRoll, false);
+			var newNote = addNote(noteContainer, pianoRoll, null, false);
 			newNote.style.width = noteAttr.width;
 			newNote.style.left = noteAttr.left;
-			newNote.style.opacity = (i === 0) ? 1.0 : 0.5;
+			newNote.style.opacity = (i === 0) ? 1.0 : 0.3;
+			newNote.style.zIndex = (i === 0) ? 100 : 0;
 			newInstrument.activeNotes[newNote.id] = newNote;
 		}
 		newInstrument.notes = readInNotes(newInstrument, pianoRoll);

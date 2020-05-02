@@ -154,8 +154,6 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	column.style.height = "15px";
 	column.style.verticalAlign = "middle";
 	column.style.backgroundColor = "transparent";
-
-	column.setAttribute("length", "eighth");
 	column.setAttribute("type", "default"); 
 	column.setAttribute("volume", 0.2);
 	column.className = "noteContainer";
@@ -167,10 +165,10 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	}
 
 	// hook up an event listener to allow for picking notes on the grid!
-	column.addEventListener("click", function(e){
+	column.addEventListener("click", function(evt){
 					
 		if(column.childNodes.length === 0){
-			addNote(this.id, pianoRollObject, true);
+			addNote(this.id, pianoRollObject, evt, true);
 		}else if(column.childNodes.length > 0){
 			// if all of the child nodes are from other instruments,
 			// which we can know based on opacity,
@@ -182,7 +180,7 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 				}
 			});
 			if(onlyHasOther){
-				addNote(this.id, pianoRollObject, true);
+				addNote(this.id, pianoRollObject, evt, true);
 			}
 		}
 	});

@@ -10,7 +10,7 @@ function PianoRoll(){
 	this.numberOfMeasures = 4; 	// 4 measures by default
 	this.subdivision = 8; 		// number of eighth notes per measure (8 for 4 quarter notes per measure, 6 for 3/4)
 	this.timeSignature = "4/4"; 
-	this.currentTempo = 250; 	// hold the current tempo (this is time in milliseconds per 8th note). 240 ms seems about right for 120 bpm (and with the length of 8th notes as 40px)
+	this.currentTempo = 250; 	// hold the current tempo (this is time in milliseconds per 8th note). 250 ms seems about right for 120 bpm (and with the length of 8th notes as 40px)
 	this.instruments = [];		// list of instruments will be an array
 	this.timers = [];			// keep track of setTimeouts so all can be ended at once 
 	this.currentInstrument; 	// need to keep track of what current instrument is!
@@ -28,11 +28,17 @@ function PianoRoll(){
 	this.playMarkerColor = "rgb(50, 205, 50)";
 	this.highlightColor = "#FFFF99";
 	this.measureNumberColor = "#2980B9";
-	this.noteColor = "rgb(0, 178, 0)";
-	this.onionSkinNote = "rgba(0, 178, 0, 0.2)";
 	this.instrumentTableColor = 'rgb(188, 223, 70)';
 	this.currNotePlayingColor = 'rgb(112, 155, 224)';
-	this.addNoteSize = "last"; // last selected note size (changes based on last resize). other options = "8th", "16th", "32nd". used in addNote()
+	
+	this.noteSizeMap = {
+		"8th": 40,
+		"16th": 20,
+		"32nd": 10,
+	}
+	this.lockNoteSize = "16th"; //
+	this.addNoteSize = "last selected"; // default size of note to add (changes based on last resize). other options = "8th", "16th", "32nd". used in addNote()
+	this.lastNoteSize = 40; // last clicked-on note size in px as integer 
 	this.noteIdNum = 0; // use this to create a unique number for each added note's id
 	
 	this.instrumentPresets = {};// a dictionary to keep track of imported instrument presets
@@ -246,12 +252,11 @@ function Note(freq, duration, block){
 // such as the id and custom attributes I've assigned, such as "length", "volume", etc.
 
 // the id is very important in keeping track of which columns to subdivide or rejoin when
-// switching instruments. 
+// switching instruments.
 
 // pass in a dom element node and the object will extract the information 
 function ElementNode(domElement){
 	this.id = domElement.id;
-	this.length = domElement.getAttribute("length");
 	this.volume = domElement.getAttribute("volume");
 	
 	// indicates whether note is regular, legato, staccato, or glide 
