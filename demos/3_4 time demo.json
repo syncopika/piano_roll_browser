@@ -9,20 +9,20 @@
         {
             "name": "Instrument 1",
             "volume": 0.2,
-            "waveType": "triangle",
+            "waveType": "sine",
             "notes": {
                 "Fs6col_0": [
                     {
                         "width": "40px",
                         "left": "60px",
-                        "volume": "0.2",
+                        "volume": "0.15",
                         "type": "default"
                     }
                 ],
                 "E6col_1": [
                     {
-                        "width": "40px",
-                        "left": "100px",
+                        "width": "20px",
+                        "left": "120px",
                         "volume": "0.2",
                         "type": "default"
                     }
@@ -37,7 +37,7 @@
                 ],
                 "D6col_3": [
                     {
-                        "width": "40px",
+                        "width": "20px",
                         "left": "180px",
                         "volume": "0.2",
                         "type": "default"
@@ -56,7 +56,7 @@
                         "width": "40px",
                         "left": "260px",
                         "volume": "0.2",
-                        "type": "default"
+                        "type": "legato"
                     }
                 ],
                 "A5col_6": [
@@ -64,7 +64,7 @@
                         "width": "40px",
                         "left": "300px",
                         "volume": "0.2",
-                        "type": "default"
+                        "type": "legato"
                     }
                 ],
                 "D6col_7": [
@@ -79,16 +79,16 @@
                     {
                         "width": "40px",
                         "left": "380px",
-                        "volume": "0.2",
-                        "type": "default"
+                        "volume": "0.15",
+                        "type": "legato"
                     }
                 ],
                 "E6col_9": [
                     {
                         "width": "60px",
                         "left": "420px",
-                        "volume": "0.2",
-                        "type": "default"
+                        "volume": "0.15",
+                        "type": "legato"
                     }
                 ],
                 "D6col_10": [
@@ -363,7 +363,7 @@
                         "type": "default"
                     }
                 ],
-                "Cs6col_44": [
+                "E5col_44": [
                     {
                         "width": "40px",
                         "left": "1820px",
@@ -375,7 +375,7 @@
                     {
                         "width": "40px",
                         "left": "1860px",
-                        "volume": "0.2",
+                        "volume": "0.15",
                         "type": "default"
                     }
                 ],
@@ -392,6 +392,14 @@
                         "width": "40px",
                         "left": "1860px",
                         "volume": "0.1",
+                        "type": "default"
+                    }
+                ],
+                "A5col_43": [
+                    {
+                        "width": "40px",
+                        "left": "1780px",
+                        "volume": "0.2",
                         "type": "default"
                     }
                 ]
@@ -421,7 +429,7 @@
                 ],
                 "D6col_0": [
                     {
-                        "width": "20px",
+                        "width": "40px",
                         "left": "60px",
                         "volume": "0.1",
                         "type": "default"
@@ -431,7 +439,7 @@
                     {
                         "width": "10px",
                         "left": "240px",
-                        "volume": "0.1",
+                        "volume": "0.01",
                         "type": "default"
                     }
                 ],
@@ -439,7 +447,7 @@
                     {
                         "width": "10px",
                         "left": "250px",
-                        "volume": "0.1",
+                        "volume": "0.05",
                         "type": "default"
                     }
                 ],
@@ -447,8 +455,8 @@
                     {
                         "width": "10px",
                         "left": "260px",
-                        "volume": "0.1",
-                        "type": "default"
+                        "volume": "0.05",
+                        "type": "legato"
                     }
                 ],
                 "E5col_5": [
@@ -456,21 +464,21 @@
                         "width": "10px",
                         "left": "270px",
                         "volume": "0.1",
-                        "type": "default"
+                        "type": "legato"
                     },
                     {
                         "width": "10px",
                         "left": "290px",
                         "volume": "0.1",
-                        "type": "default"
+                        "type": "legato"
                     }
                 ],
                 "D5col_5": [
                     {
                         "width": "10px",
                         "left": "280px",
-                        "volume": "0.1",
-                        "type": "default"
+                        "volume": "0.15",
+                        "type": "legato"
                     }
                 ],
                 "Fs5col_6": [
@@ -558,7 +566,7 @@
                         "width": "40px",
                         "left": "860px",
                         "volume": "0.1",
-                        "type": "default"
+                        "type": "glide"
                     }
                 ],
                 "Cs6col_21": [
@@ -606,7 +614,7 @@
                         "width": "20px",
                         "left": "1040px",
                         "volume": "0.1",
-                        "type": "default"
+                        "type": "staccato"
                     }
                 ],
                 "D6col_25": [
@@ -614,7 +622,7 @@
                         "width": "20px",
                         "left": "1060px",
                         "volume": "0.1",
-                        "type": "default"
+                        "type": "staccato"
                     }
                 ],
                 "E6col_25": [
@@ -622,7 +630,7 @@
                         "width": "20px",
                         "left": "1080px",
                         "volume": "0.1",
-                        "type": "default"
+                        "type": "staccato"
                     }
                 ],
                 "A6col_26": [
@@ -767,7 +775,7 @@
                         "type": "default"
                     }
                 ],
-                "D6col_40": [
+                "Fs6col_40": [
                     {
                         "width": "40px",
                         "left": "1660px",
@@ -844,6 +852,14 @@
                         "width": "20px",
                         "left": "1800px",
                         "volume": "0.1",
+                        "type": "default"
+                    }
+                ],
+                "A5col_0": [
+                    {
+                        "width": "40px",
+                        "left": "60px",
+                        "volume": "0.05",
                         "type": "default"
                     }
                 ]

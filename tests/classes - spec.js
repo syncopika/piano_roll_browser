@@ -20,6 +20,7 @@ describe('testing classes.js', function(){
 		var instrument = new Instrument(name, dummyGain, notesArr);
 		assert(instrument.volume === 0.2);
 		assert(instrument.name === 'test');
+		assert(instrument.onionSkinOn === true);
 	});
 	
 	it('testing ElementNode class', function(){
