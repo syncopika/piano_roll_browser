@@ -10,3 +10,4 @@ current things to do now:
 	- separate out index.html javascript
 	- add a readme for with_db folder
 	- redo demos
+	- allow onion skin toggling (can get to be too much with multiple instruments)

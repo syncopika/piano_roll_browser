@@ -243,14 +243,15 @@ function scheduler(pianoRoll, allInstruments){
 
 		startPos = document.getElementById(startMarker).getBoundingClientRect().left + window.pageXOffset;
 	
-		for(var k = 0; k < pianoRoll.instruments.length; k++){
+		for(var k = 0; k < instruments.length; k++){
 			// have each instrument start with the note at index given by startMarker
-			for(var l = 0; l < pianoRoll.instruments[k].notes.length; l++){
+			for(var l = 0; l < instruments[k].notes.length; l++){
 				try{
 					// so each note in the notes array is itself an array! hence the [0]
-					var columnCell = document.getElementById(pianoRoll.instruments[k].notes[l][0].block.id).parentNode;
+					var columnCell = document.getElementById(instruments[k].notes[l][0].block.id).parentNode;
 					var cellId = columnCell.id;
 					var cellPos = columnCell.getBoundingClientRect().left + window.pageXOffset;
+
 					if(cellId.indexOf(startMarker) > -1){
 						instrumentNotePointers[k] = l;
 						break;
@@ -261,7 +262,7 @@ function scheduler(pianoRoll, allInstruments){
 					}
 				}catch(error){
 					console.error(error);
-					console.error(pianoRoll.instruments[k].notes[l].block.id);
+					console.error(instruments[k].notes[l].block.id);
 				}
 			}
 		}
@@ -304,7 +305,6 @@ function scheduler(pianoRoll, allInstruments){
 				if(startMarker){
 					startPos = document.getElementById(startMarker).getBoundingClientRect().left + window.pageXOffset;
 				}
-				
 				var firstNoteStart = document.getElementById(currNotes[0].block.id).getBoundingClientRect().left + window.pageXOffset;
 				if(firstNoteStart !== startPos){
 					var actualStart = getCorrectLength(firstNoteStart - startPos, pianoRoll);
@@ -335,22 +335,18 @@ function scheduler(pianoRoll, allInstruments){
 				if(instruments[i].waveType === "percussion"){	
 					// articulation DOES apply to percussion IF STACCATO OR LEGATO? ignore for now 
 			
-					// find out what octave the note is in 
-					// note that the note might be a rest! so it has no block id!
-					if(thisNote.block.id){
-						var octave = parseInt(thisNote.block.id.match(/[0-9]/g)[0]);
-						if(octave >= 2 && octave <= 4){
-							osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
-						}else if(octave === 5){
-							osc = pianoRoll.PercussionManager.snareDrumNote(thisNote.freq, volume, nextTime[i], true);
-						}else{
-							osc = pianoRoll.PercussionManager.hihatNote(volume, nextTime[i], true);
-						}
-					}else{
-						// this is a rest
+					// find out what octave the note is in
+					var noteContainer = document.getElementById(thisNote.block.id).parentNode;
+					var octave = parseInt(noteContainer.id.match(/[0-9]/g)[0]);
+
+					if(octave >= 2 && octave <= 4){
 						osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
+					}else if(octave === 5){
+						osc = pianoRoll.PercussionManager.snareDrumNote(thisNote.freq, volume, nextTime[i], true);
+					}else{
+						osc = pianoRoll.PercussionManager.hihatNote(volume, nextTime[i], true);
 					}
-					
+
 					oscList = oscList.concat(osc);	
 					
 				}else if(pianoRoll.instrumentPresets[instruments[i].waveType]){
@@ -418,7 +414,6 @@ function scheduler(pianoRoll, allInstruments){
 						var thisNotePos = document.getElementById(thisNote.block.id).getBoundingClientRect().left + window.pageXOffset;
 						var durationUntilNextNoteStart = getCorrectLength(nextNotePos - thisNotePos, pianoRoll);
 						nextTime[i] += (durationUntilNextNoteStart / 1000);
-						//console.log("next time start for next note: " + nextTime[i]);
 					}else{
 						nextTime[i] += (thisNote.duration / 1000);
 					}
@@ -429,6 +424,7 @@ function scheduler(pianoRoll, allInstruments){
 					// add note to play into currentInstrumentNoteQueue
 					if(instruments[i] === pianoRoll.currentInstrument){
 						// when oscillator ends, highlight the note (if oscList contains more than 1 node, just pick the first one)
+						// TODO: don't use note oscillators for this feature (showing which note is currently playing)
 						osc = oscList[0];
 						osc.onended = onendFunc(document.getElementById(thisNote.block.id).parentNode.id, pianoRoll);
 						pianoRoll.currentInstrumentNoteQueue.push({"note": thisNote.block.id, "time": nextTime[i]});
@@ -488,7 +484,6 @@ function playAll(pianoRollObject){
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
 		pianoRollObject.isPlaying = true;
 		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject.currentInstrument, pianoRollObject);
-		// start the piano roll 
 		scheduler(pianoRollObject, true);
 	}
 }

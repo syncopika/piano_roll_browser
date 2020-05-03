@@ -235,7 +235,8 @@ function Instrument(name, gain, notesArray){
 	this.waveType = "sine"; 		//sine wave by default 
 	
 	// volume property so all notes for a particular instrument can be set to a certain volume
-	this.volume = 0.2; 				// set default volume to .2 (I think that's probably loud enough)
+	this.volume = 0.2; 
+	this.onionSkinOn = true; // make onion-skin for this instrument togglable
 }
 
 /*****  NOTE CLASS ******/
@@ -321,7 +322,6 @@ function PercussionManager(pianoRollObject){
 		noiseFilter.connect(noiseEnvelope);
 		//noiseEnvelope.connect(context.destination);
 
-		
 		// the pianoRollObject should have the noise buffer and envelope set up for the snare 
 		// we just need to trigger it 
 		// here we add the snappy part of the drum sound

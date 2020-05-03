@@ -21,8 +21,7 @@ function makeInstrumentContextMenu(pianoRollObject){
 				
 				var num = 6;
 				for(var customPreset in pianoRollObject.instrumentPresets){
-					instrumentOptions[num] = customPreset;
-					num++;
+					instrumentOptions[num++] = customPreset;
 				}
 				
 				return {
@@ -31,7 +30,7 @@ function makeInstrumentContextMenu(pianoRollObject){
 					items: {
 						name: {
 							name: "Name - press enter to change name", 
-							type: 'text',
+							type: "text",
 							value: "",
 							events: {
 								keyup: function(e){
@@ -50,7 +49,7 @@ function makeInstrumentContextMenu(pianoRollObject){
 						sep1: "-------------",
 						select: {
 							name: "Select wave type",
-							type: 'select',
+							type: "select",
 							options: instrumentOptions, //{1: 'square', 2: 'sine', 3: 'sawtooth', 4: 'triangle', 5: 'percussion'},
 							selected: function() {
 								for(var itemNum in instrumentOptions){
@@ -61,36 +60,48 @@ function makeInstrumentContextMenu(pianoRollObject){
 							},
 							events: {
 								change: function(e){
-									var instrumentId = parseInt( e.data.$trigger.attr("id") ) - 1; 
-									pianoRollObject.instruments[instrumentId].waveType = (this.options[e.target.options[e.target.selectedIndex].value - 1].textContent);
+									//var instrumentId = parseInt( e.data.$trigger.attr("id") ) - 1; 
+									pianoRollObject.currentInstrument.waveType = (this.options[e.target.options[e.target.selectedIndex].value - 1].textContent);
 								}
 							}
 						},
 						sep2: "-------------",
 						"Change volume": {
 							name: "change volume",
-							type: 'select',
+							type: "select",
 							options: {1: .01, 2: .05, 3: 0.10, 4: 0.15, 5: 0.20, 6: 0.25, 7: 0.30, 8: 0.35, 9: 0.40, 10: 0.45, 11: 0.50},
 							selected: function(){
 								for(key in this.options){	
-									if( parseFloat( this.options[key].textContent ) === pianoRollObject.currentInstrument.volume){
+									if(parseFloat(this.options[key].textContent) === pianoRollObject.currentInstrument.volume){
 										return parseInt(key) + 1; // the keys' index is offset by 1 somehow? ...
 									}
 								}
 							},
 							events: {
 								change: function(e){
-									var instrumentId = parseInt( e.data.$trigger.attr("id") ) - 1; 
-									// update current isntruments' volume 
-									pianoRollObject.instruments[instrumentId].volume = parseFloat( this.options[e.target.options[e.target.selectedIndex].value - 1].textContent );
+									//var instrumentId = parseInt( e.data.$trigger.attr("id") ) - 1; 
+									// update current instrument's volume 
+									pianoRollObject.currentInstrument.volume = parseFloat( this.options[e.target.options[e.target.selectedIndex].value - 1].textContent );
 								}
 							}
 						},
 						sep3: "-------------",
+						"Show onion-skin for this instrument": {
+							name: "Toggle onion-skin", 
+							type: "checkbox",
+							selected: pianoRollObject.currentInstrument.onionSkinOn,
+							events: {
+								click: function(e){
+									pianoRollObject.currentInstrument.onionSkinOn = !pianoRollObject.currentInstrument.onionSkinOn;
+								}
+							}
+						},
+						sep4: "-------------",
 						"Delete": {
 							name: "Delete", 
 							icon: "delete",
 							callback: function(key, options){
+								// TODO: implement me
 								//console.log(options);
 								//alert(options.$trigger.attr("id") );
 							}
