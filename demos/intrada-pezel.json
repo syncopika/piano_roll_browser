@@ -10,6 +10,7 @@
             "name": "Instrument 1",
             "volume": 0.2,
             "waveType": "sine",
+            "onionSkinOn": true,
             "notes": {
                 "C5col_0": [
                     {
@@ -1449,6 +1450,7 @@
             "name": "Instrument2",
             "volume": 0.2,
             "waveType": "triangle",
+            "onionSkinOn": true,
             "notes": {
                 "G5col_4": [
                     {
@@ -2688,6 +2690,7 @@
             "name": "Instrument3",
             "volume": 0.2,
             "waveType": "triangle",
+            "onionSkinOn": true,
             "notes": {
                 "C6col_16": [
                     {
@@ -3671,6 +3674,7 @@
             "name": "new_instrument",
             "volume": 0.2,
             "waveType": "sine",
+            "onionSkinOn": true,
             "notes": {
                 "C4col_36": [
                     {

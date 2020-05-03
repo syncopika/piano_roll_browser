@@ -7,7 +7,5 @@
   
 current things to do now:
 	- onendFunc -> don't tie it to a note but rather maybe make a silent oscillator for every column for consistency?
-	- separate out index.html javascript
-	- add a readme for with_db folder
-	- redo demos
-	- allow onion skin toggling (can get to be too much with multiple instruments)
+	- delete measure functionality
+	- new screenshots + tutorial write-up

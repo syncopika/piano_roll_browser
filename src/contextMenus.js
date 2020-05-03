@@ -10,6 +10,7 @@ function makeInstrumentContextMenu(pianoRollObject){
     $(function(){
 		$.contextMenu({
 			selector: '.context-menu-instrument', 
+			zIndex: 102,
 			build: function($trigger, e){
 				var instrumentOptions = {
 					1: "square",
@@ -124,7 +125,7 @@ function makeNoteContextMenu(pianoRollObject){
 	$(function(){
 		$.contextMenu({
 			selector: '.context-menu-one', 
-			zIndex: 10,
+			zIndex: 101,
 			// this build option is especially useful for when you need to 
 			// reference the element this context menu is called on (via e.data.$trigger)
 			// i.e. when I need to show what option is currently selected for an element 
