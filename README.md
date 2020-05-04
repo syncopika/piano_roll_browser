@@ -9,7 +9,7 @@ This project is a work-in-progress
     
 ### cool features:    
 - saveable projects    
-- can import custom instrument presets    
+- can click-and-drag to move and resize notes   
 - each note is customizable    
 - togglable onion skin    
 - recordable    
@@ -30,7 +30,7 @@ Resizing notes:
 Changing note lock size:    
 ![changing note lock size](screenshots/note_lock.gif "changing note lock size")    
 
-- **wanna add custom instrument presets?** use this other tool (https://syncopika.github.io/soundmaker/), download your preset, and import it in the piano roll! see the demo_presets folder for examples. Currently the kind of presets I support is very basic (just 2 kinds of nodes with limited customizations) but I plan to make more improvements in the future.    
+- **want to add custom instrument presets?** use this other tool (https://syncopika.github.io/soundmaker/), download your preset, and import it in the piano roll! see the demo_presets folder for examples. Currently the kind of presets I support is extremely basic (just 2 kinds of nodes with limited customizations) but I plan to make more improvements in the future.    
 	
 check out a demo! see the demo dropdown box.    
     

@@ -6,6 +6,7 @@
 - onion-skin sometimes prevents resizing ability? (can't reproduce currrently :/)
   
 current things to do now:
+	- resizing a note to a smaller one also adds a new note :<
 	- onendFunc -> don't tie it to a note but rather maybe make a silent oscillator for every column for consistency?
 	- delete measure functionality
-	- new screenshots + tutorial write-up
+	- clean up code a bit, document functions?

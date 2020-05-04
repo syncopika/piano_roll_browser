@@ -4,37 +4,48 @@ DOM MODIFICATION
 
 many functions here rely on an instance of
 the PianoRoll class in classes.js 
-
 and playbackFunctionality.js
 
 these functions affect what's being displayed on the DOM 
 
 ***************/
 
+// returns whther num is within leftLim and rightLim 
+// @param num, leftLim, rightLim: an integer
+// @return: true if num in range, else false 
 function inRange(num, leftLim, rightLim){
 	return num >= leftLim && num <= rightLim;
 }
 
-// newNote is an html element representing a note 
-// currNotes is a dictionary (activeNotes of an instrument)
+// add newNote to the hashmap currNotes 
+// @param currNotes: a hashmap mapping HTML element ids to HTML elements 
+// @param newNote: a HTML element representing a note
 function addNoteToCurrInstrument(currNotes, newNote){
 	currNotes[newNote.id] = newNote;
 }
 
-function getSubdivisionPositions(containerElement, pianoRoll){
+// gets a list of possible positions that a note could be placed within a grid cell / note container 
+// @param containerElement: an HTML element representing a grid cell, where notes can be placed
+// @param pianoRollObject: an instance of PianoRoll
+// @return: a list of integers, with each integer representing a possible style.left value (in px) of a note of the container
+function getSubdivisionPositions(containerElement, pianoRollObject){
 	
 	var targetContPos = containerElement.getBoundingClientRect().left + window.pageXOffset;
-	var currLockType = pianoRoll.lockNoteSize;
-	var subdivisionCount = Math.floor(parseInt(containerElement.style.width) / (pianoRoll.noteSizeMap[currLockType]));
+	var currLockType = pianoRollObject.lockNoteSize;
+	var subdivisionCount = Math.floor(parseInt(containerElement.style.width) / (pianoRollObject.noteSizeMap[currLockType]));
 	var possibleNotePos = [];
 	
 	for(var i = 0; i <= subdivisionCount; i++){
-		possibleNotePos.push(targetContPos + (i * (pianoRoll.noteSizeMap[currLockType])));
+		possibleNotePos.push(targetContPos + (i * (pianoRollObject.noteSizeMap[currLockType])));
 	}
 	
 	return possibleNotePos;
 }
 
+// checks to see if a note can be placed within a row cell / note container 
+// @param posToPlace: an integer 
+// @param currContainerChildren: an HTMLCollection of child nodes of an html element
+// @return: true if posToPlace can hold a new note, else false
 function canPlaceNote(posToPlace, currContainerChildren){
 	// check to make sure posToPlace doesn't equal the left position of any of the 
 	// children of the target container to place in - also, we only care about
@@ -50,7 +61,13 @@ function canPlaceNote(posToPlace, currContainerChildren){
 	return true;
 }
 
-function placeNoteAtPosition(pianoRollObject, evt, note){
+// places a note at the position specified by evt 
+// placement depends on the current note lock size
+// @param note: an html element representing a note 
+// @param pianoRollObject: an instance of PianoRoll
+// @param evt: a MouseEvent 
+// @return: the note that was placed if it was, else null
+function placeNoteAtPosition(note, pianoRollObject, evt){
 	
 	var targetContainer = evt.target;
 	
@@ -101,7 +118,12 @@ function placeNoteAtPosition(pianoRollObject, evt, note){
 	return null;
 }
 
-function resizeHelper(newNote, pianoRoll, evt){
+// helper function to utilize a couple other arguments besides evt on mouse move 
+// when resizing
+// @param newNote: an html element representing a note 
+// @param pianoRollObject: an instance of PianoRoll 
+// @param evt: a MouseEvent
+function resizeHelper(newNote, pianoRollObject, evt){
 	
 	if(newNote.style.opacity != 1){
 		return;
@@ -112,9 +134,9 @@ function resizeHelper(newNote, pianoRoll, evt){
 	var pos = evt.x + window.pageXOffset;
 	var diff = pos - (newNote.getBoundingClientRect().left + parseInt(newNote.style.width) + window.pageXOffset);
 
-	var currLockType = pianoRoll.lockNoteSize;
+	var currLockType = pianoRollObject.lockNoteSize;
 	var currNoteWidth = parseInt(newNote.style.width);
-	var noteSize = pianoRoll.noteSizeMap[currLockType];
+	var noteSize = pianoRollObject.noteSizeMap[currLockType];
 	
 	var nextBlockPos = window.pageXOffset + newNote.getBoundingClientRect().left + currNoteWidth + noteSize;
 	var prevBlockPos = window.pageXOffset + newNote.getBoundingClientRect().left + currNoteWidth - noteSize;
@@ -136,7 +158,11 @@ function resizeHelper(newNote, pianoRoll, evt){
 
 }
 
-function moveHelper(newNote, pianoRoll, evt){
+// helper function to utilize a couple other arguments besides evt on mouse move 
+// @param newNote: an html element representing a note 
+// @param pianoRollObject: an instance of PianoRoll
+// @param evt: a MouseEvent
+function moveHelper(newNote, pianoRollObject, evt){
 	
 	evt.preventDefault();
 	
@@ -145,17 +171,18 @@ function moveHelper(newNote, pianoRoll, evt){
 	}
 	
 	var currPos = evt.target.getBoundingClientRect().left + window.pageXOffset;
-	var currNotes = pianoRoll.currentInstrument.activeNotes;
+	var currNotes = pianoRollObject.currentInstrument.activeNotes;
 	if(currNotes[currPos]){
 		// remove newNote from the notes at this position since it's being moved
 		currNotes[currPos] = currNotes[currPos].filter((note) => note !== newNote);
 	}
 	
-	placeNoteAtPosition(pianoRoll, evt, newNote);
+	placeNoteAtPosition(newNote, pianoRollObject, evt);
 
 }
 
-// can we move back to addEventListener as a named function?
+// since this doesn't actually use a MouseEvent, can probably be moved into the function that takes the MouseEvent 
+// on mouse up
 function mouseupHelper(newNote, pianoRollObject, pianoRollInterface, eventsToRemove){
 	
 	// allow user to click on an already-placed note to hear it again
@@ -176,6 +203,8 @@ function mouseupHelper(newNote, pianoRollObject, pianoRollInterface, eventsToRem
 }
 
 // pass in a hashmap for defined values?
+// creates a new html element representing a note 
+// @param pianoRollObject: an instance of PianoRoll
 function createNewNoteElement(pianoRollObject){
 
 	var newNote = document.createElement('div');
@@ -196,9 +225,9 @@ function createNewNoteElement(pianoRollObject){
 	}
 	
 	newNote.addEventListener("mousemove", function(e){
-		// allow resize cursor to show when the mouse moves over the right edge of the note
 		e.preventDefault();
 		
+		// allow resize cursor to show when the mouse moves over the right edge of the note
 		if(e.offsetX >= (parseInt(newNote.style.width) - 3)){
 			newNote.style.cursor = "w-resize";
 		}else{
@@ -263,15 +292,13 @@ function createNewNoteElement(pianoRollObject){
 	return newNote;
 }
 
-
-/****
-
-	make notes clickable / toggle active note (green) 
-
-****/
+// used when clicking on a row cell/note container to add a new note 
+// @param id: the html element id of a row cell to add a note to 
+// @param pianoRollObject: instance of PianoRoll
+// @param evt: a MouseEvent
 function addNote(id, pianoRollObject, evt){
 	
-	var newNote = placeNoteAtPosition(pianoRollObject, evt);
+	var newNote = placeNoteAtPosition(null, pianoRollObject, evt);
 	if(newNote){
 		// play click sound if placing new note
 		var waveType = pianoRollObject.currentInstrument.waveType; 
@@ -282,13 +309,9 @@ function addNote(id, pianoRollObject, evt){
 	}
 }
 
-
-/****
-
-	highlight row
-	- used when mouseover 
-
-****/
+// used for highlighting the row of the grid the cursor is hovering over
+// @param id: the html element id of a row cell / note container
+// @param color: the color to highlight with 
 function highlightRow(id, color){
 	// get id of parent
 	var parent = document.getElementById(id).parentNode.id;
@@ -296,11 +319,8 @@ function highlightRow(id, color){
 	$('#' + parent).css('background-color', color);
 }
 
-/****
-
-	just remove any child nodes, if any for current instrument
-	
-****/
+// clear the notes of an instrument (which effectively clears the grid of their notes)
+// @param instrument: an instance of Instrument to clear the notes for 
 function clearGrid(instrument){
 	var currNotes = instrument.activeNotes;
 	for(var noteId in currNotes){
@@ -311,22 +331,14 @@ function clearGrid(instrument){
 	instrument.notes = [];
 }
 
-/****
-
-	clears all instruments' notes
-
-****/
+// @param pianoRollObject: instance of PianoRoll
 function clearGridAll(pianoRollObject){
 	for(var i = 0; i < pianoRollObject.instruments.length; i++){
 		clearGrid(pianoRollObject.instruments[i]);
 	}
 }
 
-/****
-
-	add a new measure
-
-****/
+// @param pianoRollObject: instance of PianoRoll
 function addNewMeasure(pianoRollObject){
 	
 	// updating the measure count - notice specific id of element! 
@@ -356,8 +368,8 @@ function addNewMeasure(pianoRollObject){
 		newHeader.style.height = '12px';
 		newHeader.style.fontSize = '10px';
 		
+		// deprecated: can probably remove
 		// 0 == false; i.e. does not have a note in the column
-		// this attribute should help optimize performance a bit
 		newHeader.setAttribute("hasNote", 0); 
 		
 		if(i !== 0){
@@ -444,11 +456,8 @@ function deleteMeasure(pianoRollObject){
 }
 
 
-/****
-
-	choose instrument
- 
-****/
+// @param thisElement: the id of an html element representing an instrument
+// @param pianoRollObject: an instance of PianoRoll 
 function chooseInstrument(thisElement, pianoRollObject){
 	
 	// look at grid, collect the notes, save them to the current instrument, and
@@ -496,11 +505,8 @@ function chooseInstrument(thisElement, pianoRollObject){
 	
 }
 
-/****
-
-	sets the notes of the passed-in instrument to opacity of 1.0
-
-****/
+// changes all the notes of the given instrument to opacity 1.0, making them fully visible
+// @param instrumentObject: instance of Instrument
 function drawNotes(instrumentObject){
 	
 	var notes = instrumentObject.activeNotes;
@@ -511,18 +517,11 @@ function drawNotes(instrumentObject){
 		notes[n].style.zIndex = 100;
 	}
 
-	// reset headers first (i.e. clear columns with hasnote === 1)
-	// TODO: remove? do we want this anymore?
+	// deprecated: can probably remove 
 	resetHeaders();
 }
 
-/****
-
-	function to reset "hasnote" attribute for column headers 
-	necessary for when changing instruments, because 'hasnote' should  
-	reflect whether a note exists in a column for only the current instrument 
-	
-*****/
+// deprecated. can probably remove.
 function resetHeaders(){
 	var columnHeaders = document.getElementById("columnHeaderRow").children;
 	
@@ -531,13 +530,9 @@ function resetHeaders(){
 	}
 }
 
-/***
 
-	change tempo 
-
-	this function relies on an INPUT box's ID to get the user-inputted tempo
-
-***/
+// this function relies on an INPUT box's ID to get the user-inputted tempo
+// @param pianoRollObject: instance of PianoRoll
 function changeTempo(pianoRollObject){
 	var tempoInput = document.getElementById("changeTempo");
 	var selectedTempo = parseInt(tempoInput.value);
@@ -561,11 +556,8 @@ function changeTempo(pianoRollObject){
 	}
 }
 
-/***
 
-	change time signature and subdivision (can only switch between 4/4 and 3/4)
-
-***/
+// change time signature and subdivision (can only switch between 4/4 and 3/4)
 function changeTimeSignature(pianoRollObject, newTimeSig){
 	if(newTimeSig === '4/4'){
 		pianoRollObject.subdivision = 8;
@@ -610,17 +602,15 @@ var onendFunc = function(x, pianoRoll){
 };
 
 
-/****
-
-	Onion skin feature
-
-****/
-// see where the other instruments' notes are 
+// see where the other instruments' notes are
+// if an instrument has onionSkinOn unchecked, then they will not have 
+// their notes shown as onion skin 
+// onion skin opacity is currently set to 0.3.
+// @param: pianoRollObject: instance of PianoRoll
 function showOnionSkin(pianoRollObject){
 	for(var i = 0; i < pianoRollObject.instruments.length; i++){
 		var currInstrument = pianoRollObject.instruments[i];
 		if(currInstrument !== pianoRollObject.currentInstrument){
-			// go through each instrument's activeNotes
 			var activeNotes = currInstrument.activeNotes;
 			for(var activeNote in activeNotes){
 				var note = activeNotes[activeNote];
@@ -636,11 +626,9 @@ function showOnionSkin(pianoRollObject){
 	}
 }
 
-/****
-
-	add a new instrument 
-
-****/
+// @param name: name of the instrument 
+// @param createBool: true to create a new Instrument instance, false to not 
+// @param pianoRollObject: instance of PianoRoll
 function addNewInstrument(name, createBool, pianoRollObject){
 	var instrumentTable = document.getElementById("instrumentTable");
 	var newInstrument = document.createElement('td');
@@ -662,8 +650,7 @@ function addNewInstrument(name, createBool, pianoRollObject){
 	
 	instrumentTable.appendChild(newInstrument);
 	
-	// createBool is true if a new instrument needs to be created
-	// - when importing data, this createNewInstrument step is not needed
+	// when importing data, this createNewInstrument step is not needed
 	if(createBool){
 		createNewInstrument("new_instrument", pianoRollObject);
 	}
