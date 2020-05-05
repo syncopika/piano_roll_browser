@@ -373,11 +373,8 @@ function addNewMeasure(pianoRollObject){
 	pianoRollObject.numberOfMeasures++;
 }
 
-/****
-
-	TODO: delete a measure 
-	
-****/
+// deletes the last measure
+// @param pianoRollObject: an instance of PianoRoll
 function deleteMeasure(pianoRollObject){
 	
 	// check how many measures exist first. if none, don't do anything. 
@@ -386,6 +383,7 @@ function deleteMeasure(pianoRollObject){
 	}
 	
 	// TODO: finish me
+	var lastMeasureStartColNum = (pianoRollObject.numberOfMeasures-1) * pianoRollObject.subdivision;
 }
 
 
@@ -546,6 +544,93 @@ function showOnionSkin(pianoRollObject){
 		}
 	}
 }
+
+
+// redraw thick grid cell lines for the correct cells if subdivision changes (i.e. going from 4/4 to 3/4)
+// @param pianoRollObject: an instance of PianoRoll
+// @param headerId: the id of the element that holds all the column header elements
+function redrawCellBorders(pianoRollObject, headerId){
+
+	var subdivision = pianoRollObject.subdivision; 
+	var headers = Array.from(document.getElementById(headerId).children);
+	
+	var measureCounter = 1;
+	
+	for(var i = 1; i < headers.length; i++){
+		var columnHeader = headers[i];
+		var colNum = parseInt(headers[i].id.match(/\d+/g)[0]);
+		columnHeader.innerHTML = "";
+		columnHeader.className = "thinBorder";
+		
+		var subdiv = (i % subdivision) === 0 ? subdivision : (i % subdivision);
+
+		// mark the measure number 
+		if(subdiv === 1){
+			var measureNumber = document.createElement("h2");
+			measureNumber.innerHTML = measureCounter++;
+			measureNumber.style.margin = '0 0 0 0';
+			measureNumber.style.color = pianoRollObject.measureNumberColor;
+			
+			columnHeader.appendChild(measureNumber);
+			columnHeader.className = "";
+		}else{
+			if(subdivision === subdiv){
+				columnHeader.className = "thickBorder";
+			}
+			headers[i].textContent = subdiv; 
+		}
+		
+		var columnCells = document.querySelectorAll('[id$=' + '\"' + columnHeader.id + '\"]');
+		
+		// skip the first element, which is the column header (not a note on the grid)
+		for(var j = 1; j < columnCells.length; j++){
+			var gridCell = columnCells[j];
+			gridCell.className = "noteContainer " + ((columnHeader.className === "") ? "thinBorder" : columnHeader.className);
+		};
+		
+		// update piano roll num measures 
+		pianoRollObject.numberOfMeasures = measureCounter-1;
+	}
+		
+	// now we have to check if changing the meter altered the last measure in such a way that 
+	// we have to add more columns (i.e. going from 4/4 to 3/4 may leave the last measure consisting of only 2 columns!)
+	// what if user keeps switching between 4/4 and 3/4? the total number of measures will keep increasing
+	
+	var lastColNum = parseInt(headers[headers.length-1].id.match(/\d+/g)[0]);
+	var headerColumnRow = document.getElementById(headerId);
+	var currColHeadNum = ((lastColNum + 1) % subdivision) + 1;
+	
+	while((lastColNum + 1) % subdivision !== 0){
+		var newColumnHead = document.createElement('div');
+		newColumnHead.id = "col_" + (lastColNum + 1); 
+		newColumnHead.style.display = "inline-block";
+		newColumnHead.style.margin = "0 auto";
+		newColumnHead.className = ((lastColNum + 2) % subdivision === 0) ? "thickBorder" : "thinBorder";
+		newColumnHead.style.textAlign = "center";
+		newColumnHead.style.width = '40px';
+		newColumnHead.style.height = '12px';
+		newColumnHead.style.fontSize = '10px';
+		newColumnHead.textContent = currColHeadNum;
+		headerColumnRow.append(newColumnHead);
+		
+		// add the rest of the column 
+		for(var note in pianoRollObject.noteFrequencies){
+			// ignore enharmonics 
+			if(note.substring(0, 2) === "Gb" || note.substring(0, 2) === "Db" ||
+			   note.substring(0, 2) === "D#" || note.substring(0, 2) === "G#" ||
+			   note.substring(0, 2) === "A#"){
+				continue;
+			}
+			var n = replaceSharp(note);
+			var noteRow = document.querySelector('[id^=' + n + ']');
+			noteRow.append(createColumnCell(note, lastColNum + 1, pianoRollObject));
+		}
+		
+		currColHeadNum++;
+		lastColNum++;
+	}
+}
+
 
 // @param name: name of the instrument 
 // @param createBool: true to create a new Instrument instance, false to not 

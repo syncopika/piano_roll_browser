@@ -87,7 +87,8 @@ function bindButtons(pianoRollObject){
 	/*
 	document.getElementById('delMeasure').addEventListener('click', function(){
 		deleteMeasure(pianoRollObject);
-	});*/
+	});
+	*/
 
 	document.getElementById('addMeasure').addEventListener('click', function(){
 		addNewMeasure(pianoRollObject);

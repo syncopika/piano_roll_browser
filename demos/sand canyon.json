@@ -1345,7 +1345,7 @@
                 ],
                 "G5col_184": [
                     {
-                        "width": "40px",
+                        "width": "80px",
                         "left": "7420px",
                         "volume": "0.1",
                         "type": "glide"
@@ -4373,7 +4373,7 @@
         },
         {
             "name": "percussion",
-            "volume": 0.15,
+            "volume": 0.05,
             "waveType": "percussion",
             "notes": {
                 "G3col_0": [
@@ -4430,7 +4430,7 @@
                     {
                         "width": "20px",
                         "left": "340px",
-                        "volume": "0.15",
+                        "volume": "0.1",
                         "type": "default"
                     }
                 ],
@@ -4476,7 +4476,7 @@
                     {
                         "width": "20px",
                         "left": "660px",
-                        "volume": "0.15",
+                        "volume": "0.1",
                         "type": "default"
                     }
                 ],
@@ -4532,7 +4532,7 @@
                     {
                         "width": "20px",
                         "left": "1080px",
-                        "volume": "0.15",
+                        "volume": "0.1",
                         "type": "default"
                     }
                 ],
@@ -4555,8 +4555,8 @@
                 "G5col_30": [
                     {
                         "width": "20px",
-                        "left": "1280px",
-                        "volume": "0.15",
+                        "left": "1260px",
+                        "volume": "0.1",
                         "type": "default"
                     }
                 ],
@@ -4572,14 +4572,14 @@
                     {
                         "width": "20px",
                         "left": "1420px",
-                        "volume": "0.15",
+                        "volume": "0.1",
                         "type": "default"
                     }
                 ],
-                "C6col_38": [
+                "C6col_39": [
                     {
                         "width": "20px",
-                        "left": "1580px",
+                        "left": "1620px",
                         "volume": "0.15",
                         "type": "default"
                     }
@@ -4592,11 +4592,11 @@
                         "type": "default"
                     }
                 ],
-                "G5col_39": [
+                "G5col_38": [
                     {
                         "width": "20px",
-                        "left": "1620px",
-                        "volume": "0.15",
+                        "left": "1580px",
+                        "volume": "0.1",
                         "type": "default"
                     }
                 ],
@@ -4604,7 +4604,7 @@
                     {
                         "width": "20px",
                         "left": "1740px",
-                        "volume": "0.15",
+                        "volume": "0.1",
                         "type": "default"
                     }
                 ],
@@ -4634,7 +4634,7 @@
                     {
                         "width": "40px",
                         "left": "2040px",
-                        "volume": "0.15",
+                        "volume": "0.1",
                         "type": "default"
                     }
                 ],
@@ -4650,14 +4650,6 @@
                     {
                         "width": "20px",
                         "left": "2260px",
-                        "volume": "0.15",
-                        "type": "default"
-                    }
-                ],
-                "G5col_55": [
-                    {
-                        "width": "20px",
-                        "left": "2280px",
                         "volume": "0.15",
                         "type": "default"
                     }
@@ -4820,7 +4812,7 @@
                     {
                         "width": "20px",
                         "left": "3480px",
-                        "volume": "0.15",
+                        "volume": "0.05",
                         "type": "default"
                     }
                 ],
@@ -4828,7 +4820,7 @@
                     {
                         "width": "20px",
                         "left": "3540px",
-                        "volume": "0.15",
+                        "volume": "0.1",
                         "type": "default"
                     }
                 ],
@@ -5354,9 +5346,9 @@
                 ],
                 "C6col_51": [
                     {
-                        "width": "40px",
+                        "width": "60px",
                         "left": "2120px",
-                        "volume": "0.15",
+                        "volume": "0.1",
                         "type": "default"
                     }
                 ],
@@ -5428,7 +5420,7 @@
                     {
                         "width": "20px",
                         "left": "4500px",
-                        "volume": "0.15",
+                        "volume": "0.1",
                         "type": "default"
                     }
                 ],
@@ -5444,7 +5436,7 @@
                     {
                         "width": "20px",
                         "left": "4420px",
-                        "volume": "0.15",
+                        "volume": "0.1",
                         "type": "default"
                     }
                 ],
@@ -6227,6 +6219,22 @@
                         "width": "40px",
                         "left": "6100px",
                         "volume": "0.15",
+                        "type": "default"
+                    }
+                ],
+                "C6col_53": [
+                    {
+                        "width": "20px",
+                        "left": "2200px",
+                        "volume": "0.15",
+                        "type": "default"
+                    }
+                ],
+                "G5col_55": [
+                    {
+                        "width": "20px",
+                        "left": "2280px",
+                        "volume": "0.05",
                         "type": "default"
                     }
                 ]

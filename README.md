@@ -35,10 +35,11 @@ Changing note lock size:
 check out a demo! see the demo dropdown box.    
     
 ### current issues:    
-- non-functional currently on Edge and doesn't work quite well on Firefox (especially with percussion and custom presets). requires further debugging.    
+- non-functional currently on Edge and doesn't work quite well on Firefox (lots of blipping / might be an oscillator thing). requires further debugging.    
 - downloading the audio isn't great on Chrome - the audio duration is messed up (see: https://stackoverflow.com/questions/38443084/how-can-i-add-predefined-length-to-audio-recorded-from-mediarecorder-in-chrome).    
     
 ### current next steps?:    
+- delete measures
 - still need to delete instruments.    
     
 ### features I would like to implement:    

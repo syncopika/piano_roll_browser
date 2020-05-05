@@ -12,7 +12,7 @@ relies on PianoRoll object in classes.js
 
 
 // create a new gain object
-// needs a context variable!
+// @param context: an AudioContext instance
 function initGain(context){
 	var newGain = context.createGain();
 	// set gain to 0 initially so no sound will be heard 
@@ -21,11 +21,10 @@ function initGain(context){
 }
 
 
-/****
-
-	plays the corresponding pitch of a block when clicked 
-
-****/
+// plays the corresponding pitch of a block when clicked 
+// @param id: an HTML element id 
+// @param waveType: a string representing the sound type (i.e. sine, triangle, etc.)
+// @param pianoRollObject: an instance of PianoRoll
 function clickNote(id, waveType, pianoRollObject){
 
 	// resume the context per the Web Audio autoplay policy 
@@ -94,6 +93,7 @@ function clickNote(id, waveType, pianoRollObject){
 	});
 }
 
+// like clickNote but for percussion notes
 function clickPercussionNote(id, pianoRollObject){
 	
 	var parent = document.getElementById(id).parentNode.id;
@@ -119,7 +119,11 @@ function clickPercussionNote(id, pianoRollObject){
 	}
 }
 
-
+// sort an instrument's notes by position 
+// an instrument's activeNotes map is evaluated and a new map where the key 
+// represents an x-position and each value is a list of notes at that position is generated 
+// @param instrument: an instance of Instrument 
+// @return: an object that maps positions to the notes at those positions
 function sortNotesByPosition(instrument){
 	// organize notes by position
 	var positionMapping = {};
@@ -140,13 +144,12 @@ function sortNotesByPosition(instrument){
 
 
 
-
-
-/****
-
-	this will read all the notes, put them in an array and returns the array 
-
-****/
+// get an array of Note object arrays for an instrument 
+// since chords are allowed and multiple notes may start at the same x-position,
+// each array within the resulting array represents the note(s) at a position.
+// @param instrument: an instance of Instrument 
+// @param pianoRollObject: an instance of PianoRoll
+// @return: an array of arrays containing Note objects
 function readInNotes(instrument, pianoRollObject){
 	
 	var notePosMap = sortNotesByPosition(instrument);
@@ -187,10 +190,9 @@ function readInNotes(instrument, pianoRollObject){
 	- figure out the realDuration and spacer 
 	- create a new oscillator for every note?? (lots of garbage?)
 	
-	@param pianoRoll 
-	- PianoRoll object
+	@param pianoRoll: an instance of PianoRoll
 	
-	@param allInstruments (boolean)
+	@param allInstruments: boolean
 	- true for all instruments 
 	- false for just the current instrument 
 	
@@ -446,25 +448,24 @@ function scheduler(pianoRoll, allInstruments){
 			pianoRoll.recorder.stop();
 			pianoRoll.recording = false;
 			
-			// html-specific: not the best thing to do here...
+			// relies on specific html element: not the best thing to do here...
 			document.getElementById('record').style.border = "";
 		}
 	}
 	
 }
 
-function loopSignal(pianoRoll, allInstruments){
+// implements looping play functionality
+// @param pianoRollObject: an instance of PianoRoll
+// @param allInstruments: true if playing all instruments, false if not.
+function loopSignal(pianoRollObject, allInstruments){
 	setTimeout(function(){
-		scheduler(pianoRoll, allInstruments);
+		scheduler(pianoRollObject, allInstruments);
 	}, 80);
 }
 
 
-/****
-
-	play notes for current instrument
-
-****/
+//play notes for current instrument
 function play(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
@@ -474,11 +475,7 @@ function play(pianoRollObject){
 	}
 }
 
-/****
-
-	play all instruments
-
-****/
+//play all instruments
 function playAll(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
@@ -488,11 +485,7 @@ function playAll(pianoRollObject){
 	}
 }
 
-/****
-	
-	record playback 
-	
-****/
+// record playback (for all instruments)
 function recordPlay(pianoRollObject){
 	if(pianoRollObject.recording){
 		return;
@@ -503,11 +496,7 @@ function recordPlay(pianoRollObject){
 	}
 }
 
-/****
-
-	stop playback
-
-****/
+//stop playback
 function stopPlay(pianoRollObject){
 
 	pianoRollObject.isPlaying = false;
@@ -549,22 +538,14 @@ function stopPlay(pianoRollObject){
 }
 
 
-/***
-
-	calculate length of note in milliseconds
-
-***/
+// calculate length of note in milliseconds
 function getCorrectLength(length, pianoRollObject){
 	var currentTempo = pianoRollObject.currentTempo;
 	return Math.round((currentTempo / 40) * length); // 40 px == 1 eighth note.
 }
 
 
-/****
-
-	create a new instrument 
-
-****/
+//create a new instrument 
 function createNewInstrument(name, pianoRollObject){
 	// make new gain node for the instrument 
 	var newGain = initGain(pianoRollObject.audioContext);
@@ -575,8 +556,9 @@ function createNewInstrument(name, pianoRollObject){
 	pianoRollObject.instruments.push(newInstrument);
 }
 
+
 function deleteInstrument(){
-	//TODO
+	//TODO: implement me
 }
 
 
