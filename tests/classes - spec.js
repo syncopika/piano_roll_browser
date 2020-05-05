@@ -20,18 +20,17 @@ describe('testing classes.js', function(){
 		var instrument = new Instrument(name, dummyGain, notesArr);
 		assert(instrument.volume === 0.2);
 		assert(instrument.name === 'test');
+		assert(instrument.onionSkinOn === true);
 	});
 	
 	it('testing ElementNode class', function(){
 		var el = document.createElement('div');
-		el.setAttribute("length", 5);
 		el.setAttribute("volume", .5);
 		el.setAttribute("type", "legato");
 		el.id = "test";
 		
 		var elNode = new ElementNode(el);
 		assert(elNode.id === el.id);
-		assert(elNode.length === el.getAttribute("length"));
 		assert(elNode.volume === el.getAttribute("volume"));
 		assert(elNode.style === el.getAttribute("type"));
 	});

@@ -10,7 +10,7 @@ function PianoRoll(){
 	this.numberOfMeasures = 4; 	// 4 measures by default
 	this.subdivision = 8; 		// number of eighth notes per measure (8 for 4 quarter notes per measure, 6 for 3/4)
 	this.timeSignature = "4/4"; 
-	this.currentTempo = 500; 	// hold the current tempo - in milliseconds!! ((1000 ms/sec. * 60 sec./min.) / 120 beats/min. = 500 ms/beat) default is 120 bpm
+	this.currentTempo = 250; 	// hold the current tempo (this is time in milliseconds per 8th note). 250 ms seems about right for 120 bpm (and with the length of 8th notes as 40px)
 	this.instruments = [];		// list of instruments will be an array
 	this.timers = [];			// keep track of setTimeouts so all can be ended at once 
 	this.currentInstrument; 	// need to keep track of what current instrument is!
@@ -28,10 +28,19 @@ function PianoRoll(){
 	this.playMarkerColor = "rgb(50, 205, 50)";
 	this.highlightColor = "#FFFF99";
 	this.measureNumberColor = "#2980B9";
-	this.noteColor = "rgb(0, 178, 0)";
-	this.onionSkinNote = "rgba(0, 178, 0, 0.2)";
 	this.instrumentTableColor = 'rgb(188, 223, 70)';
 	this.currNotePlayingColor = 'rgb(112, 155, 224)';
+	
+	this.noteSizeMap = {
+		"8th": 40,
+		"16th": 20,
+		"32nd": 10,
+	}
+	this.lockNoteSize = "16th"; // the note-size increment to be used when moving/placing notes
+	this.addNoteSize = "last selected"; // note-size to use when adding notes (changes based on last selected/resize by default)
+	this.lastNoteSize = 40; // last clicked-on note size in px as integer 
+	this.noteIdNum = 0; // use this to create a unique number for each added note's id
+	
 	this.instrumentPresets = {};// a dictionary to keep track of imported instrument presets
 								// i.e. {'name': 
 								//				{
@@ -43,7 +52,6 @@ function PianoRoll(){
 
 	// instrument-related stuff 
 	this.noiseBuffer; // for percussion 
-
 
 	// NOTE FREQUENCIES WITH A @ 440Hz
 	this.noteFrequencies = {
@@ -157,14 +165,6 @@ function PianoRoll(){
 		"C#2": 69.30,
 		"C2": 65.41
 	};
-
-	// figure out note lengths using these. 
-	// each note length corresponds to a factor which to divide the currentTempo (milliseconds per quarter note) by
-	this.noteLengths = {
-		"quarter": 1, 
-		"eighth": 2,    // this means divide by a factor of 2 to get milliseconds per eighth note
-		"sixteenth": 4
-	}
 	
 	// initialize the audio context and setup some stuff 
 	this.init = function(){
@@ -227,8 +227,8 @@ function Instrument(name, gain, notesArray){
 	this.waveType = "sine"; 		//sine wave by default 
 	
 	// volume property so all notes for a particular instrument can be set to a certain volume
-	// float value!
-	this.volume = .2; 				// set default volume to .2 (I think that's probably loud enough)
+	this.volume = 0.2; 
+	this.onionSkinOn = true; // make onion-skin for this instrument togglable
 }
 
 /*****  NOTE CLASS ******/
@@ -245,12 +245,11 @@ function Note(freq, duration, block){
 // such as the id and custom attributes I've assigned, such as "length", "volume", etc.
 
 // the id is very important in keeping track of which columns to subdivide or rejoin when
-// switching instruments. 
+// switching instruments.
 
 // pass in a dom element node and the object will extract the information 
 function ElementNode(domElement){
 	this.id = domElement.id;
-	this.length = domElement.getAttribute("length");
 	this.volume = domElement.getAttribute("volume");
 	
 	// indicates whether note is regular, legato, staccato, or glide 
@@ -289,12 +288,10 @@ function PercussionManager(pianoRollObject){
 			gain.connect(pianoRoll.audioContextDestMediaStream);
 		}
 		gain.connect(pianoRoll.audioContextDestOriginal);
-		//gain.connect(context.destination);
 		
 		if(!returnBool){
 			// this is just for clicking on a note
 			osc.start(0);
-			//gain.gain.setTargetAtTime(0.0, time + 0.08, 0.0045);
 			osc.stop(time + 0.1);
 		}else{
 			// this is for a note that needs to be played.
@@ -317,7 +314,6 @@ function PercussionManager(pianoRollObject){
 		noiseFilter.connect(noiseEnvelope);
 		//noiseEnvelope.connect(context.destination);
 
-		
 		// the pianoRollObject should have the noise buffer and envelope set up for the snare 
 		// we just need to trigger it 
 		// here we add the snappy part of the drum sound

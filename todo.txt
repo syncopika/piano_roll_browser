@@ -2,3 +2,10 @@
 - (maybe) figure out Edge bugs and how to fix (i.e. script 438, 5007 errors)
 - on Firefox: when playing my demos (except for the 3/4 example), the first note always seems to be skipped.
   otherwise, performance on Firefox seems to have improved considerably from at least a year ago for my application.
+  
+- onion-skin sometimes prevents resizing ability? (can't reproduce currrently :/)
+  
+current things to do now:
+	- onendFunc -> don't tie it to a note but rather maybe make a silent oscillator for every column for consistency?
+	- delete measure functionality
+	- clean up code a bit, document functions?

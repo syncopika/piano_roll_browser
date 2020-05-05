@@ -4,112 +4,318 @@ DOM MODIFICATION
 
 many functions here rely on an instance of
 the PianoRoll class in classes.js 
-
 and playbackFunctionality.js
 
 these functions affect what's being displayed on the DOM 
 
 ***************/
 
+// returns whther num is within leftLim and rightLim 
+// @param num, leftLim, rightLim: an integer
+// @return: true if num in range, else false 
+function inRange(num, leftLim, rightLim){
+	return num >= leftLim && num <= rightLim;
+}
 
+// add newNote to the hashmap currNotes 
+// @param currNotes: a hashmap mapping HTML element ids to HTML elements 
+// @param newNote: a HTML element representing a note
+function addNoteToCurrInstrument(currNotes, newNote){
+	currNotes[newNote.id] = newNote;
+}
 
-/****
-
-	make notes clickable / toggle active note (green) 
-
-****/
-function addNote(id, pianoRollObject){
+// gets a list of possible positions that a note could be placed within a grid cell / note container 
+// @param containerElement: an HTML element representing a grid cell, where notes can be placed
+// @param pianoRollObject: an instance of PianoRoll
+// @return: a list of integers, with each integer representing a possible style.left value (in px) of a note of the container
+function getSubdivisionPositions(containerElement, pianoRollObject){
 	
-	// make sure concatenated note blocks are unclickable!
-	var blockHeader = document.getElementById(id.substring(id.indexOf("col_")));
-	if(blockHeader.getAttribute('hasnote') < 0){
-		var waveType = pianoRollObject.currentInstrument.waveType; 
-		clickNote(id, waveType, pianoRollObject);
+	var targetContPos = containerElement.getBoundingClientRect().left + window.pageXOffset;
+	var currLockType = pianoRollObject.lockNoteSize;
+	var subdivisionCount = Math.floor(parseInt(containerElement.style.width) / (pianoRollObject.noteSizeMap[currLockType]));
+	var possibleNotePos = [];
+	
+	for(var i = 0; i <= subdivisionCount; i++){
+		possibleNotePos.push(targetContPos + (i * (pianoRollObject.noteSizeMap[currLockType])));
+	}
+	
+	return possibleNotePos;
+}
+
+// checks to see if a note can be placed within a row cell / note container 
+// @param posToPlace: an integer 
+// @param currContainerChildren: an HTMLCollection of child nodes of an html element
+// @return: true if posToPlace can hold a new note, else false
+function canPlaceNote(posToPlace, currContainerChildren){
+	// check to make sure posToPlace doesn't equal the left position of any of the 
+	// children of the target container to place in - also, we only care about
+	// children that are part of this current instrument's notes, so check opacity
+	for(var i = 0; i < currContainerChildren.length; i++){
+		var note = currContainerChildren[i];
+		if((note.getBoundingClientRect().left + window.pageXOffset) === posToPlace &&
+			note.style.opacity == 1){
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+// places a note at the position specified by evt. placement depends on the current note lock size
+// @param note: an html element representing a note 
+// @param pianoRollObject: an instance of PianoRoll
+// @param evt: a MouseEvent 
+// @return: the note that was placed if it was, else null
+function placeNoteAtPosition(note, pianoRollObject, evt){
+	
+	var targetContainer = evt.target;
+	
+	if(!targetContainer.classList.contains("noteContainer")){
+		if(targetContainer.classList.contains("noteElement")){
+			targetContainer = targetContainer.parentNode;
+		}else{
+			return null;
+		}
+	}
+	
+	// a little tricky but note that the last entry in possibleNotePos will be the start position 
+	// of the neighboring note container to the right!
+	var possibleNotePos = getSubdivisionPositions(targetContainer, pianoRollObject);
+	var currX = evt.x + window.pageXOffset;
+	var lockNoteLength = pianoRollObject.noteSizeMap[pianoRollObject.lockNoteSize];
+	var posToPlace = null;
+
+	for(var i = 0; i < possibleNotePos.length; i++){
+		if(i < possibleNotePos.length - 1){
+			if(currX >= possibleNotePos[i] && currX < possibleNotePos[i+1]){
+				posToPlace = possibleNotePos[i];
+				break;
+			}
+		}else{
+			// the closest boundary is the last entry in possibleNotePos,
+			// so it's the next note container over to the right.
+			posToPlace = possibleNotePos[possibleNotePos.length-1];
+			targetContainer = targetContainer.nextSibling;
+		}
+	}
+	
+	// create a new note if no note was passed in (i.e. in addNote)
+	if(!note){
+		note = createNewNoteElement(pianoRollObject);
+	}
+	// update lastNoteSize (even if not placing, allow clicking an already
+	// placed note to update the last selected size)
+	pianoRollObject.lastNoteSize = parseInt(note.style.width);
+	
+	// make sure this current instrument doesn't already have a note in position to place
+	if(canPlaceNote(posToPlace, targetContainer.children)){
+		note.style.left = possibleNotePos[i] + "px";
+		targetContainer.appendChild(note);
+		return note;
+	}
+
+	return null;
+}
+
+// helper function to utilize a couple other arguments besides evt on mouse move when resizing
+// @param newNote: an html element representing a note 
+// @param pianoRollObject: an instance of PianoRoll 
+// @param evt: a MouseEvent
+function resizeHelper(newNote, pianoRollObject, evt){
+	
+	if(newNote.style.opacity != 1){
 		return;
 	}
 	
-	// if note is already green 
-	if($('#' + id).css("background-color") === pianoRollObject.noteColor){
+	evt.preventDefault();
+
+	var pos = evt.x + window.pageXOffset;
+	var diff = pos - (newNote.getBoundingClientRect().left + parseInt(newNote.style.width) + window.pageXOffset);
+
+	var currLockType = pianoRollObject.lockNoteSize;
+	var currNoteWidth = parseInt(newNote.style.width);
+	var noteSize = pianoRollObject.noteSizeMap[currLockType];
 	
-		// take away green color 
-		$('#' + id).css("background-color", "transparent");
-		
-		// update attributes
-		$('#' + id).attr("volume", 0.0);
-		
-		// change hasNote attribute to false (0) in column header
-		var headerId = id.substring(id.indexOf("col"));
-		document.getElementById(headerId).setAttribute("hasNote", 0);
-		
-		// update right border (this is only really needed for concatenated note blocks i.e. length = eighth-eighth)
-		// NOTE: the method changeRightBorder is defined in context_menus.js!!
-		changeRightBorder(id, "add", pianoRollObject.subdivision);
-		
-		// if neighbor is green, make sure their column's hasnote is 1!
-		// this is important only for concatenated note blocks 
-		if(document.getElementById(id).nextSibling){
-			var neighbor = document.getElementById(id).nextSibling.id;
-			var neighborHeader = document.getElementById(neighbor.substring(neighbor.indexOf("col_")));
-			if(neighborHeader.getAttribute("hasnote") < 0){
-				// change hasnote attribute to 1
-				neighborHeader.setAttribute("hasnote", 1);
-				
-				// truncate the current note's length attribute by 1 
-				// i.e. if currently eighth-eighth, make it eighth (remove the first one)
-				var currLength = document.getElementById(id).getAttribute("length");
-				
-				// use the removed substring and make it the current note's new length 
-				// in other words it just takes on its old length before concatenation
-				var oldLength = currLength.substring(0, currLength.indexOf('-'));
-				$('#' + id).attr("length", oldLength);
-				
-				var newLength = currLength.substring(currLength.indexOf('-') + 1);
-				document.getElementById(neighbor).setAttribute("length", newLength);
-				
-				// also add the neighbor's entry in activeNotes 
-				pianoRollObject.currentInstrument.activeNotes[neighbor] = newLength.split('-').length;
+	var nextBlockPos = window.pageXOffset + newNote.getBoundingClientRect().left + currNoteWidth + noteSize;
+	var prevBlockPos = window.pageXOffset + newNote.getBoundingClientRect().left + currNoteWidth - noteSize;
+
+	if(diff > 0){
+		if(inRange(pos, nextBlockPos, nextBlockPos+3)){
+			// extending
+			if(evt.target.className === "noteContainer"){
+				noteSize += parseInt(evt.target.style.borderRight);
 			}
+			newNote.style.width = (currNoteWidth + noteSize) + "px";
 		}
-		
-		// remove this note from currentInstrument's activeNotes assoc. array 
-		delete pianoRollObject.currentInstrument.activeNotes[id];
-		
-		// if you choose a same note for the current instrument as another instrument, that will wipe out the 
-		// 'onion-skin' of the other instrument's note. but if you delete that note for
-		// the current instrument later, calling showOnionSkin() here will put back the 'onion-skin' for
-		// the other instrument. there is no static 'onion-skin' layer. 
-		// it's just changing the background-color of note blocks
-		showOnionSkin(pianoRollObject); 
-		
 	}else{
-		// update attributes 
-		$('#' + id).attr("volume", pianoRollObject.currentInstrument.volume);
-		
-		// what if the user wants to add more than 1 note in a column? we can allow that, but extra notes will be discarded (can't do polyphony with same oscillator?)
-		var headerId = id.substring(id.indexOf("col"));
-		var currValue = parseInt(document.getElementById(headerId).getAttribute("hasNote"));
-		if(currValue !== 1){
-			// if no note added to this column yet
-			$('#' + id).css("background-color", pianoRollObject.noteColor);
-			
-			// add the note to the currentInstrument's activeNotes attribute (an associative array)
-			pianoRollObject.currentInstrument.activeNotes[id] = 1;
-		
-			//change hasNote attribute to true in column header
-			document.getElementById(headerId).setAttribute("hasNote", 1); // set it to 1, no matter how many notes are added to the column 
+		// minimizing
+		if(inRange(pos, prevBlockPos-3, prevBlockPos)){
+			newNote.style.width = (currNoteWidth - noteSize) + "px";
 		}
 	}
-	var waveType = pianoRollObject.currentInstrument.waveType; 
-	clickNote(id, waveType, pianoRollObject);
+
 }
 
+// helper function to utilize a couple other arguments besides evt on mouse move 
+// @param newNote: an html element representing a note 
+// @param pianoRollObject: an instance of PianoRoll
+// @param evt: a MouseEvent
+function moveHelper(newNote, pianoRollObject, evt){
+	
+	evt.preventDefault();
+	
+	if(newNote.style.opacity != 1){
+		return;
+	}
+	
+	var currPos = evt.target.getBoundingClientRect().left + window.pageXOffset;
+	var currNotes = pianoRollObject.currentInstrument.activeNotes;
+	if(currNotes[currPos]){
+		// remove newNote from the notes at this position since it's being moved
+		currNotes[currPos] = currNotes[currPos].filter((note) => note !== newNote);
+	}
+	
+	placeNoteAtPosition(newNote, pianoRollObject, evt);
 
-/****
+}
 
-	highlight row
-	- used when mouseover 
+// since this doesn't actually use a MouseEvent, can probably be moved into the function that takes the MouseEvent?
+function mouseupHelper(newNote, pianoRollObject, pianoRollInterface, eventsToRemove){
+	
+	// allow user to click on an already-placed note to hear it again
+	// but not when resizing
+	if(newNote.style.cursor !== "w-resize"){
+		var waveType = pianoRollObject.currentInstrument.waveType; 
+		clickNote(newNote.parentNode.id, waveType, pianoRollObject);
+	}
 
-****/
+	var currNotes = pianoRollObject.currentInstrument.activeNotes;
+	addNoteToCurrInstrument(currNotes, newNote);
+	
+	pianoRollObject.lastNoteSize = parseInt(newNote.style.width);
+	
+	for(var event in eventsToRemove){
+		pianoRollInterface.removeEventListener(event, eventsToRemove[event]);
+	}
+}
+
+// pass in a hashmap for defined values?
+// creates a new html element representing a note 
+// @param pianoRollObject: an instance of PianoRoll
+function createNewNoteElement(pianoRollObject){
+
+	var newNote = document.createElement('div');
+	newNote.setAttribute("volume", pianoRollObject.currentInstrument.volume);
+	newNote.setAttribute("type", "default"); 
+	newNote.style.background = "linear-gradient(90deg, rgba(0,158,52,1) 90%, rgba(52,208,0,1) 99%";
+	newNote.style.height = "15px";
+	newNote.style.position = "absolute";
+	newNote.style.opacity = 1.0;
+	newNote.classList.add("noteElement");
+	newNote.classList.add("context-menu-one");
+	newNote.id = "note" + pianoRollObject.noteIdNum++;
+	
+	if(pianoRollObject.addNoteSize === "last selected"){
+		newNote.style.width = pianoRollObject.lastNoteSize + "px";
+	}else{
+		newNote.style.width = pianoRollObject.noteSizeMap[pianoRollObject.addNoteSize] + "px";
+	}
+	
+	newNote.addEventListener("mousemove", function(e){
+		e.preventDefault();
+		
+		// allow resize cursor to show when the mouse moves over the right edge of the note
+		if(e.offsetX >= (parseInt(newNote.style.width) - 3)){
+			newNote.style.cursor = "w-resize";
+		}else{
+			newNote.style.cursor = "";
+		}
+	});
+	
+	var pianoRollInterface = document.getElementById("piano");
+	newNote.addEventListener("mousedown", function(e){
+		
+		if(newNote.style.opacity != 1){
+			return;
+		}
+		
+		e.preventDefault();
+		e.stopPropagation();
+		
+		if(e.which == 2){
+			// middle mouse button
+			newNote.parentNode.removeChild(newNote);
+			delete pianoRollObject.currentInstrument.activeNotes[newNote.id];
+			return;
+		}
+		
+		if(e.which === 3){
+			// don't let right-click do anything
+			return;
+		}
+
+		if(newNote.style.cursor === "w-resize"){
+			
+			function resizeNote(evt){
+				resizeHelper(newNote, pianoRollObject, evt);
+			}
+			
+			pianoRollInterface.addEventListener("mousemove", resizeNote);
+			pianoRollInterface.addEventListener("mouseup", function mouseupResize(e){
+				pianoRollObject.lastNoteSize = parseInt(newNote.style.width);
+				pianoRollInterface.removeEventListener("mousemove", resizeNote);
+				pianoRollInterface.removeEventListener("mouseup", mouseupResize);
+			});
+		}else{
+			
+			function moveNote(evt){
+				moveHelper(newNote, pianoRollObject, evt);
+			}
+			
+			var evtsToRemove = {
+					"mousemove": moveNote,
+					"mouseup": mouseupMove
+			};
+			
+			function mouseupMove(evt){
+				mouseupHelper(newNote, pianoRollObject, pianoRollInterface, evtsToRemove);
+			}
+			
+			pianoRollInterface.addEventListener("mousemove", moveNote);
+			pianoRollInterface.addEventListener("mouseup", mouseupMove);
+		}
+	});
+	
+	return newNote;
+}
+
+// used when clicking on a row cell/note container to add a new note 
+// @param id: the html element id of a row cell to add a note to 
+// @param pianoRollObject: instance of PianoRoll
+// @param evt: a MouseEvent
+function addNote(id, pianoRollObject, evt){
+
+	if(evt.target.classList.contains("noteElement")){
+		// prevent shrinking a note from also creating a new note 
+		// because there'll be a click (which triggers this function) and a mouseup registered when resizing
+		// when shrinking a note the cursor will be on the note being shrunk, so we can check the target
+		return;
+	}
+	
+	var newNote = placeNoteAtPosition(null, pianoRollObject, evt);
+	if(newNote){
+		// play click sound if placing new note
+		var waveType = pianoRollObject.currentInstrument.waveType; 
+		clickNote(id, waveType, pianoRollObject);
+	
+		// add the note to the current instrument
+		addNoteToCurrInstrument(pianoRollObject.currentInstrument.activeNotes, newNote);
+	}
+}
+
+// used for highlighting the row of the grid the cursor is hovering over
+// @param id: the html element id of a row cell / note container
+// @param color: the color to highlight with 
 function highlightRow(id, color){
 	// get id of parent
 	var parent = document.getElementById(id).parentNode.id;
@@ -117,131 +323,37 @@ function highlightRow(id, color){
 	$('#' + parent).css('background-color', color);
 }
 
-/****
-
-	delete all notes - clear the grid
-	- does not alter subdivisions
-	- does not clear onion skin!
-	- only clears current instrument's notes 
-    - don't forget active notes of current instrument!
-	
-****/
-function clearGrid(pianoRollObject){
-	var columns = document.getElementById("columnHeaderRow").children;
-
-	// start at 1 to ignore the column before 1 (the blank one)
-	for(var i = 1; i < columns.length; i++){
-		if(columns[i].getAttribute("hasnote") !== "0"){
-			// change hasnote attribute back to 0!
-			columns[i].setAttribute("hasnote", "0");
-			var columnToCheck = $("div[id$='" + columns[i].id + "']").get();
-			for(var j = 0; j < columnToCheck.length; j++){
-				if(columnToCheck[j].style.backgroundColor === pianoRollObject.noteColor){
-					columnToCheck[j].style.backgroundColor = "transparent";
-				}
-				if(columnToCheck[j].style.background !== ""){
-					columnToCheck[j].style.background = "";
-				}
-			}
-		}
+// clear the notes of an instrument (which effectively clears the grid of their notes)
+// @param instrument: an instance of Instrument to clear the notes for 
+function clearGrid(instrument){
+	var currNotes = instrument.activeNotes;
+	for(var noteId in currNotes){
+		var note = document.getElementById(noteId);
+		note.parentNode.removeChild(note);
 	}
-	
-	// reset activeNotes for current instrument
-	pianoRollObject.currentInstrument.activeNotes = {};
+	instrument.activeNotes = {};
+	instrument.notes = [];
 }
 
-/****
-
-	like clearGrid, but clears EVERYTHING and rejoins any subdivisions 
-
-****/
+// @param pianoRollObject: instance of PianoRoll
 function clearGridAll(pianoRollObject){
-	var columns = document.getElementById("columnHeaderRow").children;
-
-	// start at 1 to ignore the column before 1 (the blank one)
-	for(var i = 1; i < columns.length; i++){
-
-		// change hasnote attribute back to 0!
-		columns[i].setAttribute("hasnote", "0");
-		var columnToCheck = $("div[id$='" + columns[i].id + "']").get();
-		for(var j = 0; j < columnToCheck.length; j++){
-			if(columnToCheck[j].style.backgroundColor !== "transparent"){
-				columnToCheck[j].style.backgroundColor = "transparent";
-			}
-			if(columnToCheck[j].style.background !== ""){
-				columnToCheck[j].style.background = "";
-			}
-		}
-		
-		if(columns[i].id.indexOf("-1") > 0){
-			// is the boolean value really doing anything? look into this. 
-			rejoin(columns[i].id, true, pianoRollObject);
-		}
-	}
-	
-	// reset activeNotes for all instruments
-	for(var j = 0; j < pianoRollObject.instruments.length; j++){
-		pianoRollObject.instruments[j].activeNotes = {};
+	for(var i = 0; i < pianoRollObject.instruments.length; i++){
+		clearGrid(pianoRollObject.instruments[i]);
 	}
 }
 
-/****
-
-	add a new measure
-
-****/
+// @param pianoRollObject: instance of PianoRoll
 function addNewMeasure(pianoRollObject){
 	
-	//console.log("adding new measure");
-	//console.log(pianoRollObject.numberOfMeasures)
-
 	// updating the measure count - notice specific id of element! 
 	$('#measures').text( "number of measures: " + (parseInt($('#measures').text().match(/[0-9]{1,}/g)[0]) + 1) );
 	
-	// get the column header node to insert new column headers for the new measure
 	var columnHeaderParent = document.getElementById('columnHeaderRow');
 	
-	// new column headers 
-	for(var i = 0; i < pianoRollObject.subdivision; i++){
-		var newHeader = document.createElement('div');
-		newHeader.id = "col_" + (pianoRollObject.numberOfMeasures * pianoRollObject.subdivision + i);
-		newHeader.style.margin = "0 auto";
-		newHeader.style.display = 'inline-block';		
-		
-		if(i + 1 === pianoRollObject.subdivision){
-			newHeader.style.borderRight = "3px solid #000";
-		}else{
-			newHeader.style.borderRight = "1px solid #000";
-		}
-		
-		newHeader.style.textAlign = "center";
-		newHeader.style.width = '40px';
-		newHeader.style.height = '12px';
-		newHeader.style.fontSize = '10px';
-		
-		// 0 == false; i.e. does not have a note in the column
-		// this attribute should help optimize performance a bit
-		newHeader.setAttribute("hasNote", 0); 
-		
-		if(i !== 0){
-			// don't label the first header column since that's the measure number 
-			newHeader.textContent = i + 1;
-		}
-		
-		// attach highlightHeader function to allow user to specify playing to start at this column 
-		newHeader.addEventListener("click", function(){highlightHeader(this.id, pianoRollObject)} );
-		
+	var lastColNum = pianoRollObject.numberOfMeasures * pianoRollObject.subdivision + 1;
+	for(var i = lastColNum; i < lastColNum + pianoRollObject.subdivision; i++){
+		var newHeader = createColumnHeader(i, pianoRollObject);
 		columnHeaderParent.appendChild(newHeader);
-		
-		// mark the measure number 
-		if(i === 0){
-			var measureNumber = document.createElement("h2");
-			measureNumber.innerHTML = (pianoRollObject.numberOfMeasures + 1);
-			measureNumber.style.margin = '0 0 0 0';
-			measureNumber.style.color = '#2980B9';
-			newHeader.appendChild(measureNumber);
-			newHeader.style.borderRight = "1px solid transparent";
-		}
 	}
 	
 	// now add new columns for each note
@@ -251,53 +363,18 @@ function addNewMeasure(pianoRollObject){
 	// start at 1 to skip column header row 
 	for(var j = 1; j < noteRows.length; j++){
 		for(var k = 0; k < pianoRollObject.subdivision; k++){
-			
-			// get the parent element for this row
 			var rowParent = noteRows[j];
-			var newColumn = document.createElement("div");
-			newColumn.id = noteRows[j].id + "col_" + ((pianoRollObject.numberOfMeasures * pianoRollObject.subdivision) + k);
-			
-			// adjust id if needed
-			newColumn.id = replaceSharp(newColumn.id);
-			newColumn.style.display = 'inline-block';
-			newColumn.style.width = '40px';
-			newColumn.style.height = '15px';
-			newColumn.style.verticalAlign = "middle";
-			newColumn.style.backgroundColor = "transparent";
-			
-			// IMPORTANT! new attributes for each note
-			newColumn.setAttribute("volume", "0.3");
-			newColumn.setAttribute("length", "eighth"); 
-			newColumn.setAttribute("type", "default"); 
-			newColumn.className = "context-menu-one";
-			
-			if((k + 1) % pianoRollObject.subdivision == 0){
-				newColumn.style.borderRight = "3px solid #000";
-			}else{
-				newColumn.style.borderRight = "1px solid #000";
-			}
-
-			// hook up an event listener to allow for selecting notes on the grid!
-			//notice passing in id of option/select element for picking wave type. 
-			newColumn.addEventListener("click", function(){ addNote(this.id, pianoRollObject) }); 
-			// allow for highlighting to make it clear which note a block is
-			newColumn.addEventListener("mouseenter", function(){ highlightRow(this.id, pianoRollObject.highlightColor) });
-			newColumn.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
-			rowParent.appendChild(newColumn);
+			var newColumnCell = createColumnCell(noteRows[j].id, lastColNum+k-1, pianoRollObject);
+			rowParent.appendChild(newColumnCell);
 		}
 		// adjust width of row 
-		noteRows[j].style.width = parseInt(noteRows[j].style.width) + 20 + "%";
+		noteRows[j].style.width = parseInt(noteRows[j].style.width)+20+"%";
 	}
-	pianoRollObject.numberOfMeasures++; // increment measure variable of piano roll
+	pianoRollObject.numberOfMeasures++;
 }
 
-/****
-
-	delete a measure 
-
-	WHAT IF THERE ARE NOTES IN IT??
-	
-****/
+// deletes the last measure
+// @param pianoRollObject: an instance of PianoRoll
 function deleteMeasure(pianoRollObject){
 	
 	// check how many measures exist first. if none, don't do anything. 
@@ -305,46 +382,18 @@ function deleteMeasure(pianoRollObject){
 		return;
 	}
 	
-	var confirmDelete = confirm('Are you sure? Please make sure all notes are deleted from the measure first.');
-	
-	if(confirmDelete){
-	
-		// take current number of measures and multiply
-		// by 8 to know how many columns there are 
-		var currColumns = pianoRollObject.numberOfMeasures * 8;
-		
-		// subtract 8 from currColumns - because 8 eighth notes per measure (4 quarter notes)
-		currColumns -= 8;
-		
-		// so currColumns is now the number of the first 
-		// column to remove 
-		for(var i = currColumns; i < currColumns + 8; i++){
-			// get all the columns that have the current number, i
-			var columns = $("div[id*='" + "col_" + i + "']");
-			//console.log(columns);
-			for(var j = 0; j < columns.length; j++){
-				columns[j].remove();
-			}
-		}
-
-		pianoRollObject.numberOfMeasures--;
-		// update text
-		var mtext = document.getElementById('measures');
-		mtext.textContent = "number of measures: " + pianoRollObject.numberOfMeasures;
-	}
+	// TODO: finish me
+	var lastMeasureStartColNum = (pianoRollObject.numberOfMeasures-1) * pianoRollObject.subdivision;
 }
 
 
-/****
-
-	choose instrument
- 
-****/
+// @param thisElement: the id of an html element representing an instrument
+// @param pianoRollObject: an instance of PianoRoll 
 function chooseInstrument(thisElement, pianoRollObject){
 	
 	// look at grid, collect the notes, save them to the current instrument, and
 	// move on to the clicked-on instrument
-	pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject);
+	pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject.currentInstrument, pianoRollObject);
 	
 	// reset the playMarker because the previously-set marker might be a column header 
 	// that doesn't exist anymore (i.e. because of subdivision or rejoining)
@@ -367,39 +416,6 @@ function chooseInstrument(thisElement, pianoRollObject){
 		}
 	}
 
-	// change current instrument's notes to onion skin 
-	for(activeNote in pianoRollObject.currentInstrument.activeNotes){
-		// ok problem here: when switching instruments, subdivided blocks may not exist for the instrument being switched to! 
-		// console.log(activeNote);
-		// for now (temporarily) as a quick fix, just skip null elements (WILL LEAVE EMPTY SPACES THOUGH)
-		if(!document.getElementById(activeNote)){
-			continue;
-		}
-		
-		// important if a concatenated note block! 
-		var activeNoteCount = pianoRollObject.currentInstrument.activeNotes[activeNote];
-		var boldBorder;
-		if(activeNoteCount > 1){
-			var currNote = document.getElementById(activeNote);
-			for(var j = 0; j < activeNoteCount; j++){
-				currNote.style.backgroundColor = pianoRollObject.onionSkinNote;
-				
-				// fix lengths so they won't cause trouble for the chosen instrument
-				var currLength = currNote.getAttribute("length");
-				if(currLength.indexOf('-') > 0){
-					currNote.setAttribute("length", currLength.substring(0, currLength.indexOf('-')));
-				}
-				
-				// fix border (note that changeRightBorder is defined in context_menus.js)
-				changeRightBorder(currNote.id, "add", pianoRollObject.subdivision);	
-				currNote = currNote.nextSibling;
-			}		
-		}else{
-			// if not a concatenated note block 
-			document.getElementById(activeNote).style.backgroundColor = pianoRollObject.onionSkinNote;
-		}
-	}
-
 	// get index of clicked-on instrument in instrumentTable and subtract 1 to
 	// account for 0-index when we use it to look in pianoRoll object 'instruments' 
 	// array for the corresponding instrument object
@@ -411,187 +427,39 @@ function chooseInstrument(thisElement, pianoRollObject){
 	// attach new context menu only to current instrument via class name
 	document.getElementById('instrumentTable').children[index].classList.add("context-menu-instrument");
 	
-	// then draw the previously-saved notes, if any, onto the grid of the clicked-on instrument
-	drawNotes(pianoRollObject.currentInstrument, pianoRollObject); 
-	
 	showOnionSkin(pianoRollObject);
+	
+	// then draw the previously-saved notes, if any, onto the grid of the clicked-on instrument
+	drawNotes(pianoRollObject.currentInstrument); 
 	
 	$('#' + thisElement).css('background-color', pianoRollObject.instrumentTableColor);
 	
 }
 
-/****
-
-	draw notes back on to grid
-
-****/
-// takes an instrument object and uses its notes array data to draw back the notes
-function drawNotes(instrumentObject, pianoRollObject){
+// changes all the notes of the given instrument to opacity 1.0, making them fully visible
+// @param instrumentObject: instance of Instrument
+function drawNotes(instrumentObject){
 	
-	var notes = instrumentObject.notes;
-
-	// reset headers first (i.e. clear columns with hasnote === 1)
-	resetHeaders();
+	var notes = instrumentObject.activeNotes;
 	
-	for(var i = 0; i < notes.length; i++){
-		
-		// if the frequency of a note is 0, it's a rest and so nothing needs to be drawn
-		if(notes[i].freq === 0){
-			continue;
-		}
-		
-		var elementExists = document.getElementById( notes[i].block.id );
-
-		// if we need to paint in an eighth note, but the column is currently subdivided 
-		var elementLength = notes[i].block.length.split('-');
-		if(!elementExists && elementLength[0] === "eighth"){
-			
-			var blockId = notes[i].block.id;
-			
-			rejoin(blockId, true, pianoRollObject);
-	
-			// now that the correct column should be in place, assign elementExists the id of the note we need to draw in 
-			elementExists = document.getElementById( notes[i].block.id );
-		
-		}else if(!elementExists && elementLength[0] === "sixteenth"){
-
-			// now if the note to draw in is a 16th note and there's no place to put it, create the subdivision
-			var blockId = notes[i].block.id;
-			var columnToFind = blockId.substring(0, blockId.indexOf("-"));
-			subdivide(columnToFind, true, pianoRollObject);
-			
-			elementExists = document.getElementById( notes[i].block.id );
-			
-		}
-		
-		// make sure to set column header attr "hasNote" to 1!!!
-		var columnHeader = elementExists.id.substring(elementExists.id.indexOf("col_"));
-		columnHeader = document.getElementById(columnHeader);
-		columnHeader.setAttribute("hasnote", "1");
-		
-		// color in note
-		elementExists.style.backgroundColor = pianoRollObject.noteColor;
-		// fill in attributes 
-		if(notes[i].block.volume === ""){
-			notes[i].block.volume = instrumentObject.volume;
-		}
-		if(notes[i].block.style === "undefined"){
-			notes[i].block.style = "default";
-		}
-		elementExists.setAttribute("volume", notes[i].block.volume);
-		elementExists.setAttribute("type", notes[i].block.style);
-		elementExists.setAttribute("length", notes[i].block.length);
-		
-		// special case for concatenated note block.
-		if(elementExists.getAttribute("length").indexOf('-') > 0){
-			
-			// remove right border
-			// NOTE: changeRightBorder is defined in context_menus.js!
-			changeRightBorder(elementExists.id, "remove", pianoRollObject.subdivision);
-			
-			// need to draw in rest of note block. 
-			var noteHead = elementExists.getAttribute("length").split('-').shift(); // get the head (i.e. is the beginning a 16th or 8th note)
-			
-			// subtract the value of noteHead (can only be 8th or 16th) from the current duration 
-			var currDuration = notes[i].duration - (pianoRollObject.currentTempo / pianoRollObject.noteLengths[noteHead]);
-			
-			// the rest of the concatenated note block. ignore first note since we just drew it in
-			var restOfNote = elementExists.getAttribute("length").split('-').slice(1);
-			
-			// currNote is the next neighbor
-			var currNote = elementExists.nextSibling;
-			
-			for(var j = 0; j < restOfNote.length; j++){
-				
-				var currLength = restOfNote[j];
-				
-				// get the column header 
-				var colHeader = document.getElementById( currNote.id.substring(currNote.id.indexOf("col_")) );
-				
-				if(currLength === "eighth"){
-					// check if currNote.length is an eighth note. if not, rejoin and color in 
-					if(currNote.getAttribute("length") === "eighth"){
-						currNote.style.backgroundColor = pianoRollObject.noteColor;
-					}else{
-						rejoin(currNote.id, true, pianoRollObject);
-	
-						// now that the correct column should be in place, get the sibling again of elementExists 
-						currNote = elementExists.nextSibling;
-						currNote.style.backgroundColor = pianoRollObject.noteColor;
-						
-						// make sure to update the column header's hasnote to -1 as well!
-						colHeader = document.getElementById( currNote.id.substring(currNote.id.indexOf("col_")) );
-					}
-				}else{
-					// check if neighbor is a 16th note. if not, subdivide and color 
-					if(currNote.getAttribute("length") === "sixteenth"){
-						currNote.style.backgroundColor = pianoRollObject.noteColor;
-					}else{
-						subdivide(currNote.id, true, pianoRollObject);
-	
-						// now that the correct column should be in place, get the sibling again of elementExists 
-						currNote = elementExists.nextSibling;
-						currNote.style.backgroundColor = pianoRollObject.noteColor;
-						
-						document.getElementById( currNote.id.substring(currNote.id.indexOf("col_")) );
-					}
-				}
-				
-				// change hasnote to -1 
-				colHeader.setAttribute("hasnote", -1);
-				
-				if(j < restOfNote.length - 1){
-					boldBorder = parseInt(colHeader.id.match(/[0-9]{1,}/g)[0]) + 1;
-					if(boldBorder % 8 === 0){
-						$('#' + currNote.id).css("border-right", "3px solid transparent");
-					}else{
-						$('#' + currNote.id).css("border-right", "1px solid transparent");
-					}
-				}
-				
-				currNote = currNote.nextSibling;
-			}
-			
-			// after for loop, make sure to give border on last segment of concatenated note block
-			currNote = currNote.previousSibling;
-			changeRightBorder(currNote.id, "add", pianoRollObject.subdivision);
-		}
-
+	for(var n in notes){
+		notes[n].classList.add("context-menu-one");
+		notes[n].style.opacity = 1.0;
+		notes[n].style.zIndex = 100;
 	}
-	
+
 }
 
-/****
-
-	function to reset "hasnote" attribute for column headers 
-	necessary for when changing instruments, because 'hasnote' should  
-	reflect whether a note exists in a column for only the current instrument 
-	
-*****/
-function resetHeaders(){
-	var columnHeaders = document.getElementById("columnHeaderRow").children;
-	
-	for(var k = 0; k < columnHeaders.length; k++){
-		columnHeaders[k].setAttribute('hasnote', 0);
-	}
-}
-
-/***
-
-	change tempo 
-
-	this function relies on an INPUT box's ID to get the user-inputted tempo
-
-***/
+// this function relies on an INPUT box's ID to get the user-inputted tempo
+// @param pianoRollObject: instance of PianoRoll
 function changeTempo(pianoRollObject){
 	var tempoInput = document.getElementById("changeTempo");
 	var selectedTempo = parseInt(tempoInput.value);
 	var tempoText = document.getElementById("tempo");
 	tempoText.innerHTML = selectedTempo + " bpm";
 	
-	// initially getting milliseconds FOR QUARTER NOTES (that's 2 blocks on the grid)
-	// note that currentTempo needs to be rounded before use
-	pianoRollObject.currentTempo = ((Math.round((60000 / selectedTempo) * 1000)) / 1000 );
+	// getting milliseconds PER EIGHTH NOTE (1 block on grid)
+	pianoRollObject.currentTempo = ((Math.round((60000 / selectedTempo) * 1000)) / 2000 );
 	
 	// go through all instruments and adjust duration of each note in their note arrays
 	// according to new current tempo
@@ -607,11 +475,8 @@ function changeTempo(pianoRollObject){
 	}
 }
 
-/***
 
-	change time signature and subdivision (can only switch between 4/4 and 3/4)
-
-***/
+// change time signature and subdivision (can only switch between 4/4 and 3/4)
 function changeTimeSignature(pianoRollObject, newTimeSig){
 	if(newTimeSig === '4/4'){
 		pianoRollObject.subdivision = 8;
@@ -635,7 +500,7 @@ function changeTimeSignature(pianoRollObject, newTimeSig){
 var lastNote = null;
 var onendFunc = function(x, pianoRoll){ 
 	return function(){
-		
+
 		// take away highlight of previous note 
 		if(lastNote && pianoRoll.playMarker !== lastNote.id){
 			lastNote.style.backgroundColor = '#fff';
@@ -643,17 +508,12 @@ var onendFunc = function(x, pianoRoll){
 		
 		var column = x.substring(x.indexOf('col'));
 		if(document.getElementById(column) === null){
-			if(column.indexOf("-") < 0){
-				// get first subdivision
-				column = x.substring(x.indexOf('col')) + "-1";
-			}else{
-				column = x.substring(x.indexOf('col'), x.indexOf('-'));
-			}
+			column = x.substring(x.indexOf('col'), x.indexOf('-'));
 		}
 		
 		var currNote = document.getElementById(column);
 		if(pianoRoll.isPlaying && pianoRoll.playMarker !== currNote.id){
-			document.getElementById(column).style.backgroundColor = pianoRoll.currNotePlayingColor; // nice light blue color 
+			document.getElementById(column).style.backgroundColor = pianoRoll.currNotePlayingColor;
 		}
 
 		lastNote = currNote;
@@ -661,86 +521,121 @@ var onendFunc = function(x, pianoRoll){
 };
 
 
-/****
-
-	Onion skin feature
-
-****/
-// see where the other instruments' notes are 
+// see where the other instruments' notes are.
+// if an instrument has onionSkinOn unchecked, then they will not have 
+// their notes shown as onion skin 
+// onion skin opacity is currently set to 0.3.
+// @param: pianoRollObject: instance of PianoRoll
 function showOnionSkin(pianoRollObject){
-	
 	for(var i = 0; i < pianoRollObject.instruments.length; i++){
-		
-		if(pianoRollObject.instruments[i].name !== pianoRollObject.currentInstrument.name){
-			
-			// go through each instrument's activeNotes
-			for(activeNote in pianoRollObject.instruments[i].activeNotes){
-	
-				// get note id 
-				var noteId = activeNote;
-				
-				// get location of each note
-				var location = document.getElementById(noteId);
-				
-				if(location !== null){
-					// set background color for that location a very light shade of green
-					if(location.style.backgroundColor === 'transparent'){
-						location.style.backgroundColor = pianoRollObject.onionSkinNote;
-					}
-				}else if(location === null){
-					// if not present, it's either because there's no 16th measure or 8th measure
-					if(noteId.indexOf("-1") < 0 && noteId.indexOf("-2") < 0){
-						
-						// ok so this note that we want to 'onion-skin' looks like an eighth note but
-						// there's only the 16th note subdivisions available on the grid. 
-						// so we'll find those subdivisions and just color them
-						var subdiv = document.getElementById( noteId + "-1" );
-						var subdiv2 = document.getElementById( noteId + "-2" );
-
-						// color the subdiv AND its right sibling if there is no current note in that spot 
-						if(subdiv.style.backgroundColor !== pianoRollObject.noteColor){
-							subdiv.style.backgroundColor = pianoRollObject.onionSkinNote;
-						}
-						
-						if(subdiv2.style.backgroundColor !== pianoRollObject.noteColor){
-							subdiv2.style.backgroundColor = pianoRollObject.onionSkinNote;
-						}
-						
-					/****
-					
-						warning! you also have to consider later quarter notes and longer notes.
-						the function will have to be able to look at the attribute "length" to know 
-						how many sibling elements to color!
-						
-						for now, only the first note of a concatenated note block will show 
-					
-					***/
-					}else if(noteId.indexOf("-1") > 0){
-						// if we see a 16th note but there's only an 8th note div available, just color in that 8th note 
-						var findId = noteId.substring(0, noteId.indexOf("-"));
-						var subdiv = document.getElementById(findId);
-						if(subdiv.style.backgroundColor === "transparent"){
-							subdiv.style.background = "linear-gradient(90deg," + pianoRollObject.onionSkinNote + " 50%, transparent 50%)";
-						}
-					}else if(noteId.indexOf("-2") > 0){
-						var findId = noteId.substring(0, noteId.indexOf("-"));
-						var subdiv = document.getElementById(findId);
-						if(subdiv.style.backgroundColor === "transparent"){
-							subdiv.style.background = "linear-gradient(90deg, transparent 50%, " + pianoRollObject.onionSkinNote + " 50%)";
-						}
-					}
+		var currInstrument = pianoRollObject.instruments[i];
+		if(currInstrument !== pianoRollObject.currentInstrument){
+			var activeNotes = currInstrument.activeNotes;
+			for(var activeNote in activeNotes){
+				var note = activeNotes[activeNote];
+				if(!currInstrument.onionSkinOn){
+					note.style.opacity = 0.0;
+				}else{
+					note.style.opacity = 0.3;
 				}
+				note.style.zIndex = 0;
+				note.classList.remove("context-menu-one");
 			}
 		}
 	}
 }
 
-/****
 
-	add a new instrument 
+// redraw thick grid cell lines for the correct cells if subdivision changes (i.e. going from 4/4 to 3/4)
+// @param pianoRollObject: an instance of PianoRoll
+// @param headerId: the id of the element that holds all the column header elements
+function redrawCellBorders(pianoRollObject, headerId){
 
-****/
-function addNewInstrument(name, bool, pianoRollObject){
+	var subdivision = pianoRollObject.subdivision; 
+	var headers = Array.from(document.getElementById(headerId).children);
+	
+	var measureCounter = 1;
+	
+	for(var i = 1; i < headers.length; i++){
+		var columnHeader = headers[i];
+		var colNum = parseInt(headers[i].id.match(/\d+/g)[0]);
+		columnHeader.innerHTML = "";
+		columnHeader.className = "thinBorder";
+		
+		var subdiv = (i % subdivision) === 0 ? subdivision : (i % subdivision);
+
+		// mark the measure number 
+		if(subdiv === 1){
+			var measureNumber = document.createElement("h2");
+			measureNumber.innerHTML = measureCounter++;
+			measureNumber.style.margin = '0 0 0 0';
+			measureNumber.style.color = pianoRollObject.measureNumberColor;
+			
+			columnHeader.appendChild(measureNumber);
+			columnHeader.className = "";
+		}else{
+			if(subdivision === subdiv){
+				columnHeader.className = "thickBorder";
+			}
+			headers[i].textContent = subdiv; 
+		}
+		
+		var columnCells = document.querySelectorAll('[id$=' + '\"' + columnHeader.id + '\"]');
+		
+		// skip the first element, which is the column header (not a note on the grid)
+		for(var j = 1; j < columnCells.length; j++){
+			var gridCell = columnCells[j];
+			gridCell.className = "noteContainer " + ((columnHeader.className === "") ? "thinBorder" : columnHeader.className);
+		};
+		
+		// update piano roll num measures 
+		pianoRollObject.numberOfMeasures = measureCounter-1;
+	}
+		
+	// now we have to check if changing the meter altered the last measure in such a way that 
+	// we have to add more columns (i.e. going from 4/4 to 3/4 may leave the last measure consisting of only 2 columns!)
+	// what if user keeps switching between 4/4 and 3/4? the total number of measures will keep increasing
+	
+	var lastColNum = parseInt(headers[headers.length-1].id.match(/\d+/g)[0]);
+	var headerColumnRow = document.getElementById(headerId);
+	var currColHeadNum = ((lastColNum + 1) % subdivision) + 1;
+	
+	while((lastColNum + 1) % subdivision !== 0){
+		var newColumnHead = document.createElement('div');
+		newColumnHead.id = "col_" + (lastColNum + 1); 
+		newColumnHead.style.display = "inline-block";
+		newColumnHead.style.margin = "0 auto";
+		newColumnHead.className = ((lastColNum + 2) % subdivision === 0) ? "thickBorder" : "thinBorder";
+		newColumnHead.style.textAlign = "center";
+		newColumnHead.style.width = '40px';
+		newColumnHead.style.height = '12px';
+		newColumnHead.style.fontSize = '10px';
+		newColumnHead.textContent = currColHeadNum;
+		headerColumnRow.append(newColumnHead);
+		
+		// add the rest of the column 
+		for(var note in pianoRollObject.noteFrequencies){
+			// ignore enharmonics 
+			if(note.substring(0, 2) === "Gb" || note.substring(0, 2) === "Db" ||
+			   note.substring(0, 2) === "D#" || note.substring(0, 2) === "G#" ||
+			   note.substring(0, 2) === "A#"){
+				continue;
+			}
+			var n = replaceSharp(note);
+			var noteRow = document.querySelector('[id^=' + n + ']');
+			noteRow.append(createColumnCell(note, lastColNum + 1, pianoRollObject));
+		}
+		
+		currColHeadNum++;
+		lastColNum++;
+	}
+}
+
+
+// @param name: name of the instrument 
+// @param createBool: true to create a new Instrument instance, false to not 
+// @param pianoRollObject: instance of PianoRoll
+function addNewInstrument(name, createBool, pianoRollObject){
 	var instrumentTable = document.getElementById("instrumentTable");
 	var newInstrument = document.createElement('td');
 	
@@ -761,17 +656,15 @@ function addNewInstrument(name, bool, pianoRollObject){
 	
 	instrumentTable.appendChild(newInstrument);
 	
-	// bool is not false - if a new instrument needs to be created
-	// - when importing data, this createNewInstrument step is not needed
-	if(bool !== false){
+	// when importing data, this createNewInstrument step is not needed
+	if(createBool){
 		createNewInstrument("new_instrument", pianoRollObject);
 	}
 }
 
 
 try{
-	module.exports = { 
-		clickNote: clickNote,
+	module.exports = {
 		addNote: addNote,
 		highlightRow: highlightRow,
 		clearGrid: clearGrid,
@@ -781,7 +674,6 @@ try{
 		deleteMeasure: deleteMeasure,
 		chooseInstrument: chooseInstrument,
 		drawNotes: drawNotes,
-		resetHeaders: resetHeaders,
 		showOnionSkin: showOnionSkin,
 		onendFunc: onendFunc,
 		changeTempo: changeTempo,
