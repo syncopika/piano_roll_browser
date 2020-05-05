@@ -61,8 +61,7 @@ function canPlaceNote(posToPlace, currContainerChildren){
 	return true;
 }
 
-// places a note at the position specified by evt 
-// placement depends on the current note lock size
+// places a note at the position specified by evt. placement depends on the current note lock size
 // @param note: an html element representing a note 
 // @param pianoRollObject: an instance of PianoRoll
 // @param evt: a MouseEvent 
@@ -118,8 +117,7 @@ function placeNoteAtPosition(note, pianoRollObject, evt){
 	return null;
 }
 
-// helper function to utilize a couple other arguments besides evt on mouse move 
-// when resizing
+// helper function to utilize a couple other arguments besides evt on mouse move when resizing
 // @param newNote: an html element representing a note 
 // @param pianoRollObject: an instance of PianoRoll 
 // @param evt: a MouseEvent
@@ -181,8 +179,7 @@ function moveHelper(newNote, pianoRollObject, evt){
 
 }
 
-// since this doesn't actually use a MouseEvent, can probably be moved into the function that takes the MouseEvent 
-// on mouse up
+// since this doesn't actually use a MouseEvent, can probably be moved into the function that takes the MouseEvent?
 function mouseupHelper(newNote, pianoRollObject, pianoRollInterface, eventsToRemove){
 	
 	// allow user to click on an already-placed note to hear it again
@@ -297,6 +294,13 @@ function createNewNoteElement(pianoRollObject){
 // @param pianoRollObject: instance of PianoRoll
 // @param evt: a MouseEvent
 function addNote(id, pianoRollObject, evt){
+
+	if(evt.target.classList.contains("noteElement")){
+		// prevent shrinking a note from also creating a new note 
+		// because there'll be a click (which triggers this function) and a mouseup registered when resizing
+		// when shrinking a note the cursor will be on the note being shrunk, so we can check the target
+		return;
+	}
 	
 	var newNote = placeNoteAtPosition(null, pianoRollObject, evt);
 	if(newNote){
@@ -344,52 +348,12 @@ function addNewMeasure(pianoRollObject){
 	// updating the measure count - notice specific id of element! 
 	$('#measures').text( "number of measures: " + (parseInt($('#measures').text().match(/[0-9]{1,}/g)[0]) + 1) );
 	
-	// get the column header node to insert new column headers for the new measure
 	var columnHeaderParent = document.getElementById('columnHeaderRow');
 	
-	// new column headers 
-	for(var i = 0; i < pianoRollObject.subdivision; i++){
-		var newHeader = document.createElement('div');
-		newHeader.id = "col_" + (pianoRollObject.numberOfMeasures * pianoRollObject.subdivision + i);
-		newHeader.style.margin = "0 auto";
-		newHeader.style.display = 'inline-block';		
-		
-		if(i + 1 === pianoRollObject.subdivision){
-			newHeader.className = "thickBorder";
-		}else{
-			if(i !== 0){
-				// no border just for the first column header (when i == 0) in a measure
-				newHeader.className = "thinBorder";
-			}
-		}
-		
-		newHeader.style.textAlign = "center";
-		newHeader.style.width = '40px';
-		newHeader.style.height = '12px';
-		newHeader.style.fontSize = '10px';
-		
-		// deprecated: can probably remove
-		// 0 == false; i.e. does not have a note in the column
-		newHeader.setAttribute("hasNote", 0); 
-		
-		if(i !== 0){
-			// don't label the first header column since that's the measure number 
-			newHeader.textContent = i + 1;
-		}
-		
-		// attach highlightHeader function to allow user to specify playing to start at this column 
-		newHeader.addEventListener("click", function(){highlightHeader(this.id, pianoRollObject)} );
-		
+	var lastColNum = pianoRollObject.numberOfMeasures * pianoRollObject.subdivision + 1;
+	for(var i = lastColNum; i < lastColNum + pianoRollObject.subdivision; i++){
+		var newHeader = createColumnHeader(i, pianoRollObject);
 		columnHeaderParent.appendChild(newHeader);
-		
-		// mark the measure number 
-		if(i === 0){
-			var measureNumber = document.createElement("h2");
-			measureNumber.innerHTML = (pianoRollObject.numberOfMeasures + 1);
-			measureNumber.style.margin = '0 0 0 0';
-			measureNumber.style.color = '#2980B9';
-			newHeader.appendChild(measureNumber);
-		}
 	}
 	
 	// now add new columns for each note
@@ -399,43 +363,12 @@ function addNewMeasure(pianoRollObject){
 	// start at 1 to skip column header row 
 	for(var j = 1; j < noteRows.length; j++){
 		for(var k = 0; k < pianoRollObject.subdivision; k++){
-			
-			// get the parent element for this row
 			var rowParent = noteRows[j];
-			var newColumn = document.createElement("div");
-			
-			newColumn.id = noteRows[j].id + "col_" + ((pianoRollObject.numberOfMeasures * pianoRollObject.subdivision) + k);
-			newColumn.id = replaceSharp(newColumn.id);
-			
-			newColumn.style.display = 'inline-block';
-			newColumn.style.width = '40px';
-			newColumn.style.height = '15px';
-			newColumn.style.verticalAlign = "middle";
-			newColumn.style.backgroundColor = "transparent";
-			newColumn.className = "noteContainer";
-			newColumn.setAttribute("volume", pianoRollObject.currentInstrument.volume);
-			newColumn.setAttribute("type", "default"); // note syle
-			
-			if((k + 1) % pianoRollObject.subdivision == 0){
-				newColumn.classList.add("thickBorder");
-			}else{
-				newColumn.classList.add("thinBorder");
-			}
-
-			// hook up an event listener to allow for selecting notes on the grid!
-			(function(newColumn){
-				newColumn.addEventListener("click", function(evt){
-					addNote(newColumn.id, pianoRollObject, evt, true);
-				}); 
-			})(newColumn);
-			
-			// allow for highlighting to make it clear which note a block is
-			newColumn.addEventListener("mouseenter", function(){ highlightRow(this.id, pianoRollObject.highlightColor) });
-			newColumn.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
-			rowParent.appendChild(newColumn);
+			var newColumnCell = createColumnCell(noteRows[j].id, lastColNum+k-1, pianoRollObject);
+			rowParent.appendChild(newColumnCell);
 		}
 		// adjust width of row 
-		noteRows[j].style.width = parseInt(noteRows[j].style.width) + 20 + "%";
+		noteRows[j].style.width = parseInt(noteRows[j].style.width)+20+"%";
 	}
 	pianoRollObject.numberOfMeasures++;
 }
@@ -517,19 +450,7 @@ function drawNotes(instrumentObject){
 		notes[n].style.zIndex = 100;
 	}
 
-	// deprecated: can probably remove 
-	resetHeaders();
 }
-
-// deprecated. can probably remove.
-function resetHeaders(){
-	var columnHeaders = document.getElementById("columnHeaderRow").children;
-	
-	for(var k = 0; k < columnHeaders.length; k++){
-		columnHeaders[k].setAttribute('hasnote', 0);
-	}
-}
-
 
 // this function relies on an INPUT box's ID to get the user-inputted tempo
 // @param pianoRollObject: instance of PianoRoll
@@ -602,7 +523,7 @@ var onendFunc = function(x, pianoRoll){
 };
 
 
-// see where the other instruments' notes are
+// see where the other instruments' notes are.
 // if an instrument has onionSkinOn unchecked, then they will not have 
 // their notes shown as onion skin 
 // onion skin opacity is currently set to 0.3.
@@ -668,7 +589,6 @@ try{
 		deleteMeasure: deleteMeasure,
 		chooseInstrument: chooseInstrument,
 		drawNotes: drawNotes,
-		resetHeaders: resetHeaders,
 		showOnionSkin: showOnionSkin,
 		onendFunc: onendFunc,
 		changeTempo: changeTempo,

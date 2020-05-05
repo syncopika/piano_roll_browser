@@ -4,78 +4,70 @@ build the grid
 
 ***********/
 
+// create a column header (the first element of a column)
+// @param num: an integer (i.e. a column number)
+// @param pianoRollObject: an instance of PianoRoll
+function createColumnHeader(num, pianoRollObject){
+	var newHeader = document.createElement('div');
+	newHeader.id = "col_" + (num-1);
+	newHeader.style.margin = "0 auto";
+	newHeader.style.display = 'inline-block';
+	newHeader.style.textAlign = "center";
+	newHeader.style.width = '40px';
+	newHeader.style.height = '12px';
+	newHeader.style.fontSize = '10px';
+	
+	var subdiv = (num % pianoRollObject.subdivision) === 0 ? pianoRollObject.subdivision : (num % pianoRollObject.subdivision);
+	
+	if(num > 0){
+		newHeader.className = "thinBorder";	
+		if(subdiv === 1){
+			// mark the measure number (first column of measure)
+			var measureNumber = document.createElement("h2");
+			measureNumber.innerHTML = (Math.floor(num / pianoRollObject.subdivision)+1);
+			measureNumber.style.margin = '0 0 0 0';
+			measureNumber.style.color = pianoRollObject.measureNumberColor;
+			newHeader.appendChild(measureNumber);
+			newHeader.className = ""
+		}else{
+			if(pianoRollObject.subdivision === subdiv){
+				newHeader.className = "thickBorder";
+			}
+			newHeader.textContent = subdiv; 
+		}
+	}
+	
+	// attach highlightHeader function to allow user to specify playing to start at this column 
+	newHeader.addEventListener("click", function(){highlightHeader(this.id, pianoRollObject)});
+	
+	return newHeader;
+}
 
-/****
-
-set up grid headers first (the headers for each column)
-@param columnHeaderRowId = a dom element ID 
-@param pianoRollObject = a PianoRoll object 
-
-****/
-function buildGridHeader( columnHeaderRowId, pianoRollObject ){
+// set up grid headers first (the headers for each column)
+// @param columnHeaderRowId: a dom element ID 
+// @param pianoRollObject: an isntance of PianoRoll
+function buildGridHeader(columnHeaderRowId, pianoRollObject){
 	
 	var columnHeaderRow = document.getElementById(columnHeaderRowId);
-	
-	// wherever each new measure starts, mark it
-	// start at 2 (1 is implicit)
-	var measureCounter = 2; 
 
 	// this will provide the headers for each column in the grid (i.e. number for each beat/subbeat) 
 	for(var i = 0; i < pianoRollObject.numberOfMeasures * pianoRollObject.subdivision + 1; i++){
-		var columnHeader = document.createElement('div');
-		columnHeader.id = "col_" + (i - 1); // the - 1 here is so that the very first column header block is col_-1, which won't be looked at when reading in notes (edit: irrelevant now to current implementation) 
-		columnHeader.style.display = "inline-block";
-		columnHeader.style.margin = "0 auto";
-		if(i > 0){
-			columnHeader.className = "thinBorder";
-			columnHeader.style.textAlign = "center";
-			
-			if(i < pianoRollObject.subdivision + 1){
-				// for the first measure
-				if(i === pianoRollObject.subdivision){
-					columnHeader.className = "thickBorder";
-				}
-				columnHeader.textContent = i;
-			}else if(i !== pianoRollObject.numberOfMeasures * pianoRollObject.subdivision + 1){
-				
-				var subdiv = (i % pianoRollObject.subdivision) === 0 ? pianoRollObject.subdivision : (i % pianoRollObject.subdivision);
-				
-				// mark the measure number 
-				if(subdiv === 1){
-					var measureNumber = document.createElement("h2");
-					measureNumber.innerHTML = measureCounter;
-					measureNumber.style.margin = '0 0 0 0';
-					measureNumber.style.color = pianoRollObject.measureNumberColor;
-					columnHeader.appendChild(measureNumber);
-					columnHeader.className = "";
-					measureCounter++;
-				}else{
-					if(pianoRollObject.subdivision === subdiv){
-						columnHeader.className = "thickBorder";
-					}
-					columnHeader.textContent = subdiv; 
-				}
-			}
-		}
 		
+		var columnHeader = createColumnHeader(i, pianoRollObject);
+
+		// the very first column header is special :)
 		if(i === 0){
 			columnHeader.style.width = '50px';
-			columnHeader.style.height = '12px';
-			columnHeader.style.border = '1px solid #000';
-		}else{
-			columnHeader.style.width = '40px';
-			columnHeader.style.height = '12px';
-			columnHeader.style.fontSize = '10px';
+			columnHeader.style.border = '1px solid #000'
 		}
-		
-		// 0 == false; i.e. does not have a note in the column
-		columnHeader.setAttribute("hasNote", 0); 
-		columnHeader.addEventListener("click", function(){ highlightHeader(this.id, pianoRollObject) });
 		
 		columnHeaderRow.append(columnHeader);
 	}
 }
 
+// used for setting a play marker to indicate where to start playing 
+// @param headerId: an HTML element id of a column header
+// @param pianoRollObject: an instance of PianoRoll
 function highlightHeader(headerId, pianoRollObject){
 	var element = document.getElementById(headerId);
 	var currColor = element.style.backgroundColor;
@@ -94,12 +86,10 @@ function highlightHeader(headerId, pianoRollObject){
 }
 
 
-/****
-
-set up rest of grid 
-
-****/
-function buildGrid( gridDivId, pianoRollObject ){
+// build out cells of grid 
+// @param gridDivId: a string representing an HTML element id of the grid
+// @param pianoRollObject: an instance of PianoRoll 
+function buildGrid(gridDivId, pianoRollObject){
 
 	var thePiano = document.getElementById(gridDivId);
 	
@@ -146,6 +136,9 @@ function buildGrid( gridDivId, pianoRollObject ){
 	}
 }
 
+// @param pitch: a string representing the pitch of a note, i.e. Fs5 (f sharp 5)
+// @param colNum: an integer representing a column number
+// @param pianoRollObject: an instance of PianoRoll 
 function createColumnCell(pitch, colNum, pianoRollObject){
 	var column = document.createElement("div");
 	column.id = replaceSharp(pitch) + "col_" + colNum;
@@ -183,13 +176,13 @@ function replaceSharp(string){
 	if(string.indexOf('#') != -1){
 		return string.replace('#', 's'); // s for sharp
 	}
-	// otherwise do nothing
 	return string;
 }
 
 
 // redraw thick grid cell lines for the correct cells if subdivision changes (i.e. going from 4/4 to 3/4)
-// headerId = the id of the element that holds all the column header elements
+// @param pianoRollObject: an instance of PianoRoll
+// @param headerId: the id of the element that holds all the column header elements
 function redrawCellBorders(pianoRollObject, headerId){
 
 	var subdivision = pianoRollObject.subdivision; 
@@ -241,7 +234,7 @@ function redrawCellBorders(pianoRollObject, headerId){
 		};
 		
 		// update piano roll num measures 
-		pianoRollObject.numberOfMeasures = measureCounter - 1;
+		pianoRollObject.numberOfMeasures = measureCounter-1;
 		
 	}
 		

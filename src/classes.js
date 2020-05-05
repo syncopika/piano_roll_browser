@@ -37,7 +37,7 @@ function PianoRoll(){
 		"32nd": 10,
 	}
 	this.lockNoteSize = "16th"; // the note-size increment to be used when moving/placing notes
-	this.addNoteSize = "last selected"; // default note-size to use when adding notes (changes based on last resize). other options = "8th", "16th", "32nd". used in addNote()
+	this.addNoteSize = "last selected"; // note-size to use when adding notes (changes based on last selected/resize by default)
 	this.lastNoteSize = 40; // last clicked-on note size in px as integer 
 	this.noteIdNum = 0; // use this to create a unique number for each added note's id
 	
@@ -165,14 +165,6 @@ function PianoRoll(){
 		"C#2": 69.30,
 		"C2": 65.41
 	};
-
-	// figure out note lengths using these. 
-	// each note length corresponds to a factor which to divide the currentTempo (milliseconds per quarter note) by
-	this.noteLengths = {
-		"quarter": 1, 
-		"eighth": 2,    // this means divide by a factor of 2 to get milliseconds per eighth note
-		"sixteenth": 4
-	}
 	
 	// initialize the audio context and setup some stuff 
 	this.init = function(){

@@ -36,7 +36,6 @@ check out a demo! see the demo dropdown box.
     
 ### current issues:    
 - non-functional currently on Edge and doesn't work quite well on Firefox (especially with percussion and custom presets). requires further debugging.    
-- can get pretty slow when changing instruments because of the onion skin.    
 - downloading the audio isn't great on Chrome - the audio duration is messed up (see: https://stackoverflow.com/questions/38443084/how-can-i-add-predefined-length-to-audio-recorded-from-mediarecorder-in-chrome).    
     
 ### current next steps?:    
