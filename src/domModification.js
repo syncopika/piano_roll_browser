@@ -150,6 +150,11 @@ function resizeHelper(newNote, pianoRollObject, evt){
 	}else{
 		// minimizing
 		if(inRange(pos, prevBlockPos-3, prevBlockPos)){
+			// do not allow 0 width 
+			var newWidth = currNoteWidth - noteSize;
+			if(newWidth <= 0){
+				return;
+			}
 			newNote.style.width = (currNoteWidth - noteSize) + "px";
 		}
 	}
@@ -211,6 +216,7 @@ function createNewNoteElement(pianoRollObject){
 	newNote.style.height = "15px";
 	newNote.style.position = "absolute";
 	newNote.style.opacity = 1.0;
+	newNote.style.zIndex = 100;
 	newNote.classList.add("noteElement");
 	newNote.classList.add("context-menu-one");
 	newNote.id = "note" + pianoRollObject.noteIdNum++;
@@ -222,8 +228,6 @@ function createNewNoteElement(pianoRollObject){
 	}
 	
 	newNote.addEventListener("mousemove", function(e){
-		e.preventDefault();
-		
 		// allow resize cursor to show when the mouse moves over the right edge of the note
 		if(e.offsetX >= (parseInt(newNote.style.width) - 3)){
 			newNote.style.cursor = "w-resize";
@@ -295,9 +299,9 @@ function createNewNoteElement(pianoRollObject){
 // @param evt: a MouseEvent
 function addNote(id, pianoRollObject, evt){
 
-	if(evt.target.classList.contains("noteElement")){
-		// prevent shrinking a note from also creating a new note 
-		// because there'll be a click (which triggers this function) and a mouseup registered when resizing
+	if(evt.target.style.zIndex == 100){
+		// prevent shrinking a note from also creating a new note
+		// because there'll be a click (which triggers this function) and a mouseup registered when resizing,
 		// when shrinking a note the cursor will be on the note being shrunk, so we can check the target
 		return;
 	}
