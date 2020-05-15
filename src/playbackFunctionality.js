@@ -179,6 +179,17 @@ function readInNotes(instrument, pianoRollObject){
 	return allNotes;
 }
 
+// tag a group of oscillators and assign them a stop time with a map
+// @param oscList: a list of OscillatorNode
+// @param tag: a string to tag the OscillatorNode as the stem before a number gets appended
+// @param map: an object to store the mapping between oscillator tag and stop time
+// @param stopTime: a float representing when to stop playing the oscillator
+function mapOscillatorStopTime(oscList, tag, map, stopTime){
+	oscList.forEach(function(osc, index){
+		osc.tag = (tag + index); // we can just arbitrarily add a new attribute. nice!
+		map[osc.tag] = stopTime;
+	});
+}
 
 /****
 
@@ -294,7 +305,6 @@ function scheduler(pianoRoll, allInstruments){
 			var notesArr = instruments[i].notes;
 			var currIndex = instrumentNotePointers[i];
 			var currNotes = notesArr[currIndex];
-			var osc = null;
 			
 			if(nextTime[i] === 0){
 				// for the very first note
@@ -313,10 +323,18 @@ function scheduler(pianoRoll, allInstruments){
 					nextTime[i] += (actualStart / 1000);
 				}
 			}
+			
+			// keep track of when a note should end because that information is important for turning off 
+			// an oscillator node at the right time (via stop()). unfortunately stop can only be called
+			// after start and I start all the oscillator nodes only after I set the duration of each note's gain,
+			// in which I no longer can access the duration info. the oscillator nodes should stop basically at 
+			// the same time their gain nodes reach 0 volume.
+			var stopTimeMap = {};
 
 			// currNotes is a list that has at least 1 note. can have multiple notes (i.e. snare drum or a chord)
 			currNotes.forEach(function(thisNote, index){
 				
+				var osc = null;
 				var oscGainNode = initGain(ctx); // new gain node for each oscillator
 				var volume = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
 				
@@ -348,6 +366,8 @@ function scheduler(pianoRoll, allInstruments){
 					}else{
 						osc = pianoRoll.PercussionManager.hihatNote(volume, nextTime[i], true);
 					}
+					
+					mapOscillatorStopTime(osc, thisNote.block.id, stopTimeMap, nextTime[i] + (realDuration / 1000));
 
 					oscList = oscList.concat(osc);	
 					
@@ -356,6 +376,9 @@ function scheduler(pianoRoll, allInstruments){
 					// custom intrument preset!
 					var currPreset = pianoRoll.instrumentPresets[instruments[i].waveType];
 					var instrumentPresetNodes = processNote(thisNote.freq, volume, nextTime[i], pianoRoll, currPreset); 
+					
+					mapOscillatorStopTime(osc, thisNote.block.id, stopTimeMap, nextTime[i] + (realDuration / 1000));
+					
 					oscList = oscList.concat(instrumentPresetNodes);
 					
 				}else{	
@@ -386,6 +409,9 @@ function scheduler(pianoRoll, allInstruments){
 					// change gain to 0 after a really small amount of time to give the impression of articulation
 					oscGainNode.gain.setTargetAtTime(0, (nextTime[i]) + (realDuration / 1000) - .0025, 0.0010);		
 					
+					// now keep track of the oscillators and map them to when they should be stopped
+					mapOscillatorStopTime([osc], thisNote.block.id, stopTimeMap, nextTime[i] + (realDuration / 1000));
+					
 					oscList.push(osc);
 					
 					// use right context destination for recording
@@ -395,15 +421,16 @@ function scheduler(pianoRoll, allInstruments){
 					oscGainNode.connect(pianoRoll.audioContextDestOriginal);
 					
 				}
-			
+				
 				pianoRoll.timers = pianoRoll.timers.concat(oscList);
 
 				if(index === currNotes.length - 1){
+					//console.log(stopTimeMap);
 					
 					// we're at the last note of this chord (if multiple notes)
 					oscList.forEach(function(osc){
 						osc.start(nextTime[i]);
-						osc.stop(nextTime[i] + (realDuration / 1000)); // converting to seconds here - thus divide by 1000
+						osc.stop(stopTimeMap[osc.tag]);
 					});
 					
 					// update lastTime and nextTime
