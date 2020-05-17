@@ -14,7 +14,7 @@ $(document).ready(function(){
 		special block for just piano notes 
 		this is supposed to move right when scroll right 
 	*/
-	var position = $('#C7').position();
+	var position = $('#C8').position();
 	$('#pianoNotes').css('left', position.left);
 	$('#pianoNotes').css('top', position.top);
 });
@@ -59,7 +59,7 @@ $(window).scroll(function(){
 
 	// change position of the piano notes bar on the left to move 
 	// with horizontal scroll 
-	$('#pianoNotes').css('top', $("#C7").position().top);
+	$('#pianoNotes').css('top', $("#C8").position().top);
 	$('#pianoNotes').css('left', $(window).scrollLeft());
 	
 	// adjust the left padding the mobile note bar! it should only 

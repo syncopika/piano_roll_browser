@@ -55,7 +55,7 @@ function PianoRoll(){
 
 	// NOTE FREQUENCIES WITH A @ 440Hz
 	this.noteFrequencies = {
-	/*
+
 		"C8": 4186.01,
 		"B7": 3951.07,
 		"Bb7": 3729.31,
@@ -73,7 +73,7 @@ function PianoRoll(){
 		"D7": 2349.32,
 		"Db7": 2217.46,
 		"C#7": 2217.46,
-	*/
+
 		"C7": 2093.00,
 		"B6": 1975.53,
 		"Bb6": 1864.66,
