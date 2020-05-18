@@ -191,6 +191,7 @@ function mapOscillatorStopTime(oscList, tag, map, stopTime){
 	});
 }
 
+
 /****
 
 	need a scheduler to schedule when a note should be played given a time based on the AudioContext's timer 
@@ -251,6 +252,10 @@ function scheduler(pianoRoll, allInstruments){
 		}
 	}
 	
+	// gather the column headers so we can process them to indicate the approx. current location for playback
+	var columnHeadersToHighlight = Array.from(document.getElementById("columnHeaderRow").children).splice(1); // remove first col header since it's for cosmetic purposes
+	var highlightNextTime = ctx.currentTime; // keep track of when to start and stop oscillators responsible for highlighting the current approx. playback location
+	
 	// in the case where the user specified a measure to start playing at
 	if(startMarker){
 
@@ -279,10 +284,23 @@ function scheduler(pianoRoll, allInstruments){
 				}
 			}
 		}
+		columnHeadersToHighlight = columnHeadersToHighlight.splice(parseInt(startMarker.match(/[0-9]+/g)[0]));
 	}
 	
+	// set up oscillator just for highlighting approx. the current column header
+	// note each column header is 40 px in length (that's 1 eighth note)
+	// so they should all be the same length in duration
+	columnHeadersToHighlight.forEach((header) => {
+		var highlightOsc = ctx.createOscillator();
+		highlightOsc.start(highlightNextTime);
+		highlightNextTime += (getCorrectLength(40, pianoRoll) / 1000);
+		highlightOsc.stop(highlightNextTime);
+		highlightOsc.onended = onendFunc(header.id, pianoRoll);
+		pianoRoll.timers.push(highlightOsc);
+	});
+	
 	while(pianoRoll.isPlaying && stillNotesToPlay < instruments.length){
-
+		
 		// for each instrument in the piano roll, get their next note and schedule it 
 		// to play given the next note's duration 
 		// mind any attributes like staccato and legato!
@@ -325,7 +343,7 @@ function scheduler(pianoRoll, allInstruments){
 			}
 			
 			// keep track of when a note should end because that information is important for turning off 
-			// an oscillator node at the right time (via stop()). unfortunately stop can only be called
+			// an oscillator node at the right time via stop(). unfortunately stop can only be called
 			// after start and I start all the oscillator nodes only after I set the duration of each note's gain,
 			// in which I no longer can access the duration info. the oscillator nodes should stop basically at 
 			// the same time their gain nodes reach 0 volume.
@@ -449,20 +467,12 @@ function scheduler(pianoRoll, allInstruments){
 
 					// increment the note pointer for this instrument 
 					instrumentNotePointers[i]++;
-					
-					// add note to play into currentInstrumentNoteQueue
-					if(instruments[i] === pianoRoll.currentInstrument){
-						// when oscillator ends, highlight the note (if oscList contains more than 1 node, just pick the first one)
-						// TODO: don't use note oscillators for this feature (showing which note is currently playing)
-						osc = oscList[0];
-						osc.onended = onendFunc(document.getElementById(thisNote.block.id).parentNode.id, pianoRoll);
-						pianoRoll.currentInstrumentNoteQueue.push({"note": thisNote.block.id, "time": nextTime[i]});
-					}
 				}
 			
 			}); // end forEach currNotes 
 			
-		} // end for	
+		} // end for
+		
 	} // end while 
 	
 	if(pianoRoll.loopFlag && pianoRoll.isPlaying){
@@ -470,6 +480,7 @@ function scheduler(pianoRoll, allInstruments){
 		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){loopSignal(pianoRoll, allInstruments)};
 	}else if(pianoRoll.recording){
 		// stop the recorder when the last oscillator is done playing
+		// TODO: this is broken
 		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){	
 			// stop recorder
 			pianoRoll.recorder.stop();
@@ -488,11 +499,11 @@ function scheduler(pianoRoll, allInstruments){
 function loopSignal(pianoRollObject, allInstruments){
 	setTimeout(function(){
 		scheduler(pianoRollObject, allInstruments);
-	}, 80);
+	}, 80); // 80 ms before re-executing scheduler
 }
 
 
-//play notes for current instrument
+// play notes for current instrument
 function play(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
@@ -502,7 +513,7 @@ function play(pianoRollObject){
 	}
 }
 
-//play all instruments
+// play all instruments
 function playAll(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
@@ -561,7 +572,6 @@ function stopPlay(pianoRollObject){
 	
 	lastNote = null;
 	currNote = null;
-	pianoRollObject.currentInstrumentNoteQueue = [];
 }
 
 

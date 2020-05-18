@@ -20,7 +20,6 @@ function PianoRoll(){
 	this.audioDataChunks = [];
 	this.isPlaying;				// a boolean flag to easily quit playing
 	this.lastTime; 				// the time the last note was supposed to be played
-	this.currentInstrumentNoteQueue = []; // keep track of the current instrument' scheduled notes. use this for showing what note is currently playing
 	this.loopFlag = false;		// if playback should be looped or not 
 	this.recording = false;		// if recording. note that if looping, recording should not be possible.
 	this.recorder;
@@ -55,7 +54,7 @@ function PianoRoll(){
 
 	// NOTE FREQUENCIES WITH A @ 440Hz
 	this.noteFrequencies = {
-	/*
+
 		"C8": 4186.01,
 		"B7": 3951.07,
 		"Bb7": 3729.31,
@@ -73,7 +72,7 @@ function PianoRoll(){
 		"D7": 2349.32,
 		"Db7": 2217.46,
 		"C#7": 2217.46,
-	*/
+
 		"C7": 2093.00,
 		"B6": 1975.53,
 		"Bb6": 1864.66,

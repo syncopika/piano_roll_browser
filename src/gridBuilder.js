@@ -94,6 +94,7 @@ function buildGrid(gridDivId, pianoRollObject){
 	var thePiano = document.getElementById(gridDivId);
 	
 	// this special div is the bar that shows the available notes 
+	// TODO? move this out of here?
 	var pianoNotes = document.getElementById('pianoNotes');
 	
 	for(var note in pianoRollObject.noteFrequencies){
@@ -128,7 +129,7 @@ function buildGrid(gridDivId, pianoRollObject){
 		newRowClone.appendChild(textClone);
 		pianoNotes.append(newRowClone);
 		
-		// append columns to each row 
+		// append column cells to each row 
 		for(var j = 0; j < pianoRollObject.numberOfMeasures * pianoRollObject.subdivision; j++){
 			var column = createColumnCell(note, j, pianoRollObject);
 			newRow.appendChild(column);

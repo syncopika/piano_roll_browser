@@ -55,7 +55,7 @@ describe('testing gridBuilder.js', function(){
 		
 		// there should be a row (div) for each note, + the pianoNotes div 
 		// the pianoNotes div should have n children, where n = number of unique notes
-		var numUniqueNotes = 61; //Object.keys(pianoRoll.noteFrequencies).length;
+		const numUniqueNotes = 73; // 6 octaves + C8
 		expect(document.getElementById(el.id).children.length).to.equal(numUniqueNotes);
 		expect(document.getElementById(pianoNotes.id).children.length).to.equal(numUniqueNotes);
 	});

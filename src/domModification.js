@@ -62,7 +62,7 @@ function canPlaceNote(posToPlace, currContainerChildren){
 }
 
 // places a note at the position specified by evt. placement depends on the current note lock size
-// @param note: an html element representing a note 
+// @param note: an html element representing a note, or null for creating a new note
 // @param pianoRollObject: an instance of PianoRoll
 // @param evt: a MouseEvent 
 // @return: the note that was placed if it was, else null
@@ -497,9 +497,7 @@ function changeTimeSignature(pianoRollObject, newTimeSig){
 	// https://www.html5rocks.com/en/tutorials/audio/scheduling/
 	// trying to sync visual (show currently playing note) with audio...
 	// right now I'm using the oscillator node's onended function to 
-	// highlight where the current note playing is. obviously, since it's
-	// onended it's a bit laggy... but it gives a good idea of where the piece is 
-	// and it works just the same on low and high tempi 
+	// highlight where the current note playing is.
 ***/
 var lastNote = null;
 var onendFunc = function(x, pianoRoll){ 
