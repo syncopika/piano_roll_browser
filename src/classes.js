@@ -20,7 +20,6 @@ function PianoRoll(){
 	this.audioDataChunks = [];
 	this.isPlaying;				// a boolean flag to easily quit playing
 	this.lastTime; 				// the time the last note was supposed to be played
-	this.currentInstrumentNoteQueue = []; // keep track of the current instrument' scheduled notes. use this for showing what note is currently playing
 	this.loopFlag = false;		// if playback should be looped or not 
 	this.recording = false;		// if recording. note that if looping, recording should not be possible.
 	this.recorder;

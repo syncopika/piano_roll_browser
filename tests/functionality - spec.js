@@ -41,7 +41,6 @@ describe('testing playbackFunctionality.js', function(){
 		stopPlay(pianoRoll);
 		assert(pianoRoll.isPlaying === false);
 		assert(pianoRoll.timers.length === 0);
-		assert(pianoRoll.currentInstrumentNoteQueue.length === 0);
 	});
 
 });

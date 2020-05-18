@@ -6,11 +6,10 @@
 - onion-skin sometimes prevents resizing ability? (can't reproduce currrently :/)
   
 current things to do now:
-	- onendFunc -> don't tie it to a note but rather maybe make a silent oscillator for every column for consistency?
 	- delete measure functionality
 	- improve percussion
 	- the pianoNotes div (i.e. mobile piano bar) implementation could be cleaned up a bit maybe?
 	- haven't found the exact cause yet but sometimes notes aren't getting picked up (maybe because of onion-skin) and you have to 
           delete them + re-add.
-	- work on soundmaker for custom presets
+	- recording needs to be fixed (stops recording too early)
 	- pre-commit hook for running tests!
