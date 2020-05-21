@@ -130,6 +130,11 @@ function sortNotesByPosition(instrument){
 	for(var noteId in instrument.activeNotes){
 		
 		var note = instrument.activeNotes[noteId];
+		
+		if(note.style.left === ""){
+			note.style.left = note.getBoundingClientRect().left + window.pageXOffset + "px";
+		}
+		
 		var position = parseInt(note.style.left);
 		
 		if(positionMapping[position] === undefined){
@@ -480,7 +485,7 @@ function scheduler(pianoRoll, allInstruments){
 		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){loopSignal(pianoRoll, allInstruments)};
 	}else if(pianoRoll.recording){
 		// stop the recorder when the last oscillator is done playing
-		// TODO: this is broken
+		// TODO: this is broken - the last oscillator in timers might end earlier than the very last of note of the whole piece!
 		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){	
 			// stop recorder
 			pianoRoll.recorder.stop();
