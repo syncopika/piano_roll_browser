@@ -16,8 +16,13 @@ This project is a work-in-progress
      
 ### instructions:    
 - To change the name of the piece or the composer, double click on 'title' or 'composer', just above the buttons.     
-
+    
+- Right-click an instrument block to change the sound, its default volume or toggle its notes' visibility when switching to another instrument.    
+    
 - Left-click a block on the grid to place a note; right-click to open a context menu to delete or use the middle mouse button. Stretch or shorten notes by grabbing the right side of a note and dragging. Notes can also be moved. Form chords by placing multiple notes in a column!    
+    
+Instrument context-menu on right-click:    
+![instrument context menu](screenshots/instrument_menu.gif "instrument context menu")   
     
 Note context-menu on right-click:    
 ![note context menu](screenshots/note_menu.gif "note context menu")   
