@@ -9,7 +9,7 @@ This project is a work-in-progress
     
 ### cool features:    
 - saveable projects    
-- can click-and-drag to move and resize notes   
+- can click-and-drag to move and resize notes (down to as small as 32nd notes)   
 - each note is customizable    
 - togglable onion skin    
 - recordable    
@@ -21,6 +21,8 @@ This project is a work-in-progress
     
 - Left-click a block on the grid to place a note; right-click to open a context menu to delete or use the middle mouse button. Stretch or shorten notes by grabbing the right side of a note and dragging. Notes can also be moved. Form chords by placing multiple notes in a column!    
     
+- change the note lock size to adjust the range of note sizes and positions!    
+    
 Instrument context-menu on right-click:    
 ![instrument context menu](screenshots/instrument_menu.gif "instrument context menu")   
     
@@ -29,8 +31,6 @@ Note context-menu on right-click:
     
 Resizing notes:    
 ![resizing notes](screenshots/note_resize.gif "resizing notes")    
-    
-- change the note lock type to adjust the range of note sizes and positions!    
     
 Changing note lock size:    
 ![changing note lock size](screenshots/note_lock.gif "changing note lock size")    
@@ -52,13 +52,13 @@ check out a demo! see the demo dropdown box.
 - be able to repeat a section 
     
 ### implementation / design:    
-The objective of my piano roll, at least conceptually, is fairly straightforward. The goal is to arrange a number of notes with
+The objective of my piano roll, at least conceptually, is I think fairly straightforward. The goal is to arrange a number of notes with
 varying lengths and pitches with the help of a grid, put these notes in an array and then create OscillatorNodes for each note so that a musical phrase can be played back.    
     
 My implementation does not use the canvas element like some other piano roll implementations and instead relies on just DOM manipulation of a grid to manipulate notes.
 Users can place and move notes freely on the piano roll. In order to do that, my program looks at a couple of factors: the location of the cursor and the note lock size, which can be an 8th note (1 block on the piano roll), 16th note (half a block), or 32nd note. The note lock size determines the incremental distance a note block can be moved. The smaller the note, the more possible locations within a piano roll block it could be placed. For note movement, the cursor's location is taken into account and if it is over a piano roll block, my program determines, based on the cursor's x-position, what position within the piano roll block the cursor is closest to and places the note at that position.    
     
-For the context menus used to edit instruments and notes, I used the awesome jQuery contextMenu library provided here: https://swisnl.github.io/jQuery-contextMenu/. Thanks very much to them.
+For the context menus used to edit instruments and notes, I used the awesome jQuery contextMenu library provided here: https://swisnl.github.io/jQuery-contextMenu/. Thanks very much to them!
     
 ### demos:    
 Intrada - Johann Pezel (1639 - 1694). One of my favorite brass quintet pieces!    
