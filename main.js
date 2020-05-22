@@ -403,15 +403,20 @@ function getFile(e){
 	var reader = new FileReader();
 	var file = e.target.files[0];
 	
-	// TODO: check for json file? file validation of some sort?
-	
 	//when the image loads, put it on the canvas.
 	reader.onload = (function(theFile){
 		return function(e){
-			// clear grid first
+			
+			var data = JSON.parse(e.target.result);
+			
+			// make sure project is valid
+			if(!validateProject(data)){
+				return;
+			}
+			
 			// note that I'm relying on my pianoRoll variable
 			clearGridAll(pianoRoll);
-			var data = JSON.parse(e.target.result);
+			
 			processData(data);
 		}
 	})(file);
@@ -419,6 +424,16 @@ function getFile(e){
 	//read the file as a URL
 	reader.readAsText(file);
 };
+
+function validateProject(project){
+	var measures = typeof(project.measures) === "number";
+	var tempo = typeof(project.tempo) === "number";
+	var composer = typeof(project.composer) === "string";
+	var title = typeof(project.title) === "string";
+	var subdivision = typeof(project.subdivision) === "number"; // do we even need this?
+	var instruments = project.instruments !== "undefined";
+	return measures && tempo && composer && title && subdivision && instruments;
+}
 
 
 /****

@@ -483,17 +483,6 @@ function scheduler(pianoRoll, allInstruments){
 	if(pianoRoll.loopFlag && pianoRoll.isPlaying){
 		// get the last oscillator and make it send a signal when it's done playing to start over again 
 		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){loopSignal(pianoRoll, allInstruments)};
-	}else if(pianoRoll.recording){
-		// stop the recorder when the last oscillator is done playing
-		// TODO: this is broken - the last oscillator in timers might end earlier than the very last of note of the whole piece!
-		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){	
-			// stop recorder
-			pianoRoll.recorder.stop();
-			pianoRoll.recording = false;
-			
-			// relies on specific html element: not the best thing to do here...
-			document.getElementById('record').style.border = "";
-		}
 	}
 	
 }

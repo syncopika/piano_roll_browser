@@ -459,6 +459,11 @@ function drawNotes(instrumentObject){
 function changeTempo(pianoRollObject){
 	var tempoInput = document.getElementById("changeTempo");
 	var selectedTempo = parseInt(tempoInput.value);
+	
+	if(isNaN(selectedTempo)){
+		return;
+	}
+	
 	var tempoText = document.getElementById("tempo");
 	tempoText.innerHTML = selectedTempo + " bpm";
 	
@@ -500,25 +505,32 @@ function changeTimeSignature(pianoRollObject, newTimeSig){
 	// highlight where the current note playing is.
 ***/
 var lastNote = null;
-var onendFunc = function(x, pianoRoll){ 
+var onendFunc = function(colHeaderId, pianoRoll){ 
 	return function(){
+		
+		var colHeaders = document.getElementById('columnHeaderRow').children;
+		var lastHeaderId = colHeaders[colHeaders.length-1].id;
+		
+		if(pianoRoll.recording && colHeaderId === lastHeaderId){
+			// stop the recorder when the last column has been reached
+			pianoRoll.recorder.stop();
+			pianoRoll.recording = false;
+			
+			// relies on specific html element: not the best thing to do here...
+			document.getElementById('record').style.border = "";
+		}
 
 		// take away highlight of previous note 
 		if(lastNote && pianoRoll.playMarker !== lastNote.id){
 			lastNote.style.backgroundColor = '#fff';
 		}
 		
-		var column = x.substring(x.indexOf('col'));
-		if(document.getElementById(column) === null){
-			column = x.substring(x.indexOf('col'), x.indexOf('-'));
-		}
-		
-		var currNote = document.getElementById(column);
-		if(pianoRoll.isPlaying && pianoRoll.playMarker !== currNote.id){
-			document.getElementById(column).style.backgroundColor = pianoRoll.currNotePlayingColor;
+		var currCol = document.getElementById(colHeaderId);
+		if(pianoRoll.isPlaying && pianoRoll.playMarker !== colHeaderId){
+			currCol.style.backgroundColor = pianoRoll.currNotePlayingColor;
 		}
 
-		lastNote = currNote;
+		lastNote = currCol;
 	}
 };
 

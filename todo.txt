@@ -14,4 +14,5 @@ current things to do now:
 	- the pianoNotes div (i.e. mobile piano bar) implementation could be cleaned up a bit maybe?
 	- haven't found the exact cause yet but sometimes notes aren't getting picked up (maybe because of onion-skin) and you have to 
           delete them + re-add.
-	- recording needs to be fixed (stops recording too early)
+	- add metronome? is scheduler scheduling on time?
+	- accessibility?
