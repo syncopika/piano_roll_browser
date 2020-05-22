@@ -45,9 +45,9 @@ function clickNote(id, waveType, pianoRollObject){
 			var allNodes = [];
 			
 			currPreset.waveNodes.forEach((node) => {
-				let snap = addWaveNode(node, pianoRollObject);
-				let snapOsc = snap[0];
-				let snapEnv = snap[1];
+				var snap = addWaveNode(node, pianoRollObject);
+				var snapOsc = snap[0];
+				var snapEnv = snap[1];
 				
 				snapOsc.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], time);
 				snapEnv.gain.setValueAtTime(pianoRollObject.currentInstrument.volume, time);
@@ -55,9 +55,9 @@ function clickNote(id, waveType, pianoRollObject){
 			});
 			
 			currPreset.noiseNodes.forEach((node) => {
-				let noise = addNoise(node, pianoRollObject);
-				let noiseOsc = noise[0];
-				let noiseEnv = noise[1];
+				var noise = addNoise(node, pianoRollObject);
+				var noiseOsc = noise[0];
+				var noiseEnv = noise[1];
 				
 				noiseEnv.gain.setValueAtTime(pianoRollObject.currentInstrument.volume, time);
 				allNodes.push(noiseOsc);
@@ -130,6 +130,11 @@ function sortNotesByPosition(instrument){
 	for(var noteId in instrument.activeNotes){
 		
 		var note = instrument.activeNotes[noteId];
+		
+		if(note.style.left === ""){
+			note.style.left = note.getBoundingClientRect().left + window.pageXOffset + "px";
+		}
+		
 		var position = parseInt(note.style.left);
 		
 		if(positionMapping[position] === undefined){
@@ -478,17 +483,6 @@ function scheduler(pianoRoll, allInstruments){
 	if(pianoRoll.loopFlag && pianoRoll.isPlaying){
 		// get the last oscillator and make it send a signal when it's done playing to start over again 
 		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){loopSignal(pianoRoll, allInstruments)};
-	}else if(pianoRoll.recording){
-		// stop the recorder when the last oscillator is done playing
-		// TODO: this is broken
-		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){	
-			// stop recorder
-			pianoRoll.recorder.stop();
-			pianoRoll.recording = false;
-			
-			// relies on specific html element: not the best thing to do here...
-			document.getElementById('record').style.border = "";
-		}
 	}
 	
 }
