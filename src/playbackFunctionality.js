@@ -45,9 +45,9 @@ function clickNote(id, waveType, pianoRollObject){
 			var allNodes = [];
 			
 			currPreset.waveNodes.forEach((node) => {
-				let snap = addWaveNode(node, pianoRollObject);
-				let snapOsc = snap[0];
-				let snapEnv = snap[1];
+				var snap = addWaveNode(node, pianoRollObject);
+				var snapOsc = snap[0];
+				var snapEnv = snap[1];
 				
 				snapOsc.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], time);
 				snapEnv.gain.setValueAtTime(pianoRollObject.currentInstrument.volume, time);
@@ -55,9 +55,9 @@ function clickNote(id, waveType, pianoRollObject){
 			});
 			
 			currPreset.noiseNodes.forEach((node) => {
-				let noise = addNoise(node, pianoRollObject);
-				let noiseOsc = noise[0];
-				let noiseEnv = noise[1];
+				var noise = addNoise(node, pianoRollObject);
+				var noiseOsc = noise[0];
+				var noiseEnv = noise[1];
 				
 				noiseEnv.gain.setValueAtTime(pianoRollObject.currentInstrument.volume, time);
 				allNodes.push(noiseOsc);

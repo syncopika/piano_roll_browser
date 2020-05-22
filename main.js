@@ -177,10 +177,10 @@ function bindButtons(pianoRollObject){
 		$('#measures').text( "number of measures: " + pianoRollObject.numberOfMeasures );
 	});
 	
-	// import instrument preset
+	/* import instrument preset
 	document.getElementById('importInstrumentPreset').addEventListener('click', function(){
 		importInstrumentPreset();
-	});
+	});*/
 }
 
 // import json of instrument preset 
@@ -425,13 +425,31 @@ function getFile(e){
 	reader.readAsText(file);
 };
 
+// some basic validation, not comprehensive (i.e. not going to check whether every note has all the necessary fields)
 function validateProject(project){
 	var measures = typeof(project.measures) === "number";
 	var tempo = typeof(project.tempo) === "number";
 	var composer = typeof(project.composer) === "string";
 	var title = typeof(project.title) === "string";
 	var subdivision = typeof(project.subdivision) === "number"; // do we even need this?
-	var instruments = project.instruments !== "undefined";
+	var instruments = Array.isArray(project.instruments);
+	
+	// make sure note information is in current format
+	project.instruments.forEach((instrument) => {
+		
+		if(!(typeof(instrument.notes) === "object")){
+			return false;
+		}
+		
+		for(var note in instrument.notes){
+			var isNoteArray = Array.isArray(instrument.notes[note]);
+			if(!isNoteArray){
+				return false;
+			}
+		}
+			
+	});
+	
 	return measures && tempo && composer && title && subdivision && instruments;
 }
 
