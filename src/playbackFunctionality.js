@@ -20,7 +20,6 @@ function initGain(context){
 	return newGain;
 }
 
-
 // plays the corresponding pitch of a block when clicked 
 // @param id: an HTML element id 
 // @param waveType: a string representing the sound type (i.e. sine, triangle, etc.)
@@ -147,8 +146,6 @@ function sortNotesByPosition(instrument){
 	return positionMapping;
 }
 
-
-
 // get an array of Note object arrays for an instrument 
 // since chords are allowed and multiple notes may start at the same x-position,
 // each array within the resulting array represents the note(s) at a position.
@@ -258,7 +255,19 @@ function scheduler(pianoRoll, allInstruments){
 	}
 	
 	// gather the column headers so we can process them to indicate the approx. current location for playback
+	// filter columnHeadersToHighlight a bit more - we only want to include up to the last column that has notes.
+	// any column past that we don't want 
 	var columnHeadersToHighlight = Array.from(document.getElementById("columnHeaderRow").children).splice(1); // remove first col header since it's for cosmetic purposes
+	var lastColWithNotes;
+	columnHeadersToHighlight.forEach((col, index) => {
+		if(col.getAttribute("numNotes") > 0){
+			lastColWithNotes = index;
+		}
+	});
+	if(lastColWithNotes){
+		columnHeadersToHighlight = columnHeadersToHighlight.slice(0, lastColWithNotes+1);
+	}
+	
 	var highlightNextTime = ctx.currentTime; // keep track of when to start and stop oscillators responsible for highlighting the current approx. playback location
 	
 	// in the case where the user specified a measure to start playing at
@@ -300,8 +309,12 @@ function scheduler(pianoRoll, allInstruments){
 		highlightOsc.start(highlightNextTime);
 		highlightNextTime += (getCorrectLength(40, pianoRoll) / 1000);
 		highlightOsc.stop(highlightNextTime);
-		highlightOsc.onended = onendFunc(header.id, pianoRoll);
-		pianoRoll.timers.push(highlightOsc);
+		highlightOsc.onended = onendFunc(
+			header.id, 
+			columnHeadersToHighlight[columnHeadersToHighlight.length-1].id, 
+			pianoRoll
+		);
+		pianoRoll.timers.push(highlightOsc); // maybe should use a separate timers array?
 	});
 	
 	while(pianoRoll.isPlaying && stillNotesToPlay < instruments.length){
@@ -456,8 +469,8 @@ function scheduler(pianoRoll, allInstruments){
 						var nextNote = notesArr[currIndex+1][0];
 						var nextNotePos = document.getElementById(nextNote.block.id).getBoundingClientRect().left + window.pageXOffset;
 						var thisNotePos = document.getElementById(thisNote.block.id).getBoundingClientRect().left + window.pageXOffset;
-						var durationUntilNextNoteStart = getCorrectLength(nextNotePos - thisNotePos, pianoRoll);
-						nextTime[i] += (durationUntilNextNoteStart / 1000);
+						var durationUntilNextNoteStart = getCorrectLength(nextNotePos - thisNotePos, pianoRoll) / 1000;
+						nextTime[i] += durationUntilNextNoteStart;
 					}else{
 						nextTime[i] += (thisNote.duration / 1000);
 					}
@@ -473,7 +486,8 @@ function scheduler(pianoRoll, allInstruments){
 	} // end while 
 	
 	if(pianoRoll.loopFlag && pianoRoll.isPlaying){
-		// get the last oscillator and make it send a signal when it's done playing to start over again 
+		// is this actually correct? the last oscillator in timers might not be necessarily the last note of the piece?
+		// seems to work well most, if not all the time though so far.
 		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){loopSignal(pianoRoll, allInstruments)};
 	}
 	

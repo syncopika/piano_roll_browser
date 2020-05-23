@@ -1,7 +1,7 @@
 /******* 
 	
 	CONTEXT MENU FOR INSTRUMENTS 
-	@param pianoRollObject = a PianoRoll object 
+	@param pianoRollObject: an instance of PianoRoll
 	relies on dom elements with the class 'context-menu-instrument'
 	
 *******/
@@ -113,6 +113,7 @@ function makeInstrumentContextMenu(pianoRollObject){
 /*****  
 	
 	CONTEXT MENU FOR GRID NOTES 
+	@param pianoRollObject: an instance of PianoRoll
 	
 *****/
 function makeNoteContextMenu(pianoRollObject){
@@ -177,6 +178,10 @@ function makeNoteContextMenu(pianoRollObject){
 								callback: function(key, options){
 									var note = options.$trigger[0];
 									var parent = note.parentNode;
+
+									var colHeader = document.getElementById(parent.id.substring(parent.id.indexOf("col")));
+									colHeader.setAttribute("numNotes", parseInt(colHeader.getAttribute("numNotes"))-1);
+			
 									parent.removeChild(note);
 									delete pianoRollObject.currentInstrument.activeNotes[note.id];
 								}

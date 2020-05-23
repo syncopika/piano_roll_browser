@@ -145,6 +145,7 @@ Object.freeze(defaultInstruments);
 	the scheduler function?
 	but we also need to note that default, legato and staccato
 	affect duration, whereas glide affects oscillator freq.
+	or maybe make this its own class?
 ******/
 const defaultNoteStyles = {
 	1: "default", 

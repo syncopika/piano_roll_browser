@@ -361,11 +361,11 @@ function processData(data){
 		
 		// add their notes to the grid
 		newInstrument.activeNotes = {};
-		for(var noteContainer in newInstrument.notes){
+		for(var noteContainerId in newInstrument.notes){
 			// newInstrument.notes is a mapping of noteContainer ids to 
 			// the length and left pos of the actual note that will go in
 			// the containers
-			newInstrument.notes[noteContainer].forEach((noteAttr) => {
+			newInstrument.notes[noteContainerId].forEach((noteAttr) => {
 				var newNote = createNewNoteElement(pianoRoll);
 				newNote.style.width = noteAttr.width;
 				newNote.style.left = noteAttr.left;
@@ -374,7 +374,10 @@ function processData(data){
 				newNote.setAttribute("volume", noteAttr.volume);
 				newNote.setAttribute("type", noteAttr.type);
 				newInstrument.activeNotes[newNote.id] = newNote;
-				document.getElementById(noteContainer).appendChild(newNote);
+				document.getElementById(noteContainerId).appendChild(newNote);
+
+				var colHeader = document.getElementById(noteContainerId.substring(noteContainerId.indexOf("col")));
+				colHeader.setAttribute("numNotes", parseInt(colHeader.getAttribute("numNotes"))+1);			
 			});
 		}
 		newInstrument.notes = readInNotes(newInstrument, pianoRoll);
