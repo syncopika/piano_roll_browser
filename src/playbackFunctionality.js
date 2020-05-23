@@ -366,17 +366,16 @@ function scheduler(pianoRoll, allInstruments){
 				var realDuration;
 				
 				if(thisNote.block.style === "staccato"){
-					realDuration = (0.50 * thisNote.duration);
+					realDuration = (0.50 * thisNote.duration)/1000;
 				}else if(thisNote.block.style === "legato"){
-					realDuration = (0.95 * thisNote.duration);
+					realDuration = (0.95 * thisNote.duration)/1000;
 				}else{
-					realDuration = (0.70 * thisNote.duration);
+					realDuration = (0.70 * thisNote.duration)/1000;
 				}
 				
 				// don't forget any specified attributes for this particular instrument 
 				// check wave type
-				if(instruments[i].waveType === "percussion"){	
-					// articulation DOES apply to percussion IF STACCATO OR LEGATO? ignore for now 
+				if(instruments[i].waveType === "percussion"){
 			
 					// find out what octave the note is in
 					var noteContainer = document.getElementById(thisNote.block.id).parentNode;
@@ -390,20 +389,17 @@ function scheduler(pianoRoll, allInstruments){
 						osc = pianoRoll.PercussionManager.hihatNote(volume, nextTime[i], true);
 					}
 					
-					mapOscillatorStopTime(osc, thisNote.block.id, stopTimeMap, nextTime[i] + (realDuration / 1000));
-
+					mapOscillatorStopTime(osc, thisNote.block.id, stopTimeMap, nextTime[i] + realDuration);
 					oscList = oscList.concat(osc);	
 					
 				}else if(pianoRoll.instrumentPresets[instruments[i].waveType]){
-					
 					// custom intrument preset!
 					var currPreset = pianoRoll.instrumentPresets[instruments[i].waveType];
 					var instrumentPresetNodes = processNote(thisNote.freq, volume, nextTime[i], pianoRoll, currPreset); 
 					
-					mapOscillatorStopTime(osc, thisNote.block.id, stopTimeMap, nextTime[i] + (realDuration / 1000));
-					
+					mapOscillatorStopTime(osc, thisNote.block.id, stopTimeMap, nextTime[i] + realDuration);					
 					oscList = oscList.concat(instrumentPresetNodes);
-					
+
 				}else{	
 
 					osc = ctx.createOscillator();
@@ -419,7 +415,6 @@ function scheduler(pianoRoll, allInstruments){
 					if(thisNote.block.style === "glide"){
 						osc.frequency.setTargetAtTime(thisNote.freq, nextTime[i], 0.025);
 					}else{
-						//osc.frequency.setTargetAtTime(thisNote.freq, nextTime[i], 0);
 						osc.frequency.setValueAtTime(thisNote.freq, nextTime[i]);
 					}
 					
@@ -430,11 +425,10 @@ function scheduler(pianoRoll, allInstruments){
 					oscGainNode.gain.setTargetAtTime(volume, nextTime[i], 0.0045); 
 					
 					// change gain to 0 after a really small amount of time to give the impression of articulation
-					oscGainNode.gain.setTargetAtTime(0, (nextTime[i]) + (realDuration / 1000) - .0025, 0.0010);		
+					oscGainNode.gain.setTargetAtTime(0, (nextTime[i]) + (realDuration - .0025), 0.0010);		
 					
 					// now keep track of the oscillators and map them to when they should be stopped
-					mapOscillatorStopTime([osc], thisNote.block.id, stopTimeMap, nextTime[i] + (realDuration / 1000));
-					
+					mapOscillatorStopTime([osc], thisNote.block.id, stopTimeMap, nextTime[i] + realDuration);
 					oscList.push(osc);
 					
 					// use right context destination for recording
@@ -442,13 +436,11 @@ function scheduler(pianoRoll, allInstruments){
 						oscGainNode.connect(pianoRoll.audioContextDestMediaStream);
 					}
 					oscGainNode.connect(pianoRoll.audioContextDestOriginal);
-					
 				}
 				
 				pianoRoll.timers = pianoRoll.timers.concat(oscList);
 
 				if(index === currNotes.length - 1){
-					//console.log(stopTimeMap);
 					
 					// we're at the last note of this chord (if multiple notes)
 					oscList.forEach(function(osc){

@@ -12,15 +12,9 @@ function makeInstrumentContextMenu(pianoRollObject){
 			selector: '.context-menu-instrument', 
 			zIndex: 102,
 			build: function($trigger, e){
-				var instrumentOptions = {
-					1: "square",
-					2: "sine",
-					3: "sawtooth",
-					4: "triangle",
-					5: "percussion"
-				};
+				var instrumentOptions = pianoRollObject.defaultInstrumentSounds;				
+				var num = Object.keys(instrumentOptions).length + 1;
 				
-				var num = 6;
 				for(var customPreset in pianoRollObject.instrumentPresets){
 					instrumentOptions[num++] = customPreset;
 				}
@@ -159,7 +153,7 @@ function makeNoteContextMenu(pianoRollObject){
 							"Change style": {
 								name: "change style",
 								type: 'select',
-								options: {1: "default", 2: "legato", 3: "staccato", 4: "glide"},
+								options: pianoRollObject.defaultNoteStyles,
 								selected: function(){
 									var currentStyle = e.data.$trigger[0].getAttribute("type");
 									for(key in this.options){
