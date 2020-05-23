@@ -1,4 +1,159 @@
-// object classes
+/******
+	map for note sizes
+******/
+const noteSizeMap = {
+	"8th": 40,
+	"16th": 20,
+	"32nd": 10,
+};
+Object.freeze(noteSizeMap);
+
+
+/******
+	map for note frequencies
+	A @ 440Hz
+******/
+const noteFrequencies = {
+	"C8": 4186.01,
+	"B7": 3951.07,
+	"Bb7": 3729.31,
+	"A#7": 3729.31,
+	"A7": 3520.00,
+	"Ab7": 3322.44,
+	"G#7": 3322.44,
+	"G7": 3135.96,
+	"Gb7": 2959.96,
+	"F#7": 2959.96,
+	"F7": 2793.83,
+	"E7": 2637.02,
+	"Eb7": 2489.02,
+	"D#7": 2489.02,
+	"D7": 2349.32,
+	"Db7": 2217.46,
+	"C#7": 2217.46,
+
+	"C7": 2093.00,
+	"B6": 1975.53,
+	"Bb6": 1864.66,
+	"A#6": 1864.66,
+	"A6": 1760.00,
+	"Ab6": 1661.22,
+	"G#6": 1661.22,
+	"G6": 1567.98,
+	"Gb6": 1479.98,
+	"F#6": 1479.98,
+	"F6": 1396.91,
+	"E6": 1318.51,
+	"Eb6": 1244.51,
+	"D#6": 1244.51,
+	"D6": 1174.66,
+	"Db6": 1108.73,
+	"C#6": 1108.73,
+	"C6": 1046.50,
+
+	"B5": 987.77,
+	"Bb5": 932.33,
+	"A#5": 932.33,
+	"A5": 880.00,
+	"Ab5": 830.61,
+	"G#5": 830.61,
+	"G5": 783.99,
+	"Gb5": 739.99,
+	"F#5": 739.99,
+	"F5": 698.46,
+	"E5": 659.25,
+	"Eb5": 622.25,
+	"D#5": 622.25,
+	"D5": 587.33,
+	"Db5": 554.37,
+	"C#5": 554.37,
+	"C5": 523.25,
+
+	"B4": 493.88,
+	"Bb4": 466.16,
+	"A#4": 466.16,
+	"A4": 440.00,
+	"Ab4": 415.30,
+	"G#4": 415.30,
+	"G4": 392.00,
+	"Gb4": 369.99,
+	"F#4": 369.99,
+	"F4": 349.23,
+	"E4": 329.63,
+	"Eb4": 311.13,
+	"D#4": 311.13,
+	"D4": 293.66,
+	"Db4": 277.18,
+	"C#4": 277.18,
+	"C4": 261.63,
+	
+	"B3": 246.94,
+	"Bb3": 233.08,
+	"A#3": 233.08,
+	"A3": 220.00,
+	"Ab3": 207.63,
+	"G#3": 207.63,
+	"G3": 196.00,
+	"Gb3": 185.00,
+	"F#3": 185.00,
+	"F3": 174.61,
+	"E3": 164.81,
+	"Eb3": 155.56,
+	"D#3": 155.56,
+	"D3": 146.83,
+	"Db3": 138.59,
+	"C#3": 138.59,
+	"C3": 130.81,
+	
+	"B2": 123.47,
+	"Bb2": 116.54,
+	"A#2": 116.54,
+	"A2": 110.00,
+	"Ab2": 103.83,
+	"G#2": 103.83,
+	"G2": 98.00,
+	"Gb2": 92.50,
+	"F#2": 92.50,
+	"F2": 87.31,
+	"E2": 82.41,
+	"Eb2": 77.78,
+	"D#2": 77.78,
+	"D2": 73.42,
+	"Db2": 69.30,
+	"C#2": 69.30,
+	"C2": 65.41
+};
+Object.freeze(noteFrequencies);
+
+/******
+	default instrument sound choices
+******/
+const defaultInstruments = {
+	1: "square",
+	2: "sine",
+	3: "sawtooth",
+	4: "triangle",
+	5: "percussion",
+};
+Object.freeze(defaultInstruments);
+
+
+/******
+	default note styles
+	TODO: can we reorganize this so that we can map
+	a style to a function so that we don't we have do that in 
+	the scheduler function?
+	but we also need to note that default, legato and staccato
+	affect duration, whereas glide affects oscillator freq.
+	or maybe make this its own class?
+******/
+const defaultNoteStyles = {
+	1: "default", 
+	2: "legato",
+	3: "staccato",
+	4: "glide",
+};
+Object.freeze(defaultNoteStyles);
 
 /****** 
 	
@@ -9,8 +164,8 @@
 function PianoRoll(){
 	this.numberOfMeasures = 4; 	// 4 measures by default
 	this.subdivision = 8; 		// number of eighth notes per measure (8 for 4 quarter notes per measure, 6 for 3/4)
-	this.timeSignature = "4/4"; 
 	this.currentTempo = 250; 	// hold the current tempo (this is time in milliseconds per 8th note). 250 ms seems about right for 120 bpm (and with the length of 8th notes as 40px)
+	this.timeSignature = "4/4"; // options are 4/4 or 3/4
 	this.instruments = [];		// list of instruments will be an array
 	this.timers = [];			// keep track of setTimeouts so all can be ended at once 
 	this.currentInstrument; 	// need to keep track of what current instrument is!
@@ -18,23 +173,25 @@ function PianoRoll(){
 	this.audioContextDestOriginal; // the original audio context destination 
 	this.audioContextDestMediaStream; // a media stream destination for the audio context (to be used when recording is desired)
 	this.audioDataChunks = [];
-	this.isPlaying;				// a boolean flag to easily quit playing
 	this.lastTime; 				// the time the last note was supposed to be played
+	this.isPlaying = false;		// a boolean flag to easily quit playing
 	this.loopFlag = false;		// if playback should be looped or not 
 	this.recording = false;		// if recording. note that if looping, recording should not be possible.
-	this.recorder;
+	this.recorder;				// a MediaRecorder instance
 	this.playMarker;		    // the id of a column header indicating where to start playing
+	
+	// default instrument sounds and note styles
+	this.defaultInstrumentSounds = defaultInstruments;
+	this.defaultNoteStyles = defaultNoteStyles;
+	
+	// colors
 	this.playMarkerColor = "rgb(50, 205, 50)";
 	this.highlightColor = "#FFFF99";
 	this.measureNumberColor = "#2980B9";
 	this.instrumentTableColor = 'rgb(188, 223, 70)';
 	this.currNotePlayingColor = 'rgb(112, 155, 224)';
 	
-	this.noteSizeMap = {
-		"8th": 40,
-		"16th": 20,
-		"32nd": 10,
-	}
+	this.noteSizeMap = noteSizeMap;
 	this.lockNoteSize = "16th"; // the note-size increment to be used when moving/placing notes
 	this.addNoteSize = "last selected"; // note-size to use when adding notes (changes based on last selected/resize by default)
 	this.lastNoteSize = 40; // last clicked-on note size in px as integer 
@@ -49,123 +206,10 @@ function PianoRoll(){
 								//      }
 								// each preset_info dictionary keeps references to the different sound nodes needed for the instrument
 
-	// instrument-related stuff 
 	this.noiseBuffer; // for percussion 
 
-	// NOTE FREQUENCIES WITH A @ 440Hz
-	this.noteFrequencies = {
-
-		"C8": 4186.01,
-		"B7": 3951.07,
-		"Bb7": 3729.31,
-		"A#7": 3729.31,
-		"A7": 3520.00,
-		"Ab7": 3322.44,
-		"G#7": 3322.44,
-		"G7": 3135.96,
-		"Gb7": 2959.96,
-		"F#7": 2959.96,
-		"F7": 2793.83,
-		"E7": 2637.02,
-		"Eb7": 2489.02,
-		"D#7": 2489.02,
-		"D7": 2349.32,
-		"Db7": 2217.46,
-		"C#7": 2217.46,
-
-		"C7": 2093.00,
-		"B6": 1975.53,
-		"Bb6": 1864.66,
-		"A#6": 1864.66,
-		"A6": 1760.00,
-		"Ab6": 1661.22,
-		"G#6": 1661.22,
-		"G6": 1567.98,
-		"Gb6": 1479.98,
-		"F#6": 1479.98,
-		"F6": 1396.91,
-		"E6": 1318.51,
-		"Eb6": 1244.51,
-		"D#6": 1244.51,
-		"D6": 1174.66,
-		"Db6": 1108.73,
-		"C#6": 1108.73,
-		"C6": 1046.50,
-
-		"B5": 987.77,
-		"Bb5": 932.33,
-		"A#5": 932.33,
-		"A5": 880.00,
-		"Ab5": 830.61,
-		"G#5": 830.61,
-		"G5": 783.99,
-		"Gb5": 739.99,
-		"F#5": 739.99,
-		"F5": 698.46,
-		"E5": 659.25,
-		"Eb5": 622.25,
-		"D#5": 622.25,
-		"D5": 587.33,
-		"Db5": 554.37,
-		"C#5": 554.37,
-		"C5": 523.25,
-
-		"B4": 493.88,
-		"Bb4": 466.16,
-		"A#4": 466.16,
-		"A4": 440.00,
-		"Ab4": 415.30,
-		"G#4": 415.30,
-		"G4": 392.00,
-		"Gb4": 369.99,
-		"F#4": 369.99,
-		"F4": 349.23,
-		"E4": 329.63,
-		"Eb4": 311.13,
-		"D#4": 311.13,
-		"D4": 293.66,
-		"Db4": 277.18,
-		"C#4": 277.18,
-		"C4": 261.63,
-		
-		"B3": 246.94,
-		"Bb3": 233.08,
-		"A#3": 233.08,
-		"A3": 220.00,
-		"Ab3": 207.63,
-		"G#3": 207.63,
-		"G3": 196.00,
-		"Gb3": 185.00,
-		"F#3": 185.00,
-		"F3": 174.61,
-		"E3": 164.81,
-		"Eb3": 155.56,
-		"D#3": 155.56,
-		"D3": 146.83,
-		"Db3": 138.59,
-		"C#3": 138.59,
-		"C3": 130.81,
-		
-		"B2": 123.47,
-		"Bb2": 116.54,
-		"A#2": 116.54,
-		"A2": 110.00,
-		"Ab2": 103.83,
-		"G#2": 103.83,
-		"G2": 98.00,
-		"Gb2": 92.50,
-		"F#2": 92.50,
-		"F2": 87.31,
-		"E2": 82.41,
-		"Eb2": 77.78,
-		"D#2": 77.78,
-		"D2": 73.42,
-		"Db2": 69.30,
-		"C#2": 69.30,
-		"C2": 65.41
-	};
+	this.noteFrequencies = noteFrequencies;
 	
-	// initialize the audio context and setup some stuff 
 	this.init = function(){
 		
 		var context = new AudioContext();

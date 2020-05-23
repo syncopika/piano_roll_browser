@@ -16,6 +16,7 @@ function createColumnHeader(num, pianoRollObject){
 	newHeader.style.width = '40px';
 	newHeader.style.height = '12px';
 	newHeader.style.fontSize = '10px';
+	newHeader.setAttribute("numNotes", 0); // keep track of whether this column has notes or not
 	
 	var subdiv = (num % pianoRollObject.subdivision) === 0 ? pianoRollObject.subdivision : (num % pianoRollObject.subdivision);
 	

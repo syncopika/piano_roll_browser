@@ -1,7 +1,7 @@
 /******* 
 	
 	CONTEXT MENU FOR INSTRUMENTS 
-	@param pianoRollObject = a PianoRoll object 
+	@param pianoRollObject: an instance of PianoRoll
 	relies on dom elements with the class 'context-menu-instrument'
 	
 *******/
@@ -12,15 +12,9 @@ function makeInstrumentContextMenu(pianoRollObject){
 			selector: '.context-menu-instrument', 
 			zIndex: 102,
 			build: function($trigger, e){
-				var instrumentOptions = {
-					1: "square",
-					2: "sine",
-					3: "sawtooth",
-					4: "triangle",
-					5: "percussion"
-				};
+				var instrumentOptions = pianoRollObject.defaultInstrumentSounds;				
+				var num = Object.keys(instrumentOptions).length + 1;
 				
-				var num = 6;
 				for(var customPreset in pianoRollObject.instrumentPresets){
 					instrumentOptions[num++] = customPreset;
 				}
@@ -119,6 +113,7 @@ function makeInstrumentContextMenu(pianoRollObject){
 /*****  
 	
 	CONTEXT MENU FOR GRID NOTES 
+	@param pianoRollObject: an instance of PianoRoll
 	
 *****/
 function makeNoteContextMenu(pianoRollObject){
@@ -159,7 +154,7 @@ function makeNoteContextMenu(pianoRollObject){
 							"Change style": {
 								name: "change style",
 								type: 'select',
-								options: {1: "default", 2: "legato", 3: "staccato", 4: "glide"},
+								options: pianoRollObject.defaultNoteStyles,
 								selected: function(){
 									var currentStyle = e.data.$trigger[0].getAttribute("type");
 									for(key in this.options){
@@ -183,6 +178,10 @@ function makeNoteContextMenu(pianoRollObject){
 								callback: function(key, options){
 									var note = options.$trigger[0];
 									var parent = note.parentNode;
+
+									var colHeader = document.getElementById(parent.id.substring(parent.id.indexOf("col")));
+									colHeader.setAttribute("numNotes", parseInt(colHeader.getAttribute("numNotes"))-1);
+			
 									parent.removeChild(note);
 									delete pianoRollObject.currentInstrument.activeNotes[note.id];
 								}

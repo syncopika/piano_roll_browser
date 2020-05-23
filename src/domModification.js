@@ -99,7 +99,7 @@ function placeNoteAtPosition(note, pianoRollObject, evt){
 		}
 	}
 	
-	// create a new note if no note was passed in (i.e. in addNote)
+	// create a new note if no note was passed in (i.e. when addNote() instead of moveHelper())
 	if(!note){
 		note = createNewNoteElement(pianoRollObject);
 	}
@@ -109,8 +109,20 @@ function placeNoteAtPosition(note, pianoRollObject, evt){
 	
 	// make sure this current instrument doesn't already have a note in position to place
 	if(canPlaceNote(posToPlace, targetContainer.children)){
+		
+		// update current column header before moving (if moving a note)
+		var container = note.parentNode;
+		if(container){
+			var colHeader = document.getElementById(container.id.substring(container.id.indexOf("col")));
+			colHeader.setAttribute("numNotes", parseInt(colHeader.getAttribute("numNotes"))-1);
+		}
+		
 		note.style.left = possibleNotePos[i] + "px";
 		targetContainer.appendChild(note);
+		
+		var colHeader = document.getElementById(targetContainer.id.substring(targetContainer.id.indexOf("col")));
+		colHeader.setAttribute("numNotes", parseInt(colHeader.getAttribute("numNotes"))+1);
+		
 		return note;
 	}
 
@@ -142,9 +154,6 @@ function resizeHelper(newNote, pianoRollObject, evt){
 	if(diff > 0){
 		if(inRange(pos, nextBlockPos, nextBlockPos+3)){
 			// extending
-			if(evt.target.className === "noteContainer"){
-				noteSize += parseInt(evt.target.style.borderRight);
-			}
 			newNote.style.width = (currNoteWidth + noteSize) + "px";
 		}
 	}else{
@@ -173,15 +182,7 @@ function moveHelper(newNote, pianoRollObject, evt){
 		return;
 	}
 	
-	var currPos = evt.target.getBoundingClientRect().left + window.pageXOffset;
-	var currNotes = pianoRollObject.currentInstrument.activeNotes;
-	if(currNotes[currPos]){
-		// remove newNote from the notes at this position since it's being moved
-		currNotes[currPos] = currNotes[currPos].filter((note) => note !== newNote);
-	}
-	
 	placeNoteAtPosition(newNote, pianoRollObject, evt);
-
 }
 
 // since this doesn't actually use a MouseEvent, can probably be moved into the function that takes the MouseEvent?
@@ -248,8 +249,13 @@ function createNewNoteElement(pianoRollObject){
 		
 		if(e.which == 2){
 			// middle mouse button
-			newNote.parentNode.removeChild(newNote);
+			var container = newNote.parentNode;
+			var colHeader = document.getElementById(container.id.substring(container.id.indexOf("col")));
+			colHeader.setAttribute("numNotes", colHeader.getAttribute("numNotes")-1);
+			
+			container.removeChild(newNote);
 			delete pianoRollObject.currentInstrument.activeNotes[newNote.id];
+			
 			return;
 		}
 		
@@ -505,13 +511,13 @@ function changeTimeSignature(pianoRollObject, newTimeSig){
 	// highlight where the current note playing is.
 ***/
 var lastNote = null;
-var onendFunc = function(colHeaderId, pianoRoll){ 
+var onendFunc = function(colHeaderId, lastColId, pianoRoll){ 
 	return function(){
 		
-		var colHeaders = document.getElementById('columnHeaderRow').children;
-		var lastHeaderId = colHeaders[colHeaders.length-1].id;
-		
-		if(pianoRoll.recording && colHeaderId === lastHeaderId){
+		if(pianoRoll.recording && colHeaderId === lastColId){
+			
+			// add some extra silence so it doesn't end so abruptly
+			
 			// stop the recorder when the last column has been reached
 			pianoRoll.recorder.stop();
 			pianoRoll.recording = false;
@@ -528,7 +534,7 @@ var onendFunc = function(colHeaderId, pianoRoll){
 		var currCol = document.getElementById(colHeaderId);
 		if(pianoRoll.isPlaying && pianoRoll.playMarker !== colHeaderId){
 			currCol.style.backgroundColor = pianoRoll.currNotePlayingColor;
-		}
+		}	
 
 		lastNote = currCol;
 	}
