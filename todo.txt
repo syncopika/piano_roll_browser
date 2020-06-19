@@ -16,3 +16,4 @@ current things to do now:
           delete them + re-add.
 	- add metronome? is scheduler scheduling on time?
 	- accessibility?
+	- maybe make it at least a little mobile friendly, i.e. support also touch events?

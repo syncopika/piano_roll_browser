@@ -63,7 +63,9 @@ Intrada - Johann Pezel (1639 - 1694). One of my favorite brass quintet pieces!
     
 Sand Canyon (Kirby's Dream Land 3) - Jun Ishikawa
     
-3_4 time demo - my own composition
+3_4 time demo - my own composition    
+    
+なかよしセンセーション (Princess Connect Re:Dive) - 大久保 薫
 
 
     
