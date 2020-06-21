@@ -317,6 +317,47 @@ function scheduler(pianoRoll, allInstruments){
 		pianoRoll.timers.push(highlightOsc); // maybe should use a separate timers array?
 	});
 	
+	// figure out for each instrument the minumum number of gain nodes and oscillator nodes we need 
+	// in order to minimize the number of nodes we need to create since that adds performance overhead
+	var numGainNodePerInst = {};
+	instruments.forEach((instrument) => {
+		//console.log(instrument.notes);
+		// refactor to do this instead:
+		// numGainNodePerInst[instrument.name] = Math.max.apply(instrument.notes)
+		instrument.notes.forEach((group) => {
+			if(!numGainNodePerInst[instrument.name]){
+				numGainNodePerInst[instrument.name] = group.length;
+			}else{
+				numGainNodePerInst[instrument.name] = Math.max(
+					numGainNodePerInst[instrument.name],
+					group.length
+				);
+			}
+		});
+	});
+	console.log(numGainNodePerInst);
+	
+	// add the appropriate number of gain nodes and oscillator nodes for each instrument.
+	// we can then reuse these nodes instead of making new ones for every single note, which is unnecessary 
+	// especially if we have a lot of notes that aren't part of chords and can be used with just one gain node and oscillator
+	var instrumentGainNodes = {};
+	var instrumentOscNodes = {};
+	Object.keys(numGainNodePerInst).forEach((instrument) => {
+		instrumentGainNodes[instrument] = [];
+		instrumentOscNodes[instrument] = [];
+		for(var i = 0; i < numGainNodePerInst[instrument]; i++){
+			var newGainNode = ctx.createGain();
+			instrumentGainNodes[instrument].push(newGainNode);
+			
+			var newOscNode = ctx.createOscillator();
+			instrumentOscNodes[instrument].push(newOscNode);
+		}
+	});
+	
+	// then when you schedule the notes, use the nodes in instrumentGainNodes and instrumentOscNodes
+	
+	
+	
 	while(pianoRoll.isPlaying && stillNotesToPlay < instruments.length){
 		
 		// for each instrument in the piano roll, get their next note and schedule it 
