@@ -131,7 +131,7 @@ function sortNotesByPosition(instrument){
 		var note = instrument.activeNotes[noteId];
 		
 		if(note.style.left === ""){
-			note.style.left = note.getBoundingClientRect().left + window.pageXOffset + "px";
+			note.style.left = (getNotePosition(note) + "px");
 		}
 		
 		var position = parseInt(note.style.left);
@@ -191,6 +191,13 @@ function mapOscillatorStopTime(oscList, tag, map, stopTime){
 		osc.tag = (tag + index); // we can just arbitrarily add a new attribute. nice!
 		map[osc.tag] = stopTime;
 	});
+}
+
+// get the position of a note element
+// @param noteElement: an HTML element of a note 
+// @return: a float value representing the position of the note element
+function getNotePosition(noteElement){
+	return noteElement.getBoundingClientRect().left + window.pageXOffset;
 }
 
 
@@ -273,7 +280,7 @@ function scheduler(pianoRoll, allInstruments){
 	// in the case where the user specified a measure to start playing at
 	if(startMarker){
 
-		startPos = document.getElementById(startMarker).getBoundingClientRect().left + window.pageXOffset;
+		startPos = getNotePosition(document.getElementById(startMarker));
 	
 		for(var k = 0; k < instruments.length; k++){
 			// have each instrument start with the note at index given by startMarker
@@ -282,7 +289,7 @@ function scheduler(pianoRoll, allInstruments){
 					// so each note in the notes array is itself an array! hence the [0]
 					var columnCell = document.getElementById(instruments[k].notes[l][0].block.id).parentNode;
 					var cellId = columnCell.id;
-					var cellPos = columnCell.getBoundingClientRect().left + window.pageXOffset;
+					var cellPos = getNotePosition(columnCell);
 
 					if(cellId.indexOf(startMarker) > -1){
 						instrumentNotePointers[k] = l;
@@ -317,6 +324,11 @@ function scheduler(pianoRoll, allInstruments){
 		pianoRoll.timers.push(highlightOsc); // maybe should use a separate timers array?
 	});
 	
+	
+	
+	
+	
+	
 	// figure out for each instrument the minumum number of gain nodes and oscillator nodes we need 
 	// in order to minimize the number of nodes we need to create since that adds performance overhead
 	var numGainNodePerInst = {};
@@ -324,7 +336,27 @@ function scheduler(pianoRoll, allInstruments){
 		//console.log(instrument.notes);
 		// refactor to do this instead:
 		// numGainNodePerInst[instrument.name] = Math.max.apply(instrument.notes)
-		instrument.notes.forEach((group) => {
+		var prevNote = null;
+		var currNote = null;
+		instrument.notes.forEach((group, index) => {
+			if(index > 0){
+				prevNote = document.getElementById(instrument.notes[index-1][0].block.id);
+				currNote = document.getElementById(group[0].block.id);
+				
+				var prevNotePos = getNotePosition(prevNote);
+				var prevNoteLen = parseInt(prevNote.style.width);
+				var currNotePos = getNotePosition(currNote);
+				
+				if(currNotePos < (prevNotePos + prevNoteLen)){
+					//console.log("currNotePos: " + currNotePos + ", prevNote: " + (prevNotePos + prevNoteLen));
+					if(!numGainNodePerInst[instrument.name]){
+						numGainNodePerInst[instrument.name] = 2;
+					}else{
+						numGainNodePerInst[instrument.name]++;
+					}
+				}
+			}
+			
 			if(!numGainNodePerInst[instrument.name]){
 				numGainNodePerInst[instrument.name] = group.length;
 			}else{
@@ -355,6 +387,13 @@ function scheduler(pianoRoll, allInstruments){
 	});
 	
 	// then when you schedule the notes, use the nodes in instrumentGainNodes and instrumentOscNodes
+	console.log(instrumentGainNodes);
+	console.log(instrumentOscNodes);
+	
+	
+	
+	
+	
 	
 	
 	
@@ -392,9 +431,9 @@ function scheduler(pianoRoll, allInstruments){
 				// if startMarker is specified, we can use its position to figure out the initial rest
 				var startPos = 60; // 60 is the x-position of the very first note of the piano roll
 				if(startMarker){
-					startPos = document.getElementById(startMarker).getBoundingClientRect().left + window.pageXOffset;
+					startPos = getNotePosition(document.getElementById(startMarker));
 				}
-				var firstNoteStart = document.getElementById(currNotes[0].block.id).getBoundingClientRect().left + window.pageXOffset;
+				var firstNoteStart = getNotePosition(document.getElementById(currNotes[0].block.id));
 				if(firstNoteStart !== startPos){
 					var actualStart = getCorrectLength(firstNoteStart - startPos, pianoRoll);
 					nextTime[i] += (actualStart / 1000);
