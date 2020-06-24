@@ -334,14 +334,34 @@ function scheduler(pianoRoll, allInstruments){
 	var numGainNodePerInst = {};
 	instruments.forEach((instrument) => {
 		//console.log(instrument.notes);
-		// refactor to do this instead:
-		// numGainNodePerInst[instrument.name] = Math.max.apply(instrument.notes)
 		var prevNote = null;
 		var currNote = null;
 		instrument.notes.forEach((group, index) => {
 			if(index > 0){
-				prevNote = document.getElementById(instrument.notes[index-1][0].block.id);
-				currNote = document.getElementById(group[0].block.id);
+				
+				// find the longest note in the prev group
+				if(!prevNote){
+					prevNote = document.getElementById(instrument.notes[index-1][0].block.id);
+					instrument.notes[index-1].forEach((note) => {
+						var n = document.getElementById(note.block.id);
+						if(parseInt(n.style.width) > parseInt(prevNote.style.width)){
+							prevNote = n;
+						}
+					});
+				}
+				
+				// get the longest note in curr group 
+				var longestCurrNote = document.getElementById(group[0].block.id);
+				group.forEach((note) => {
+					var n = document.getElementById(note.block.id);
+					if(parseInt(n.style.width) > parseInt(longestCurrNote.style.width)){
+						longestCurrNote = n;
+					}
+				});
+				
+				//console.log("longest curr note: " + longestCurrNote.id);
+				//console.log("longest prev note: " + prevNote.id);
+				currNote = longestCurrNote;
 				
 				var prevNotePos = getNotePosition(prevNote);
 				var prevNoteLen = parseInt(prevNote.style.width);
@@ -355,6 +375,8 @@ function scheduler(pianoRoll, allInstruments){
 						numGainNodePerInst[instrument.name]++;
 					}
 				}
+				
+				prevNote = currNote;
 			}
 			
 			if(!numGainNodePerInst[instrument.name]){
@@ -391,8 +413,50 @@ function scheduler(pianoRoll, allInstruments){
 	console.log(instrumentOscNodes);
 	
 	
+	// 'route' the notes i.e. assign them to the gain/osc nodes such that they all get played properly
+	var routes = {};
+	var posTracker = {};
 	
+	instruments.forEach((instrument, instrumentIndex) => {
+		
+		routes[instrumentIndex] = {};
+		posTracker[instrumentIndex] = {}; // stores the end position (i.e. start + note width) of the last note assigned to a gain node for an instrument
+		
+		// uhhh is using the instrument name as a key a good idea? we don't even enforce instrument name uniqueness.
+		for(var i = 0; i < instrumentGainNodes[instrument.name].length; i++){
+			routes[instrumentIndex][i] = [];
+			posTracker[instrumentIndex][i] = 0;
+		}
+		
+		instrument.notes.forEach((group, index) => {
+			group.forEach((note, noteIndex) => {
+				
+				var lastEndPositions = posTracker[instrumentIndex]; // this is a map!
+
+				var n = document.getElementById(note.block.id);
+				var endPosCurrNote = getNotePosition(n) + parseInt(n.style.width);
+				var startPosCurrNote = getNotePosition(n);
+				var gainNodeRoutes = instrumentGainNodes[instrument.name];
+				
+				// try the first gain node in the map to see if they can handle this note. i.e. if another note should be playing for this gain 
+				// while this current note is supposed to start, this gain node cannot support this current note.
+				// if not, keep going down the list
+				// there should always be a possible gain node route option available
+				for(var i = 0; i < gainNodeRoutes.length; i++){
+					if(lastEndPositions[i] < startPosCurrNote){
+						// we can use this gain node!
+						routes[instrumentIndex][i].push(note); // assign this note to the gain node
+						lastEndPositions[i] = endPosCurrNote;  // log its ending position 
+						break;
+					}
+				}
+					
+			});
+		});
+	});
 	
+	console.log(routes);
+	console.log(posTracker);
 	
 	
 	
@@ -518,7 +582,7 @@ function scheduler(pianoRoll, allInstruments){
 					oscGainNode.gain.setTargetAtTime(volume, nextTime[i], 0.0045); 
 					
 					// change gain to 0 after a really small amount of time to give the impression of articulation
-					oscGainNode.gain.setTargetAtTime(0, (nextTime[i]) + (realDuration - .0025), 0.0010);		
+					oscGainNode.gain.setTargetAtTime(0.0, (nextTime[i]) + (realDuration - .0025), 0.0010);		
 					
 					// now keep track of the oscillators and map them to when they should be stopped
 					mapOscillatorStopTime([osc], thisNote.block.id, stopTimeMap, nextTime[i] + realDuration);
