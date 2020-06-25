@@ -193,6 +193,15 @@ function mapOscillatorStopTime(oscList, tag, map, stopTime){
 	});
 }
 
+// calculate length of note in milliseconds
+// @param length: length in px 
+// @param pianoRollObject: instance of PianoRoll
+// @return: an integer representing the length of px in milliseconds
+function getCorrectLength(length, pianoRollObject){
+	var currentTempo = pianoRollObject.currentTempo;
+	return Math.round((currentTempo / 40) * length); // 40 px == 1 eighth note.
+}
+
 // get the position of a note element
 // @param noteElement: an HTML element of a note 
 // @return: a float value representing the position of the note element
@@ -282,26 +291,26 @@ function scheduler(pianoRoll, allInstruments){
 
 		startPos = getNotePosition(document.getElementById(startMarker));
 	
-		for(var k = 0; k < instruments.length; k++){
+		for(var i = 0; i < instruments.length; i++){
 			// have each instrument start with the note at index given by startMarker
-			for(var l = 0; l < instruments[k].notes.length; l++){
+			for(var j = 0; j < instruments[i].notes.length; j++){
 				try{
-					// so each note in the notes array is itself an array! hence the [0]
-					var columnCell = document.getElementById(instruments[k].notes[l][0].block.id).parentNode;
+					// the elements of the notes array are arrays of Note objects, hence the [0]
+					var columnCell = document.getElementById(instruments[i].notes[j][0].block.id).parentNode;
 					var cellId = columnCell.id;
 					var cellPos = getNotePosition(columnCell);
 
 					if(cellId.indexOf(startMarker) > -1){
-						instrumentNotePointers[k] = l;
+						instrumentNotePointers[i] = j;
 						break;
 					}else if(cellPos > startPos){
 						// this is the first note that appears after the selected column to start playing from 
-						instrumentNotePointers[k] = l;
+						instrumentNotePointers[i] = j;
 						break;
 					}
 				}catch(error){
 					console.error(error);
-					console.error(instruments[k].notes[l].block.id);
+					console.error(instruments[i].notes[j].block.id);
 				}
 			}
 		}
@@ -339,8 +348,14 @@ function scheduler(pianoRoll, allInstruments){
 		//console.log(instrument.notes);
 		var prevNote = null;
 		var currNote = null;
-		instrument.notes.forEach((group, index) => {
-			if(index > 0){
+
+		var start = instrumentNotePointers[instIndex];
+		//console.log(start);
+		for(var index = start; index < instrument.notes.length; index++){
+			
+			var group = instrument.notes[index];			
+
+			if(index > start){
 				
 				// find the longest note in the prev group
 				if(!prevNote){
@@ -390,9 +405,9 @@ function scheduler(pianoRoll, allInstruments){
 					group.length
 				);
 			}
-		});
+		}
 	});
-	console.log(numGainNodePerInst);
+	//console.log(numGainNodePerInst);
 	
 	// add the appropriate number of gain nodes and oscillator nodes for each instrument.
 	// we can then reuse these nodes instead of making new ones for every single note, which is unnecessary 
@@ -405,7 +420,7 @@ function scheduler(pianoRoll, allInstruments){
 		instrumentGainNodes[instrument] = [];
 		instrumentOscNodes[instrument] = [];
 		for(var i = 0; i < numGainNodePerInst[instrument]; i++){
-			var newGainNode = ctx.createGain();
+			var newGainNode = initGain(ctx);
 			newGainNode.id = ("gain" + (gainCount++));
 			instrumentGainNodes[instrument].push(newGainNode);
 			
@@ -420,8 +435,8 @@ function scheduler(pianoRoll, allInstruments){
 	}
 	
 	// then when you schedule the notes, use the nodes in instrumentGainNodes and instrumentOscNodes
-	console.log(instrumentGainNodes);
-	console.log(instrumentOscNodes);
+	//console.log(instrumentGainNodes);
+	//console.log(instrumentOscNodes);
 	
 	
 	// 'route' the notes i.e. assign them to the gain/osc nodes such that they all get played properly
@@ -433,13 +448,14 @@ function scheduler(pianoRoll, allInstruments){
 		routes[instrumentIndex] = {};
 		posTracker[instrumentIndex] = {}; // stores the end position (i.e. start + note width) of the last note assigned to a gain node for an instrument
 		
-		// uhhh is using the instrument name as a key a good idea? we don't even enforce instrument name uniqueness.
 		for(var i = 0; i < instrumentGainNodes[instrumentIndex].length; i++){
 			routes[instrumentIndex][i] = [];
 			posTracker[instrumentIndex][i] = 0;
 		}
 		
-		instrument.notes.forEach((group, index) => {
+		var start = instrumentNotePointers[instrumentIndex];
+		for(var index = start; index < instrument.notes.length; index++){
+			var group = instrument.notes[index];
 			group.forEach((note, noteIndex) => {
 				
 				var lastEndPositions = posTracker[instrumentIndex]; // this is a map!
@@ -454,7 +470,7 @@ function scheduler(pianoRoll, allInstruments){
 				// if not, keep going down the list
 				// there should always be a possible gain node route option available
 				for(var i = 0; i < gainNodeRoutes.length; i++){
-					if(lastEndPositions[i] < startPosCurrNote){
+					if(lastEndPositions[i] <= startPosCurrNote){
 						// we can use this gain node!
 						routes[instrumentIndex][i].push(note); // assign this note to the gain node
 						lastEndPositions[i] = endPosCurrNote;  // log its ending position 
@@ -463,10 +479,10 @@ function scheduler(pianoRoll, allInstruments){
 				}
 					
 			});
-		});
+		}
 	});
 	
-	//console.log(routes);
+	console.log(routes);
 	//console.log(posTracker);
 	//console.log(instrumentOscNodes);
 	
@@ -489,7 +505,7 @@ function scheduler(pianoRoll, allInstruments){
 		allNotesPerInstrument[instrument] = [];
 		
 		var instrumentRoutes = routes[instrument];
-		console.log(instrumentRoutes);
+		//console.log(instrumentRoutes);
 		var currInstGainNodes = instrumentGainNodes[index];
 		var currInstOscNodes = instrumentOscNodes[index];
 		//console.log(currInstGainNodes);
@@ -518,7 +534,6 @@ function scheduler(pianoRoll, allInstruments){
 				// by default, ~70% of the note duration should be played 
 				// the rest of the time can be devoted to the spacer 
 				var realDuration;
-				
 				if(thisNote.block.style === "staccato"){
 					realDuration = (0.50 * thisNote.duration)/1000;
 				}else if(thisNote.block.style === "legato"){
@@ -537,21 +552,21 @@ function scheduler(pianoRoll, allInstruments){
 					if(startMarker){
 						startPos = getNotePosition(document.getElementById(startMarker));
 					}
-					var firstNoteStart = getNotePosition(document.getElementById(notes[0].block.id));
+					var firstNoteStart = getNotePosition(document.getElementById(notes[i].block.id));
 					if(firstNoteStart !== startPos){
-						var actualStart = getCorrectLength(firstNoteStart - startPos, pianoRoll);
-						startTimeOffset = (actualStart / 1000);
+						startTimeOffset = getCorrectLength(firstNoteStart - startPos, pianoRoll) / 1000;
 					}
 				}else{
 					// find out how much space there is between curr note and prev note to figure out when curr note should start
-					var prevNote = document.getElementById(notes[i-1].block.id);
-					var prevNoteEndPos = getNotePosition(prevNote) + parseInt(prevNote.style.width);
+					var prevNotePos = getNotePosition(document.getElementById(notes[i-1].block.id));
 					var thisNotePos = getNotePosition(document.getElementById(thisNote.block.id));
-					var restUntilThisNoteStart = getCorrectLength(thisNotePos - prevNoteEndPos, pianoRoll) / 1000;
-					startTimeOffset = timeOffsetAcc + restUntilThisNoteStart;
+					var timeDiff = getCorrectLength(thisNotePos - prevNotePos, pianoRoll) / 1000;
+					startTimeOffset = timeOffsetAcc + timeDiff;
 				}
+				
+				console.log("time offset: " + timeOffsetAcc);
 				timeOffsetAcc += startTimeOffset;
-			
+				
 				var noteSetup = {
 					"note": thisNote,
 					"osc": oscToUse,
@@ -563,72 +578,60 @@ function scheduler(pianoRoll, allInstruments){
 				
 				allNotesPerInstrument[instrument].push(noteSetup);
 			}
-			
 			gainIndex++;
-		};
-
-		console.log(instrumentGainNodes);
+		}
 		index++;
 	}
 	console.log(allNotesPerInstrument);
 	
 	var thisTime = ctx.currentTime;
-	while(pianoRoll.isPlaying && stillNotesToPlay < instruments.length){
 		
-		for(var i = 0; i < instruments.length; i++){
+	for(var i = 0; i < instruments.length; i++){
+		
+		var currInstNotes = allNotesPerInstrument[i];
+		var numNotesLeft = currInstNotes.length - instrumentNotePointers[i];
+		
+
+		currInstNotes.forEach((note) => {
 			
-			if(instruments[i] === null){
-				continue;
+			// schedule the notes!
+			var osc = note.osc;
+			var gain = note.gain;
+			var duration = note.duration;
+			var volume = note.volume;
+			var startTimeOffset = note.startTimeOffset;
+			var otherParams = note.note;
+			
+			osc.type = instruments[i].waveType;
+			
+			if(otherParams.freq < 440){
+				// need to set initial freq to 0 for low notes (C3 and below)
+				// otherwise gliding will be messed up for notes on one end of the spectrum
+				osc.frequency.setValueAtTime(0.0, 0.0);
+			}
+
+			
+			console.log(otherParams.block.id + " starting at: " + (thisTime + startTimeOffset));
+
+			if(otherParams.block.style === "glide"){
+				osc.frequency.setTargetAtTime(otherParams.freq, thisTime + startTimeOffset, 0.025);
+			}else{
+				osc.frequency.setValueAtTime(otherParams.freq, thisTime + startTimeOffset);
 			}
 			
-			var currInstNotes = allNotesPerInstrument[i];
-			var numNotesLeft = currInstNotes.length - instrumentNotePointers[i];
-			if(numNotesLeft === 0){
-				stillNotesToPlay++;
-				instruments[i] = null;
-				continue;
-			}
 			
-			currInstNotes.forEach((note) => {
-				
-				// schedule the notes!
-				var osc = note.osc;
-				var gain = note.gain;
-				var duration = note.duration;
-				var volume = note.volume;
-				var startTimeOffset = note.startTimeOffset;
-				var otherParams = note.note;
-				
-				console.log("setting note for osc: " + osc.id);
-				console.log(note);
-				
-				osc.type = instruments[i].waveType;
-				
-				if(otherParams.freq < 440){
-					// need to set initial freq to 0 for low notes (C3 and below)
-					// otherwise gliding will be messed up for notes on one end of the spectrum
-					osc.frequency.setValueAtTime(0.0, 0.0);
-				}
-				
-				if(otherParams.block.style === "glide"){
-					osc.frequency.setTargetAtTime(otherParams.freq, thisTime + startTimeOffset, 0.025);
-				}else{
-					osc.frequency.setValueAtTime(otherParams.freq, thisTime + startTimeOffset);
-				}
-				
-				// setting gain value here depending on condition allows for the 'articulation' of notes without 
-				// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
-				// this is fixed by always setting gain to 0 if a note's frequency is 0.
-				gain.gain.setTargetAtTime(volume, thisTime + startTimeOffset, 0.0045); 
-				
-				// change gain to 0 after a really small amount of time to give the impression of articulation
-				gain.gain.setTargetAtTime(0.0, (thisTime + startTimeOffset + duration - .0025), 0.0010);
-				
-				// increment the note pointer for this instrument 
-				instrumentNotePointers[i]++;
-			});
+			// setting gain value here depending on condition allows for the 'articulation' of notes without 
+			// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
+			// this is fixed by always setting gain to 0 if a note's frequency is 0.
+			gain.gain.setTargetAtTime(volume, thisTime + startTimeOffset, 0.0045); 
 			
-		}
+			// change gain to 0 after a really small amount of time to give the impression of articulation
+			gain.gain.setTargetAtTime(0.0, (thisTime + startTimeOffset + duration - .0025), 0.0010);
+			
+			// increment the note pointer for this instrument 
+			instrumentNotePointers[i]++;
+		});
+		
 	}
 	
 	
@@ -892,13 +895,6 @@ function stopPlay(pianoRollObject){
 	
 	lastNote = null;
 	currNote = null;
-}
-
-
-// calculate length of note in milliseconds
-function getCorrectLength(length, pianoRollObject){
-	var currentTempo = pianoRollObject.currentTempo;
-	return Math.round((currentTempo / 40) * length); // 40 px == 1 eighth note.
 }
 
 
