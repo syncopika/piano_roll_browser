@@ -453,6 +453,7 @@ function scheduler(pianoRoll, allInstruments){
 			posTracker[instrumentIndex][i] = 0;
 		}
 		
+		// use instrumentNotePointers to take into account the startMarker 
 		var start = instrumentNotePointers[instrumentIndex];
 		for(var index = start; index < instrument.notes.length; index++){
 			var group = instrument.notes[index];
@@ -564,8 +565,8 @@ function scheduler(pianoRoll, allInstruments){
 					startTimeOffset = timeOffsetAcc + timeDiff;
 				}
 				
-				console.log("time offset: " + timeOffsetAcc);
-				timeOffsetAcc += startTimeOffset;
+				//console.log("time offset: " + timeOffsetAcc);
+				timeOffsetAcc = startTimeOffset;
 				
 				var noteSetup = {
 					"note": thisNote,
@@ -589,9 +590,8 @@ function scheduler(pianoRoll, allInstruments){
 	for(var i = 0; i < instruments.length; i++){
 		
 		var currInstNotes = allNotesPerInstrument[i];
-		var numNotesLeft = currInstNotes.length - instrumentNotePointers[i];
+		//var numNotesLeft = currInstNotes.length - instrumentNotePointers[i];
 		
-
 		currInstNotes.forEach((note) => {
 			
 			// schedule the notes!
@@ -629,7 +629,7 @@ function scheduler(pianoRoll, allInstruments){
 			gain.gain.setTargetAtTime(0.0, (thisTime + startTimeOffset + duration - .0025), 0.0010);
 			
 			// increment the note pointer for this instrument 
-			instrumentNotePointers[i]++;
+			//instrumentNotePointers[i]++;
 		});
 		
 	}
