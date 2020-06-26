@@ -181,17 +181,6 @@ function readInNotes(instrument, pianoRollObject){
 	return allNotes;
 }
 
-// tag a group of oscillators and assign them a stop time with a map
-// @param oscList: a list of OscillatorNode
-// @param tag: a string to tag the OscillatorNode as the stem before a number gets appended
-// @param map: an object to store the mapping between oscillator tag and stop time
-// @param stopTime: a float representing when to stop playing the oscillator
-function mapOscillatorStopTime(oscList, tag, map, stopTime){
-	oscList.forEach(function(osc, index){
-		osc.tag = (tag + index); // we can just arbitrarily add a new attribute. nice!
-		map[osc.tag] = stopTime;
-	});
-}
 
 // calculate length of note in milliseconds
 // @param length: length in px 
@@ -332,14 +321,7 @@ function scheduler(pianoRoll, allInstruments){
 		);
 		pianoRoll.timers.push(highlightOsc); // maybe should use a separate timers array?
 	});
-	
-	
-	
-	
-	
-	
-	
-	
+
 	
 	// figure out for each instrument the minumum number of gain nodes and oscillator nodes we need 
 	// in order to minimize the number of nodes we need to create since that adds performance overhead
@@ -393,7 +375,6 @@ function scheduler(pianoRoll, allInstruments){
 						numGainNodePerInst[instIndex]++;
 					}
 				}
-				
 				prevNote = currNote;
 			}
 			
@@ -407,7 +388,6 @@ function scheduler(pianoRoll, allInstruments){
 			}
 		}
 	});
-	//console.log(numGainNodePerInst);
 	
 	// add the appropriate number of gain nodes and oscillator nodes for each instrument.
 	// we can then reuse these nodes instead of making new ones for every single note, which is unnecessary 
@@ -434,11 +414,7 @@ function scheduler(pianoRoll, allInstruments){
 		}
 	}
 	
-	// then when you schedule the notes, use the nodes in instrumentGainNodes and instrumentOscNodes
-	//console.log(instrumentGainNodes);
-	//console.log(instrumentOscNodes);
-	
-	
+
 	// 'route' the notes i.e. assign them to the gain/osc nodes such that they all get played properly
 	var routes = {}; // map instrument to another map of gain nodes to the notes that should be played by those nodes
 	var posTracker = {};
@@ -482,18 +458,14 @@ function scheduler(pianoRoll, allInstruments){
 			});
 		}
 	});
-	
-	console.log(routes);
-	//console.log(posTracker);
-	//console.log(instrumentOscNodes);
-	
+
+	// start up the oscillators vrrrmmmmmmmm
 	for(var inst in instrumentOscNodes){
 		instrumentOscNodes[inst].forEach((osc) => {
 			osc.start();
 		});
 	}
-	
-	
+		
 	// preprocess the nodes further by figuring out how long each note should be and its start/stop times
 	// note that we should NOT actually stop any oscillators; they should just be set to 0 freq and 0 gain when they
 	// should not be playing
@@ -583,16 +555,38 @@ function scheduler(pianoRoll, allInstruments){
 		}
 		index++;
 	}
-	console.log(allNotesPerInstrument);
 	
+
 	var thisTime = ctx.currentTime;
-		
 	for(var i = 0; i < instruments.length; i++){
 		
 		var currInstNotes = allNotesPerInstrument[i];
-		//var numNotesLeft = currInstNotes.length - instrumentNotePointers[i];
 		
 		currInstNotes.forEach((note) => {
+			
+			/*
+				NEED TO HANDLE DIFF INSTRUMENTS 
+			
+			if(instruments[i].waveType === "percussion"){
+			
+				// find out what octave the note is in
+				var noteContainer = document.getElementById(thisNote.block.id).parentNode;
+				var octave = parseInt(noteContainer.id.match(/[0-9]/g)[0]);
+
+				if(octave >= 2 && octave <= 4){
+					osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
+				}else if(octave === 5){
+					osc = pianoRoll.PercussionManager.snareDrumNote(thisNote.freq, volume, nextTime[i], true);
+				}else{
+					osc = pianoRoll.PercussionManager.hihatNote(volume, nextTime[i], true);
+				}
+			}else if(pianoRoll.instrumentPresets[instruments[i].waveType]){
+				// custom intrument preset!
+				var currPreset = pianoRoll.instrumentPresets[instruments[i].waveType];
+				var instrumentPresetNodes = processNote(thisNote.freq, volume, nextTime[i], pianoRoll, currPreset); 
+			}
+					
+			*/
 			
 			// schedule the notes!
 			var osc = note.osc;
@@ -610,8 +604,7 @@ function scheduler(pianoRoll, allInstruments){
 				osc.frequency.setValueAtTime(0.0, 0.0);
 			}
 
-			
-			console.log(otherParams.block.id + " starting at: " + (thisTime + startTimeOffset));
+			//console.log(otherParams.block.id + " starting at: " + (thisTime + startTimeOffset));
 
 			if(otherParams.block.style === "glide"){
 				osc.frequency.setTargetAtTime(otherParams.freq, thisTime + startTimeOffset, 0.025);
@@ -627,186 +620,10 @@ function scheduler(pianoRoll, allInstruments){
 			
 			// change gain to 0 after a really small amount of time to give the impression of articulation
 			gain.gain.setTargetAtTime(0.0, (thisTime + startTimeOffset + duration - .0025), 0.0010);
-			
-			// increment the note pointer for this instrument 
-			//instrumentNotePointers[i]++;
+
 		});
-		
 	}
-	
-	
-	
-	
-	
-	/*
-	while(pianoRoll.isPlaying && stillNotesToPlay < instruments.length){
-		
-		// for each instrument in the piano roll, get their next note and schedule it 
-		// to play given the next note's duration 
-		// mind any attributes like staccato and legato!
-		for(var i = 0; i < instruments.length; i++){
-			
-			if(instruments[i] === null){
-				continue;
-			}
-			
-			// check if current note pointer for this instrument has reached the end of this
-			// instrument's notes array. if so, increment stillNotesToPlay 
-			var numNotesLeft = instruments[i].notes.length - instrumentNotePointers[i];
-			if(numNotesLeft === 0){
-				stillNotesToPlay++;
-				instruments[i] = null;
-				continue;
-			}
-			
-			var oscList = [];
-			var notesArr = instruments[i].notes;
-			var currIndex = instrumentNotePointers[i];
-			var currNotes = notesArr[currIndex];
-			
-			if(nextTime[i] === 0){
-				// for the very first note
-				nextTime[i] = ctx.currentTime;
 
-				// the first note on the piano roll might not start at the beginning (i.e. there might be an initial rest)
-				// so let's account for that here 
-				// if startMarker is specified, we can use its position to figure out the initial rest
-				var startPos = 60; // 60 is the x-position of the very first note of the piano roll
-				if(startMarker){
-					startPos = getNotePosition(document.getElementById(startMarker));
-				}
-				var firstNoteStart = getNotePosition(document.getElementById(currNotes[0].block.id));
-				if(firstNoteStart !== startPos){
-					var actualStart = getCorrectLength(firstNoteStart - startPos, pianoRoll);
-					nextTime[i] += (actualStart / 1000);
-				}
-			}
-			
-			
-			// keep track of when a note should end because that information is important for turning off 
-			// an oscillator node at the right time via stop(). unfortunately stop can only be called
-			// after start and I start all the oscillator nodes only after I set the duration of each note's gain,
-			// in which I no longer can access the duration info. the oscillator nodes should stop basically at 
-			// the same time their gain nodes reach 0 volume.
-			var stopTimeMap = {};
-
-			// currNotes is a list that has at least 1 note. can have multiple notes (i.e. snare drum or a chord)
-			currNotes.forEach(function(thisNote, index){
-				
-				var osc = null;
-				var oscGainNode = initGain(ctx); // new gain node for each oscillator
-				var volume = thisNote.freq > 0 ? parseFloat(thisNote.block.volume) : 0.0;
-				
-				// by default, ~70% of the note duration should be played 
-				// the rest of the time can be devoted to the spacer 
-				var realDuration;
-				
-				if(thisNote.block.style === "staccato"){
-					realDuration = (0.50 * thisNote.duration)/1000;
-				}else if(thisNote.block.style === "legato"){
-					realDuration = (0.95 * thisNote.duration)/1000;
-				}else{
-					realDuration = (0.70 * thisNote.duration)/1000;
-				}
-				
-				// don't forget any specified attributes for this particular instrument 
-				// check wave type
-				if(instruments[i].waveType === "percussion"){
-			
-					// find out what octave the note is in
-					var noteContainer = document.getElementById(thisNote.block.id).parentNode;
-					var octave = parseInt(noteContainer.id.match(/[0-9]/g)[0]);
-
-					if(octave >= 2 && octave <= 4){
-						osc = pianoRoll.PercussionManager.kickDrumNote(thisNote.freq, volume, nextTime[i], true);
-					}else if(octave === 5){
-						osc = pianoRoll.PercussionManager.snareDrumNote(thisNote.freq, volume, nextTime[i], true);
-					}else{
-						osc = pianoRoll.PercussionManager.hihatNote(volume, nextTime[i], true);
-					}
-					
-					mapOscillatorStopTime(osc, thisNote.block.id, stopTimeMap, nextTime[i] + realDuration);
-					oscList = oscList.concat(osc);	
-					
-				}else if(pianoRoll.instrumentPresets[instruments[i].waveType]){
-					// custom intrument preset!
-					var currPreset = pianoRoll.instrumentPresets[instruments[i].waveType];
-					var instrumentPresetNodes = processNote(thisNote.freq, volume, nextTime[i], pianoRoll, currPreset); 
-					
-					mapOscillatorStopTime(osc, thisNote.block.id, stopTimeMap, nextTime[i] + realDuration);					
-					oscList = oscList.concat(instrumentPresetNodes);
-
-				}else{	
-
-					osc = ctx.createOscillator();
-					osc.connect(oscGainNode);
-					osc.type = instruments[i].waveType;
-					
-					if(thisNote.freq < 440){
-						// need to set initial freq to 0 for low notes (C3 and below)
-						// otherwise gliding will be messed up for notes on one end of the spectrum
-						osc.frequency.setValueAtTime(0, 0);
-					}
-					
-					if(thisNote.block.style === "glide"){
-						osc.frequency.setTargetAtTime(thisNote.freq, nextTime[i], 0.025);
-					}else{
-						osc.frequency.setValueAtTime(thisNote.freq, nextTime[i]);
-					}
-					
-					// setting gain value here depending on condition allows for the 'articulation' of notes without 
-					// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
-					// this is fixed by always setting gain to 0 if a note's frequency is 0.
-					oscGainNode.gain.setTargetAtTime(volume, nextTime[i], 0.0045); 
-					
-					// change gain to 0 after a really small amount of time to give the impression of articulation
-					oscGainNode.gain.setTargetAtTime(0.0, (nextTime[i]) + (realDuration - .0025), 0.0010);		
-					
-					// now keep track of the oscillators and map them to when they should be stopped
-					mapOscillatorStopTime([osc], thisNote.block.id, stopTimeMap, nextTime[i] + realDuration);
-					oscList.push(osc);
-					
-					// use right context destination for recording
-					if(pianoRoll.recording){
-						oscGainNode.connect(pianoRoll.audioContextDestMediaStream);
-					}
-					oscGainNode.connect(pianoRoll.audioContextDestOriginal);
-				}
-				
-				pianoRoll.timers = pianoRoll.timers.concat(oscList);
-
-				if(index === currNotes.length - 1){
-					
-					// we're at the last note of this chord (if multiple notes)
-					oscList.forEach(function(osc){
-						osc.start(nextTime[i]);
-						osc.stop(stopTimeMap[osc.tag]);
-					});
-					
-					// update lastTime and nextTime
-					pianoRoll.lastTime = nextTime[i];
-					
-					if((currIndex + 1) < notesArr.length){
-						// if there's another note after this note (or chord), figure out when that next note should be played
-						var nextNote = notesArr[currIndex+1][0];
-						var nextNotePos = document.getElementById(nextNote.block.id).getBoundingClientRect().left + window.pageXOffset;
-						var thisNotePos = document.getElementById(thisNote.block.id).getBoundingClientRect().left + window.pageXOffset;
-						var durationUntilNextNoteStart = getCorrectLength(nextNotePos - thisNotePos, pianoRoll) / 1000;
-						nextTime[i] += durationUntilNextNoteStart;
-					}else{
-						nextTime[i] += (thisNote.duration / 1000);
-					}
-
-					// increment the note pointer for this instrument 
-					instrumentNotePointers[i]++;
-				}
-			
-			}); // end forEach currNotes 
-			
-		} // end for
-		
-	} // end while 
-	*/
 	
 	if(pianoRoll.loopFlag && pianoRoll.isPlaying){
 		// is this actually correct? the last oscillator in timers might not be necessarily the last note of the piece?
