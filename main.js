@@ -158,6 +158,7 @@ function bindButtons(pianoRollObject){
 		name.textContent = userInput;
 	});
 	
+	/*
 	document.getElementById('loop').addEventListener('click', function(){
 		pianoRoll.loopFlag = !pianoRoll.loopFlag;
 		if(pianoRoll.loopFlag){
@@ -165,7 +166,7 @@ function bindButtons(pianoRollObject){
 		}else{
 			this.style.border = "";
 		}
-	});
+	});*/
 	
 	// toggle time signature 
 	document.getElementById('timeSig').addEventListener('change', function(){

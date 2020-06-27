@@ -173,7 +173,7 @@ function PianoRoll(){
 	this.audioContextDestOriginal; // the original audio context destination 
 	this.audioContextDestMediaStream; // a media stream destination for the audio context (to be used when recording is desired)
 	this.audioDataChunks = [];
-	this.lastTime; 				// the time the last note was supposed to be played
+	this.lastTime = 0; 			// the time the last note was supposed to be played
 	this.isPlaying = false;		// a boolean flag to easily quit playing
 	this.loopFlag = false;		// if playback should be looped or not 
 	this.recording = false;		// if recording. note that if looping, recording should not be possible.
