@@ -447,13 +447,6 @@ function scheduler(pianoRoll, allInstruments){
 			});
 		}
 	});
-
-	// start up the oscillators vrrroooooommmmmmmm
-	for(var inst in instrumentOscNodes){
-		instrumentOscNodes[inst].forEach((osc) => {
-			osc.start();
-		});
-	}
 		
 	// preprocess the nodes further by figuring out how long each note should be and its start/stop times
 	// note that we should NOT actually stop any oscillators; they should just be set to 0 freq and 0 gain when they
@@ -538,6 +531,15 @@ function scheduler(pianoRoll, allInstruments){
 	}
 	
 	var thisTime = ctx.currentTime;
+	//console.log(routes);
+	//console.log(instrumentOscNodes);
+	// start up the oscillators vrrroooooommmmmmmm
+	for(var inst in instrumentOscNodes){
+		instrumentOscNodes[inst].forEach((osc) => {
+			osc.start(thisTime);
+		});
+	}
+	
 	for(var i = 0; i < instruments.length; i++){
 		
 		var currInstNotes = allNotesPerInstrument[i];
@@ -550,7 +552,11 @@ function scheduler(pianoRoll, allInstruments){
 			var duration = note.duration;
 			var volume = note.volume;
 			var startTimeOffset = note.startTimeOffset;
+			var startTime = thisTime + startTimeOffset;
+			var endTime = startTime + duration;
 			var otherParams = note.note;
+			
+			// log the time the last note will play
 			pianoRoll.lastTime = Math.max(pianoRoll.lastTime, (thisTime + startTimeOffset));
 			
 			if(instruments[i].waveType === "percussion"){
@@ -560,17 +566,17 @@ function scheduler(pianoRoll, allInstruments){
 				var oscList;
 				
 				if(octave >= 2 && octave <= 4){
-					oscList = pianoRoll.PercussionManager.kickDrumNote(otherParams.freq, volume, thisTime + startTimeOffset, true);
+					oscList = pianoRoll.PercussionManager.kickDrumNote(otherParams.freq, volume, startTime, true);
 				}else if(octave === 5){
-					oscList = pianoRoll.PercussionManager.snareDrumNote(otherParams.freq, volume, thisTime + startTimeOffset, true);
+					oscList = pianoRoll.PercussionManager.snareDrumNote(otherParams.freq, volume, startTime, true);
 				}else{
-					oscList = pianoRoll.PercussionManager.hihatNote(volume, thisTime + startTimeOffset, true);
+					oscList = pianoRoll.PercussionManager.hihatNote(volume, startTime, true);
 				}
 				
 				oscList.forEach((osc) => {
 					pianoRoll.timers.push(osc);
-					osc.start(thisTime + startTimeOffset);
-					osc.stop(thisTime + startTimeOffset + duration);
+					osc.start(startTime);
+					osc.stop(endTime);
 				});
 				
 			}else if(pianoRoll.instrumentPresets[instruments[i].waveType]){
@@ -578,7 +584,6 @@ function scheduler(pianoRoll, allInstruments){
 				//var currPreset = pianoRoll.instrumentPresets[instruments[i].waveType];
 				//var instrumentPresetNodes = processNote(thisNote.freq, volume, nextTime[i], pianoRoll, currPreset); 
 			}else{
-			
 				osc.type = instruments[i].waveType;
 			
 				if(otherParams.freq < 440){
@@ -588,19 +593,19 @@ function scheduler(pianoRoll, allInstruments){
 				}
 
 				if(otherParams.block.style === "glide"){
-					osc.frequency.setTargetAtTime(otherParams.freq, thisTime + startTimeOffset, 0.025);
+					osc.frequency.setTargetAtTime(otherParams.freq, startTime, 0.025);
 				}else{
-					osc.frequency.setValueAtTime(otherParams.freq, thisTime + startTimeOffset);
+					osc.frequency.setValueAtTime(otherParams.freq, startTime);
 				}
 				
 				// setting gain value here depending on condition allows for the 'articulation' of notes without 
 				// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
 				// this is fixed by always setting gain to 0 if a note's frequency is 0.
-				gain.gain.setTargetAtTime(volume, thisTime + startTimeOffset, 0.0045); 
+				gain.gain.setTargetAtTime(volume, startTime, 0.0045); 
 				
 				// cut the duration by just a little bit to give the impression of articulation
-				gain.gain.setTargetAtTime(0.0, (thisTime + startTimeOffset + duration - .0025), 0.0010);
-				osc.frequency.setValueAtTime(0.0, (thisTime + startTimeOffset + duration));
+				gain.gain.setTargetAtTime(0.0, (endTime - .0025), 0.0010);
+				osc.frequency.setValueAtTime(0.0, endTime);
 			}
 		});
 	}
