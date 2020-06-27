@@ -135,7 +135,6 @@ const defaultInstruments = {
 	4: "triangle",
 	5: "percussion",
 };
-Object.freeze(defaultInstruments);
 
 
 /******
@@ -198,16 +197,8 @@ function PianoRoll(){
 	this.noteIdNum = 0; // use this to create a unique number for each added note's id
 	
 	this.instrumentPresets = {};// a dictionary to keep track of imported instrument presets
-								// i.e. {'name': 
-								//				{
-								//					'waveNode': [osc1, osc2],
-								//					'noiseNode': [osc1]
-								//				}
-								//      }
-								// each preset_info dictionary keeps references to the different sound nodes needed for the instrument
-
 	this.noiseBuffer; // for percussion 
-
+	
 	this.noteFrequencies = noteFrequencies;
 	
 	this.init = function(){

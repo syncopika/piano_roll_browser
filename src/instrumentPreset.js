@@ -1,93 +1,178 @@
 // utility functions to handle importing instrument presets
-
-function addNoise(noiseNodeParams, pianoRoll){
-	
-	let audioContext = pianoRoll.audioContext;
-	
-	// this stuff should be customizable
-	let bufSize = audioContext.sampleRate;
-	let buffer = audioContext.createBuffer(1, bufSize, bufSize);
-	let output = buffer.getChannelData(0);
-	
-	// TODO: fix this
-	for(let i = 0; i < bufSize; i++){
-		output[i] = Math.random() * 2 - 1;
+class ADSREnvelope {
+	constructor(){
+		this.attack = 0;
+		this.sustain = 0;
+		this.decay = 0;
+		this.release = 0;
+		this.sustainLevel = 0;
 	}
 	
-	this.noiseBuffer = buffer;
-	let noise = audioContext.createBufferSource();
-	noise.buffer = this.noiseBuffer;
-	let noiseFilter = audioContext.createBiquadFilter();
-	noiseFilter.type = noiseNodeParams['noiseFilterPassType'];
-	noiseFilter.frequency.value = noiseNodeParams['noiseOscFreq'];
-	noise.connect(noiseFilter);
-
-	// add gain to the noise filter 
-	let noiseEnvelope = audioContext.createGain();
-	noiseFilter.connect(noiseEnvelope);
-	
-	if(pianoRoll.recording){
-		noiseEnvelope.connect(pianoRoll.audioContextDestMediaStream);
+	updateParams(params){
+		for(let param in params){
+			if(param in this){
+				this[param] = params[param];
+			}
+		}
 	}
-	noiseEnvelope.connect(pianoRoll.audioContextDestOriginal);
 	
+	applyADSR(targetNodeParam, time){
+		// targetNodeParam might be the gain property of a gain node, or a filter node for example
+		// the targetNode just needs to have fields that make sense to be manipulated with ADSR
+		// i.e. pass in gain.gain as targetNodeParam
+		// https://www.redblobgames.com/x/1618-webaudio/#orgeb1ffeb
+
+		let baseParamVal = targetNodeParam.value; // i.e. gain.gain.value
+		
+		targetNodeParam.linearRampToValueAtTime(0.0, time);
+		targetNodeParam.linearRampToValueAtTime(baseParamVal, time + this.attack);
+		targetNodeParam.linearRampToValueAtTime(baseParamVal * this.sustainLevel, this.attack + this.decay);
+		targetNodeParam.linearRampToValueAtTime(baseParamVal * this.sustainLevel, this.attack + this.decay + this.sustain);
+		targetNodeParam.linearRampToValueAtTime(0.0, this.attack + this.decay + this.sustain + this.release);
+		return targetNodeParam;
+	}
+}
+
+function importInstrumentPreset(pianoRoll){
 	
-	return [noise, noiseEnvelope];
+	let audioCtx = pianoRoll.audioContext;
+	let input = document.getElementById('importInstrumentPresetInput');
+	
+	function processInstrumentPreset(e){
+		let reader = new FileReader();
+		let file = e.target.files[0];
+		
+		reader.onload = (function(theFile){
+			return function(e){
+				// parse JSON using JSON.parse 
+				let data = JSON.parse(e.target.result);
+				
+				let presetName = data['name'];
+			
+				// store the preset in the PianoRoll obj 
+				pianoRoll.instrumentPresets[presetName] = processPresetData(data.data, audioCtx);
+			}
+		})(file);
+
+		//read the file as a URL
+		reader.readAsText(file);
+	}
+	
+	input.addEventListener('change', processInstrumentPreset, false);
+	input.click();
 }
 
 
-function addWaveNode(waveNodeParams, pianoRoll){
-	
-	let audioContext = pianoRoll.audioContext;
-	
-	let snapOsc = audioContext.createOscillator();
-	snapOsc.type = waveNodeParams['waveOscType'];
-	
-	let snapOscEnv = audioContext.createGain();
-	snapOsc.connect(snapOscEnv);
-	
-	if(pianoRoll.recording){
-		snapOscEnv.connect(pianoRoll.audioContextDestMediaStream);
+function processPresetData(data, audioCtx){
+
+	const nodeTypes = {
+		"GainNode": function(params){ return new GainNode(audioCtx, params) },
+		"OscillatorNode": function(params){ return new OscillatorNode(audioCtx, params) },
+		"ADSREnvelope": function(params){
+			let newADSREnv = new ADSREnvelope();
+			newADSREnv.updateParams(params);
+			return newADSREnv;
+		},
+		"AudioBufferSourceNode": function(params){
+			let bufferData = params["buffer"].channelData; 
+			delete params["buffer"]['channelData']; // not a real param we can use for the constructor
+			delete params["buffer"]['duration']; // duration param not supported for constructor apparently
+			let buffer = new AudioBuffer(params["buffer"]);
+			buffer.copyToChannel(bufferData, 0); // only one channel
+			
+			params["buffer"] = buffer;
+			let newAudioBuffSource = new AudioBufferSourceNode(audioCtx, params);
+			return newAudioBuffSource;
+		},
+		"BiquadFilterNode": function(params){}
 	}
-	snapOscEnv.connect(pianoRoll.audioContextDestOriginal);
 	
-	return [snapOsc, snapOscEnv];
-}
-
-
-function processNote(freq, vol, timeStart, pianoRoll, currPreset){
-	// play the given note based on the current synth setup
-	let allNodes = [];
-	let time = timeStart;
+	// set up all our nodes first
+	let nodeMap = {}; // map our node names to their node instances
+	for(let nodeName in data){
+		let nodeInfo = data[nodeName];
+		for(let type in nodeTypes){
+			if(nodeName.indexOf(type) >= 0){
+				let audioNode = nodeTypes[type](nodeInfo.node);
+				nodeMap[nodeName] = audioNode;
+				audioNode.id = nodeInfo.id;
+				break;
+			}
+		}
+	}
 	
-	currPreset.waveNodes.forEach((node) => {
-		let snap = addWaveNode(node, pianoRoll);
-		let snapOsc = snap[0];
-		let snapEnv = snap[1];
+	// then link them up properly based on feedsInto and feedsFrom for each node given in the data
+	let oscNodes = [...Object.keys(nodeMap)].filter((key) => key.indexOf("Oscillator") >= 0 || key.indexOf("AudioBuffer") >= 0);
+	
+	let nodesToStart = [];
+	oscNodes.forEach((osc) => {
 		
-		snapOsc.frequency.setValueAtTime(freq, time);
+		let newOsc = nodeMap[osc];
 		
-		// here we're using the volume given by the current note's volume setting
-		// but that conflicts with the volume given by the preset for this particular node 
-		// can we reconcile the difference? like given the current note's volume, maybe we
-		// can come up with a corresponding ratio of separate node volumes?
-		snapEnv.gain.setValueAtTime(vol, time);
-		
-		if(node['waveOscDetune']){
-			snapOsc.detune.setValueAtTime(node['waveOscDetune'], time);
-		}			
-		
-		allNodes.push(snapOsc);
+		// need to go down all the way to each node and make connections
+		// gain nodes don't need to be touched as they're already attached to the context dest by default
+		let connections = data[osc].feedsInto;
+		connections.forEach((conn) => {
+			// connect the new osc node to this connection 
+			let sinkNode = nodeMap[conn];
+			
+			// make connection
+			newOsc.connect(sinkNode);
+			
+			// if source is a gain node, no need to go further
+			if(sinkNode.id.indexOf("Gain") < 0){
+				let stack = nodeStore[sinkNode.id]["feedsInto"];
+				let newSource = sinkNode;
+				
+				while(stack.length > 0){
+					let next = stack.pop();
+					let currSink = nodeStore[next].node;
+					console.log("connecting: " + newSource.constructor.name + " to: " + currSink.constructor.name);
+					
+					newSource.connect(currSink);
+					newSource = currSink;
+					nextConnections = nodeStore[next]["feedsInto"].filter((name) => name.indexOf("Destination") < 0);
+					stack = stack.concat(nextConnections);
+				}
+			}
+		});
 	});
 	
-	currPreset.noiseNodes.forEach((node) => {
-		let noise = addNoise(node, pianoRoll);
-		let noiseOsc = noise[0];
-		let noiseEnv = noise[1];
-		
-		noiseEnv.gain.setValueAtTime(vol, time);
-		allNodes.push(noiseOsc);
-	});
+	//let gainNodes = [...Object.keys(nodeMap)].filter((key) => key.indexOf("Gain") >= 0).map((gainId) => nodeStore[gainId]);
 	
-	return allNodes;
+	console.log(nodeMap);
+	// gain node attached to destination?
+	return nodeMap;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

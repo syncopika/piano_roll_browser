@@ -178,41 +178,12 @@ function bindButtons(pianoRollObject){
 		$('#measures').text( "number of measures: " + pianoRollObject.numberOfMeasures );
 	});
 	
-	/* import instrument preset
+	// import instrument preset
 	document.getElementById('importInstrumentPreset').addEventListener('click', function(){
-		importInstrumentPreset();
-	});*/
+		importInstrumentPreset(pianoRollObject); // from instrumentPreset.js
+	});
 }
 
-// import json of instrument preset 
-function importInstrumentPreset(){
-	var input = document.getElementById('importInstrumentPresetInput');
-	input.addEventListener('change', processInstrumentPreset, false);
-	input.click();
-}
-
-function processInstrumentPreset(e){
-	var reader = new FileReader();
-	var file = e.target.files[0];
-	
-	//when the image loads, put it on the canvas.
-	reader.onload = (function(theFile){
-	
-		return function(e){
-		
-			// parse JSON using JSON.parse 
-			var data = JSON.parse(e.target.result);
-			var presetName = data['presetName'];
-			//console.log(presetName);
-			
-			// store the preset in the PianoRoll obj 
-			pianoRoll.instrumentPresets[presetName] = data;
-		}
-	})(file);
-
-	//read the file as a URL
-	reader.readAsText(file);
-}
 
 function updateAddNoteSize(el){
 	pianoRoll.addNoteSize = (el.options[el.options.selectedIndex]).textContent;
