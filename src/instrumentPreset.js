@@ -43,9 +43,13 @@ function importInstrumentPreset(pianoRoll){
 		let file = e.target.files[0];
 		
 		reader.onload = (function(theFile){
-			return function(e){
-				// parse JSON using JSON.parse 
+			return function(e){ 
 				let data = JSON.parse(e.target.result);
+				
+				if(data['name'] === undefined){
+					console.log("cannot load preset because it has no name!");
+					return;
+				}
 				
 				let presetName = data['name'];
 			

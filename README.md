@@ -37,8 +37,7 @@ Changing note lock size:
 	
 check out a demo! see the demo dropdown box.    
     
-### current issues:    
-- non-functional currently on Edge and doesn't work quite well on Firefox (lots of blipping / might be an oscillator thing). requires further debugging.    
+### current issues:        
 - downloading the audio isn't great on Chrome - the audio duration is messed up (see: https://stackoverflow.com/questions/38443084/how-can-i-add-predefined-length-to-audio-recorded-from-mediarecorder-in-chrome).    
     
 ### current next steps?:    
@@ -47,7 +46,8 @@ check out a demo! see the demo dropdown box.
     
 ### features I would like to implement:    
 - ability to change color of highlight and color of note blocks, i.e. different for each instrument    
-- be able to repeat a section 
+- be able to repeat a section    
+- looping?
     
 ### implementation / design:    
 The objective of my piano roll, at least conceptually, is I think fairly straightforward. The goal is to arrange a number of notes with
@@ -65,7 +65,7 @@ Sand Canyon (Kirby's Dream Land 3) - Jun Ishikawa
     
 3_4 time demo - my own composition    
     
-なかよしセンセーション (Princess Connect Re:Dive) - 大久保 薫
+なかよしセンセーション (Princess Connect! Re:Dive) - 大久保 薫
 
 
     

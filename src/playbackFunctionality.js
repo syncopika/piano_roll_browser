@@ -39,33 +39,13 @@ function clickNote(id, waveType, pianoRollObject){
 			parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
 			var audioContext = pianoRollObject.audioContext;
 			var currPreset = pianoRollObject.instrumentPresets[waveType];
-			//console.log(currPreset);
-			var time = audioContext.currentTime;
-			var allNodes = [];
+			console.log(currPreset);
 			
-			currPreset.waveNodes.forEach((node) => {
-				var snap = addWaveNode(node, pianoRollObject);
-				var snapOsc = snap[0];
-				var snapEnv = snap[1];
-				
-				snapOsc.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], time);
-				snapEnv.gain.setValueAtTime(pianoRollObject.currentInstrument.volume, time);
-				allNodes.push(snapOsc);
-			});
-			
-			currPreset.noiseNodes.forEach((node) => {
-				var noise = addNoise(node, pianoRollObject);
-				var noiseOsc = noise[0];
-				var noiseEnv = noise[1];
-				
-				noiseEnv.gain.setValueAtTime(pianoRollObject.currentInstrument.volume, time);
-				allNodes.push(noiseOsc);
-			});
-			
+			/*
 			allNodes.forEach((osc) => {
 				osc.start(0);
 				osc.stop(audioContext.currentTime + .100);
-			});
+			});*/
 		}else{
 			
 			var parent = document.getElementById(id).parentNode.id;
