@@ -31,44 +31,34 @@ function clickNote(id, waveType, pianoRollObject){
 
 		if(waveType === "percussion"){
 			clickPercussionNote(id, pianoRollObject);
-		}else if(pianoRoll.instrumentPresets[waveType]){
-			
-			// custom intrument preset!
-			// TODO: refactor this section pls
-			var parent = document.getElementById(id).parentNode.id;
-			parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
-			var audioContext = pianoRollObject.audioContext;
-			var currPreset = pianoRollObject.instrumentPresets[waveType];
-			console.log(currPreset);
-			
-			/*
-			allNodes.forEach((osc) => {
-				osc.start(0);
-				osc.stop(audioContext.currentTime + .100);
-			});*/
 		}else{
-			
 			var parent = document.getElementById(id).parentNode.id;
 			parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
 			
-			// create a new oscillator just for this note 
-			var osc = pianoRollObject.audioContext.createOscillator();
-			osc.type = waveType;
-			osc.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], 0);
-			
-			// borrow the currentInstrument's gain node 
-			var gain = pianoRollObject.currentInstrument.gain;
-			osc.connect(gain);
-			
-			// set the volume of a clicked note to whatever the current isntrument's volume is 
-			gain.gain.setTargetAtTime(pianoRollObject.currentInstrument.volume, pianoRollObject.audioContext.currentTime, 0.002);
-			osc.start(0);
-			
-			// silence the oscillator 
-			gain.gain.setTargetAtTime(0, pianoRollObject.audioContext.currentTime + 0.080, 0.002);
-			osc.stop(pianoRollObject.audioContext.currentTime + .100);
+			if(pianoRoll.instrumentPresets[waveType]){
+				// custom intrument preset!
+				onClickCustomPreset(pianoRollObject, waveType, parent);
+			}else{	
+				// create a new oscillator just for this note 
+				var osc = pianoRollObject.audioContext.createOscillator();
+				osc.type = waveType;
+				osc.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], 0);
+				
+				// borrow the currentInstrument's gain node 
+				var gain = pianoRollObject.currentInstrument.gain;
+				osc.connect(gain);
+				
+				var now = pianoRollObject.audioContext.currentTime;
+				
+				// set the volume of a clicked note to whatever the current isntrument's volume is 
+				gain.gain.setTargetAtTime(pianoRollObject.currentInstrument.volume, now, 0.002);
+				osc.start(0);
+				
+				// silence the oscillator 
+				gain.gain.setTargetAtTime(0.0, now + 0.080, 0.002);
+				osc.stop(now + .100);
+			}
 		}
-
 	});
 }
 
@@ -86,12 +76,10 @@ function clickPercussionNote(id, pianoRollObject){
 	
 	if(octave >= 2 && octave <= 4){
 		// kick drum 
-		pianoRollObject.PercussionManager.kickDrumNote(pianoRollObject.noteFrequencies[parent], volume, time, false);
-		
+		pianoRollObject.PercussionManager.kickDrumNote(pianoRollObject.noteFrequencies[parent], volume, time, false);		
 	}else if(octave === 5){
 		// snare drum 
-		pianoRollObject.PercussionManager.snareDrumNote(pianoRollObject.noteFrequencies[parent], volume, time, false);
-		
+		pianoRollObject.PercussionManager.snareDrumNote(pianoRollObject.noteFrequencies[parent], volume, time, false);		
 	}else{
 		// hi-hat 
 		pianoRollObject.PercussionManager.hihatNote(volume, time, false);

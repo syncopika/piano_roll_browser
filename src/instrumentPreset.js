@@ -54,7 +54,7 @@ function importInstrumentPreset(pianoRoll){
 				let presetName = data['name'];
 			
 				// store the preset in the PianoRoll obj 
-				pianoRoll.instrumentPresets[presetName] = processPresetData(data.data, audioCtx);
+				pianoRoll.instrumentPresets[presetName] = data.data;
 			}
 		})(file);
 
@@ -66,17 +66,25 @@ function importInstrumentPreset(pianoRoll){
 	input.click();
 }
 
-
-function processPresetData(data, audioCtx){
+// sets up all the audio nodes needed for this instrument preset
+function createPresetInstrument(data, audioCtx){
 
 	const nodeTypes = {
-		"GainNode": function(params){ return new GainNode(audioCtx, params) },
-		"OscillatorNode": function(params){ return new OscillatorNode(audioCtx, params) },
+		
+		"GainNode": function(params){ 
+			return new GainNode(audioCtx, params) 
+		},
+		
+		"OscillatorNode": function(params){ 
+			return new OscillatorNode(audioCtx, params) 
+		},
+		
 		"ADSREnvelope": function(params){
 			let newADSREnv = new ADSREnvelope();
 			newADSREnv.updateParams(params);
 			return newADSREnv;
 		},
+		
 		"AudioBufferSourceNode": function(params){
 			let bufferData = params["buffer"].channelData; 
 			delete params["buffer"]['channelData']; // not a real param we can use for the constructor
@@ -88,6 +96,7 @@ function processPresetData(data, audioCtx){
 			let newAudioBuffSource = new AudioBufferSourceNode(audioCtx, params);
 			return newAudioBuffSource;
 		},
+		
 		"BiquadFilterNode": function(params){}
 	}
 	
@@ -97,8 +106,9 @@ function processPresetData(data, audioCtx){
 		let nodeInfo = data[nodeName];
 		for(let type in nodeTypes){
 			if(nodeName.indexOf(type) >= 0){
-				let audioNode = nodeTypes[type](nodeInfo.node);
-				nodeMap[nodeName] = audioNode;
+				// find the right node function to call based on nodeName
+				let audioNode = nodeTypes[type](nodeInfo.node); // create new node
+				nodeMap[nodeName] = audioNode; // add it to the map
 				audioNode.id = nodeInfo.id;
 				break;
 			}
@@ -122,6 +132,7 @@ function processPresetData(data, audioCtx){
 			
 			// make connection
 			newOsc.connect(sinkNode);
+			//console.log("connecting: " + newOsc.constructor.name + " to: " + sinkNode.constructor.name);
 			
 			// if source is a gain node, no need to go further
 			if(sinkNode.id.indexOf("Gain") < 0){
@@ -131,8 +142,7 @@ function processPresetData(data, audioCtx){
 				while(stack.length > 0){
 					let next = stack.pop();
 					let currSink = nodeStore[next].node;
-					console.log("connecting: " + newSource.constructor.name + " to: " + currSink.constructor.name);
-					
+					//console.log("connecting: " + newSource.constructor.name + " to: " + currSink.constructor.name);
 					newSource.connect(currSink);
 					newSource = currSink;
 					nextConnections = nodeStore[next]["feedsInto"].filter((name) => name.indexOf("Destination") < 0);
@@ -142,13 +152,60 @@ function processPresetData(data, audioCtx){
 		});
 	});
 	
-	//let gainNodes = [...Object.keys(nodeMap)].filter((key) => key.indexOf("Gain") >= 0).map((gainId) => nodeStore[gainId]);
-	
-	console.log(nodeMap);
 	// gain node attached to destination?
 	return nodeMap;
 }
 
+
+// handling a custom preset when clicking on a note 
+function onClickCustomPreset(pianoRollObject, waveType, parent){
+	var audioCtx = pianoRollObject.audioContext;
+	var presetData = pianoRollObject.instrumentPresets[waveType];
+	console.log(presetData);
+	
+	// to debug why initial click produces no sound when using an imported preset,
+	// try using manually created audio nodes here and see if that works
+	currPreset = createPresetInstrument(presetData, audioCtx);
+	console.log(currPreset);
+	
+	var nodes = [...Object.keys(currPreset)];
+	var oscNodes = nodes.filter((nodeName) => {
+		return nodeName.indexOf("Osc") >= 0 || nodeName.indexOf("AudioBuffer") >= 0;
+	});
+	
+	var gainNodes = nodes.filter((nodeName) => {
+		return nodeName.indexOf("Gain") >= 0;
+	});
+	
+	var now = audioCtx.currentTime;
+	
+	gainNodes.forEach((gainName) => {
+		// do we really want to adjust every gain nodes' gain value?
+		var gainNode = currPreset[gainName];
+		gainNode.connect(audioCtx.destination);
+		
+		// apply any ADSR envelopes that feed into this gainNode 
+		presetData[gainName].feedsFrom.forEach((feedFrom) => {
+			if(feedFrom.indexOf("ADSR") >= 0){
+				var adsr = feedFrom;
+				var envelope = currPreset[adsr];
+				gainNode.gain.value = pianoRollObject.currentInstrument.volume;
+				envelope.applyADSR(gainNode.gain, now);
+			}else{
+				gainNode.gain.setTargetAtTime(pianoRollObject.currentInstrument.volume, now, 0.002);
+			}
+		});
+		
+	});
+	
+	oscNodes.forEach((oscName) => {
+		var osc = currPreset[oscName];
+		osc.frequency.value = pianoRollObject.noteFrequencies[parent];
+		osc.start(0);
+		osc.stop(now + .200);
+	});
+	
+}
 
 
 
