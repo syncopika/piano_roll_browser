@@ -21,9 +21,7 @@ class ADSREnvelope {
 		// the targetNode just needs to have fields that make sense to be manipulated with ADSR
 		// i.e. pass in gain.gain as targetNodeParam
 		// https://www.redblobgames.com/x/1618-webaudio/#orgeb1ffeb
-
 		let baseParamVal = targetNodeParam.value; // i.e. gain.gain.value
-		
 		targetNodeParam.linearRampToValueAtTime(0.0, time);
 		targetNodeParam.linearRampToValueAtTime(baseParamVal, time + this.attack);
 		targetNodeParam.linearRampToValueAtTime(baseParamVal * this.sustainLevel, this.attack + this.decay);
@@ -42,21 +40,23 @@ function importInstrumentPreset(pianoRoll){
 		let reader = new FileReader();
 		let file = e.target.files[0];
 		
-		reader.onload = (function(theFile){
-			return function(e){ 
-				let data = JSON.parse(e.target.result);
+		if(file){
+			reader.onload = (function(theFile){
+				return function(e){ 
+					let data = JSON.parse(e.target.result);
+					
+					if(data['name'] === undefined){
+						console.log("cannot load preset because it has no name!");
+						return;
+					}
+					
+					let presetName = data['name'];
 				
-				if(data['name'] === undefined){
-					console.log("cannot load preset because it has no name!");
-					return;
+					// store the preset in the PianoRoll obj 
+					pianoRoll.instrumentPresets[presetName] = data.data;
 				}
-				
-				let presetName = data['name'];
-			
-				// store the preset in the PianoRoll obj 
-				pianoRoll.instrumentPresets[presetName] = data.data;
-			}
-		})(file);
+			})(file);
+		}
 
 		//read the file as a URL
 		reader.readAsText(file);
@@ -72,11 +72,12 @@ function createPresetInstrument(data, audioCtx){
 	const nodeTypes = {
 		
 		"GainNode": function(params){ 
-			return new GainNode(audioCtx, params) 
+			let newGain = new GainNode(audioCtx, params);
+			return newGain; 
 		},
 		
 		"OscillatorNode": function(params){ 
-			return new OscillatorNode(audioCtx, params) 
+			return new OscillatorNode(audioCtx, params) ;
 		},
 		
 		"ADSREnvelope": function(params){
@@ -152,7 +153,6 @@ function createPresetInstrument(data, audioCtx){
 		});
 	});
 	
-	// gain node attached to destination?
 	return nodeMap;
 }
 
@@ -161,12 +161,16 @@ function createPresetInstrument(data, audioCtx){
 function onClickCustomPreset(pianoRollObject, waveType, parent){
 	var audioCtx = pianoRollObject.audioContext;
 	var presetData = pianoRollObject.instrumentPresets[waveType];
-	console.log(presetData);
+	//console.log(presetData);
 	
 	// to debug why initial click produces no sound when using an imported preset,
 	// try using manually created audio nodes here and see if that works
+	// actually, it looks like the ADSR env is the issue
 	currPreset = createPresetInstrument(presetData, audioCtx);
-	console.log(currPreset);
+	//console.log(currPreset);
+	
+	// weird, but for some reason playing an ADSR-enveloped gain node initially produces no sound.
+	// after the first click, it works. :<
 	
 	var nodes = [...Object.keys(currPreset)];
 	var oscNodes = nodes.filter((nodeName) => {
@@ -179,30 +183,31 @@ function onClickCustomPreset(pianoRollObject, waveType, parent){
 	
 	var now = audioCtx.currentTime;
 	
-	gainNodes.forEach((gainName) => {
-		// do we really want to adjust every gain nodes' gain value?
-		var gainNode = currPreset[gainName];
-		gainNode.connect(audioCtx.destination);
-		
-		// apply any ADSR envelopes that feed into this gainNode 
-		presetData[gainName].feedsFrom.forEach((feedFrom) => {
-			if(feedFrom.indexOf("ADSR") >= 0){
-				var adsr = feedFrom;
-				var envelope = currPreset[adsr];
-				gainNode.gain.value = pianoRollObject.currentInstrument.volume;
-				envelope.applyADSR(gainNode.gain, now);
-			}else{
-				gainNode.gain.setTargetAtTime(pianoRollObject.currentInstrument.volume, now, 0.002);
-			}
-		});
-		
-	});
-	
 	oscNodes.forEach((oscName) => {
 		var osc = currPreset[oscName];
 		osc.frequency.value = pianoRollObject.noteFrequencies[parent];
 		osc.start(0);
 		osc.stop(now + .200);
+	});
+	
+	gainNodes.forEach((gainName) => {
+		// do we really want to adjust every gain nodes' gain value?
+		// are there times when they should be left alone? maybe, based on the current isntrument's volume, 
+		// we might be able to do some scaling based on the gain value specified in the preset. sounds complicated though
+		var gainNode = currPreset[gainName];
+		gainNode.gain.value = pianoRollObject.currentInstrument.volume;
+		gainNode.connect(pianoRollObject.audioContextDestOriginal);
+		
+		// apply any ADSR envelopes that feed into this gainNode 
+		presetData[gainName].feedsFrom.forEach((feed) => {
+			if(feed.indexOf("ADSR") >= 0){
+				var adsr = feed;
+				var envelope = currPreset[adsr];
+				envelope.applyADSR(gainNode.gain, now);
+			}else{
+				gainNode.gain.setTargetAtTime(pianoRollObject.currentInstrument.volume, now, 0.002);
+			}
+		});
 	});
 	
 }

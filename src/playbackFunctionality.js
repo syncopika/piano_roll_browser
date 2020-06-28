@@ -34,6 +34,7 @@ function clickNote(id, waveType, pianoRollObject){
 		}else{
 			var parent = document.getElementById(id).parentNode.id;
 			parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
+			var now = pianoRollObject.audioContext.currentTime;
 			
 			if(pianoRoll.instrumentPresets[waveType]){
 				// custom intrument preset!
@@ -47,8 +48,6 @@ function clickNote(id, waveType, pianoRollObject){
 				// borrow the currentInstrument's gain node 
 				var gain = pianoRollObject.currentInstrument.gain;
 				osc.connect(gain);
-				
-				var now = pianoRollObject.audioContext.currentTime;
 				
 				// set the volume of a clicked note to whatever the current isntrument's volume is 
 				gain.gain.setTargetAtTime(pianoRollObject.currentInstrument.volume, now, 0.002);
