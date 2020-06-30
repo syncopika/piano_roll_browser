@@ -72,8 +72,7 @@ function createPresetInstrument(data, audioCtx){
 	const nodeTypes = {
 		
 		"GainNode": function(params){ 
-			let newGain = new GainNode(audioCtx, params);
-			return newGain; 
+			return new GainNode(audioCtx, params);
 		},
 		
 		"OscillatorNode": function(params){ 
@@ -87,13 +86,19 @@ function createPresetInstrument(data, audioCtx){
 		},
 		
 		"AudioBufferSourceNode": function(params){
-			let bufferData = params["buffer"].channelData; 
-			delete params["buffer"]['channelData']; // not a real param we can use for the constructor
-			delete params["buffer"]['duration']; // duration param not supported for constructor apparently
-			let buffer = new AudioBuffer(params["buffer"]);
-			buffer.copyToChannel(bufferData, 0); // only one channel
 			
-			params["buffer"] = buffer;
+			if(params["buffer"].channelData){
+				// only need to do this once
+				let bufferData = new Float32Array([...Object.values(params["buffer"].channelData)]); 
+				
+				//delete params["buffer"]['channelData']; // not a real param we can use for the constructor
+				delete params["buffer"]['duration']; // duration param not supported for constructor apparently
+				
+				let buffer = new AudioBuffer(params["buffer"]);
+				buffer.copyToChannel(bufferData, 0); // only one channel
+				params["buffer"] = buffer;
+			}
+			
 			let newAudioBuffSource = new AudioBufferSourceNode(audioCtx, params);
 			return newAudioBuffSource;
 		},
@@ -133,7 +138,7 @@ function createPresetInstrument(data, audioCtx){
 			
 			// make connection
 			newOsc.connect(sinkNode);
-			//console.log("connecting: " + newOsc.constructor.name + " to: " + sinkNode.constructor.name);
+			console.log("connecting: " + newOsc.constructor.name + " to: " + sinkNode.constructor.name);
 			
 			// if source is a gain node, no need to go further
 			if(sinkNode.id.indexOf("Gain") < 0){
@@ -165,7 +170,7 @@ function onClickCustomPreset(pianoRollObject, waveType, parent){
 	
 	// to debug why initial click produces no sound when using an imported preset,
 	// try using manually created audio nodes here and see if that works
-	// actually, it looks like the ADSR env is the issue
+	// actually, it looks like the ADSR env is the issue? maybe a linearramp problem?
 	currPreset = createPresetInstrument(presetData, audioCtx);
 	//console.log(currPreset);
 	
@@ -185,9 +190,14 @@ function onClickCustomPreset(pianoRollObject, waveType, parent){
 	
 	oscNodes.forEach((oscName) => {
 		var osc = currPreset[oscName];
-		osc.frequency.value = pianoRollObject.noteFrequencies[parent];
+		if(osc.frequency){
+			osc.frequency.value = pianoRollObject.noteFrequencies[parent];
+		}
+		//console.log(osc);
 		osc.start(0);
-		osc.stop(now + .200);
+		if(osc.stop){
+			osc.stop(now + .200);
+		}
 	});
 	
 	gainNodes.forEach((gainName) => {
