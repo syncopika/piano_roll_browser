@@ -351,6 +351,11 @@ function scheduler(pianoRoll, allInstruments){
 	// add the appropriate number of gain nodes and oscillator nodes for each instrument.
 	// we can then reuse these nodes instead of making new ones for every single note, which is unnecessary 
 	// especially if we have a lot of notes that aren't part of chords and can be used with just one gain node and oscillator
+	
+	// TODO: need to be careful here! if we import a custom preset, we may be importing a network of nodes (that can be reused).
+	// we can still maintain a 1:1 gain to route relationship but instead of the usual case where we have 1 gain for a route, we 
+	// have one network of nodes (so maybe 2 gain nodes) for a route. we need to think about how to handle/represent this when 
+	// we lay out our routes.
 	var instrumentGainNodes = {};
 	var instrumentOscNodes = {};
 	var gainCount = 0;

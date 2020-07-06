@@ -200,12 +200,21 @@ function onClickCustomPreset(pianoRollObject, waveType, parent){
 		}
 	});
 	
+	var gainValueSum = 0;
+	gainNodes.forEach((name) => {
+		gainValueSum += currPreset[name].gain.value;
+	});
+	
 	gainNodes.forEach((gainName) => {
-		// do we really want to adjust every gain nodes' gain value?
-		// are there times when they should be left alone? maybe, based on the current isntrument's volume, 
-		// we might be able to do some scaling based on the gain value specified in the preset. sounds complicated though
+
+		// let's scale our gain nodes' gain values appropriately based on the instrument's current volume value.
+		// divide this gain value from the sum of all the gain values for this preset,
+		// then multiply it by the curr. instrument's volume to get the equivalent proportion of gain values in the context of this instrument's volume.
 		var gainNode = currPreset[gainName];
-		gainNode.gain.value = pianoRollObject.currentInstrument.volume;
+
+		//gainNode.gain.value = pianoRollObject.currentInstrument.volume;
+		gainNode.gain.value = ((gainNode.gain.value / gainValueSum) * pianoRollObject.currentInstrument.volume);
+		
 		gainNode.connect(pianoRollObject.audioContextDestOriginal);
 		
 		// apply any ADSR envelopes that feed into this gainNode 
@@ -215,7 +224,7 @@ function onClickCustomPreset(pianoRollObject, waveType, parent){
 				var envelope = currPreset[adsr];
 				envelope.applyADSR(gainNode.gain, now);
 			}else{
-				gainNode.gain.setTargetAtTime(pianoRollObject.currentInstrument.volume, now, 0.002);
+				gainNode.gain.setTargetAtTime(gainNode.gain.value, now, 0.002);
 			}
 		});
 	});
