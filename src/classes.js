@@ -6,7 +6,7 @@ const noteSizeMap = {
 	"16th": 20,
 	"32nd": 10,
 };
-Object.freeze(noteSizeMap);
+Object.freeze(noteSizeMap); // prevent any edits to noteSizeMap
 
 
 /******
@@ -123,7 +123,7 @@ const noteFrequencies = {
 	"C#2": 69.30,
 	"C2": 65.41
 };
-Object.freeze(noteFrequencies);
+Object.freeze(noteFrequencies); // prevent any edits to noteFrequencies
 
 /******
 	default instrument sound choices
@@ -257,12 +257,11 @@ function Instrument(name, gain, notesArray){
 	this.name = name;
 	this.gain = gain; 				// assign a gain node object
 	this.notes = notesArray;		// array of Note objects
-	this.activeNotes = {};			// this hash will keep track of the current green notes, by grid element ID only!
-	this.waveType = "sine"; 		//sine wave by default 
+	this.activeNotes = {};			// 
+	this.waveType = "sine"; 		// sine wave by default 
 	
-	// volume property so all notes for a particular instrument can be set to a certain volume
 	this.volume = 0.2; 
-	this.onionSkinOn = true; // make onion-skin for this instrument togglable
+	this.onionSkinOn = true;
 }
 
 /*****  NOTE CLASS ******/
@@ -401,7 +400,6 @@ function PercussionManager(pianoRollObject){
 			noiseEnvelope.connect(pianoRoll.audioContextDestMediaStream);
 		}
 		noiseEnvelope.connect(pianoRoll.audioContextDestOriginal);
-		
 		
 		noiseEnvelope.gain.setValueAtTime(volume, time);
 		noiseEnvelope.gain.exponentialRampToValueAtTime(0.01, time + 0.2);

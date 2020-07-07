@@ -360,21 +360,50 @@ function scheduler(pianoRoll, allInstruments){
 	var instrumentOscNodes = {};
 	var gainCount = 0;
 	var oscCount = 0;
-	for(var instrument in numGainNodePerInst){ 
-		instrumentGainNodes[instrument] = [];
-		instrumentOscNodes[instrument] = [];
-		for(var i = 0; i < numGainNodePerInst[instrument]; i++){
-			var newGainNode = initGain(ctx);
-			newGainNode.id = ("gain" + (gainCount++));
-			instrumentGainNodes[instrument].push(newGainNode);
+
+	for(var index in numGainNodePerInst){ 
+		instrumentGainNodes[index] = [];
+		instrumentOscNodes[index] = [];
+
+		// this is the somewhat tricky part. if we have a custom instrument preset,
+		// instead of just making 1 gain and 1 osc, we need to create an instance of that preset 
+		// and take its gain nodes and osc nodes and add them as lists to the above lists. 
+		// so in the end we should have a list of lists for gain and osc nodes 
+		for(var i = 0; i < numGainNodePerInst[index]; i++){
 			
-			var newOscNode = ctx.createOscillator();
-			newOscNode.id = ("osc" + (oscCount++));
-			instrumentOscNodes[instrument].push(newOscNode);
+			var newGainNodes;
+			var newOscNodes;
 			
-			newOscNode.connect(newGainNode);
+			if(pianoRoll.instrumentPresets[instruments[index].waveType]){
+				var presetData = pianoRoll.instrumentPresets[instruments[index].waveType];
+				var currPreset = createPresetInstrument(presetData, pianoRoll.audioContext); // TODO: fix audio context reference! what if it's recording?
+				var nodes = getNodesCustomPreset(currPreset);
+				
+				// note that these nodes are already connected
+				newGainNodes = nodes.gainNodes;
+				newOscNodes = nodes.oscNodes;
+
+				newGainNodes.forEach((gain) => {
+					gain.id = ("gain" + (gainCount++));
+				});
+				
+				newOscNodes.forEach((osc) => {
+					osc.id = ("gain" + (oscCount++));
+				});
+			}else{
+				// only need 1 gain and 1 osc (with standard wave 'instruments')
+				newGainNodes = [initGain(ctx)];
+				newGainNodes[0].id = ("gain" + (gainCount++));
+				
+				newOscNodes = [ctx.createOscillator()];
+				newOscNodes[0].id = ("osc" + (oscCount++));
+				
+				newOscNodes[0].connect(newGainNodes[0]);
+			}
 			
-			pianoRoll.timers.push(newOscNode);
+			instrumentGainNodes[index].push(newGainNodes); // push a list of lists (we want to maintain the node groups here) - a node group is responsible for playing a note as if it were one node 
+			instrumentOscNodes[index].push(newOscNodes);
+			pianoRoll.timers = pianoRoll.timers.concat(newOscNodes);
 		}
 	}
 	
@@ -432,22 +461,26 @@ function scheduler(pianoRoll, allInstruments){
 		allNotesPerInstrument[instrument] = [];
 		
 		var instrumentRoutes = routes[instrument];
-		var currInstGainNodes = instrumentGainNodes[index];
-		var currInstOscNodes = instrumentOscNodes[index];
+		var currInstGainNodes = instrumentGainNodes[index]; // this is a list of lists!
+		var currInstOscNodes = instrumentOscNodes[index];   // this is a list of lists!
 		
 		// for each gain node, hook to right dest 
 		var gainIndex = 0;
 		for(var route in instrumentRoutes){
 			var notes = instrumentRoutes[route];
-			var gainToUse = currInstGainNodes[gainIndex];
-			var oscToUse = currInstOscNodes[gainIndex];
+			var gainsToUse = currInstGainNodes[gainIndex];
+			var oscsToUse = currInstOscNodes[gainIndex];
 			
 			// hook up gain to the correct destination
-			if(pianoRoll.recording){
-				gainToUse.connect(pianoRoll.audioContextDestMediaStream);
-			}
-			gainToUse.connect(pianoRoll.audioContextDestOriginal);
-
+			// TODO: when creating gain nodes for custom presets, don't attach them to the destination since we do that here 
+			gainsToUse.forEach((gain) => {
+				if(pianoRoll.recording){
+					gain.connect(pianoRoll.audioContextDestMediaStream);
+				}else{
+					gain.connect(pianoRoll.audioContextDestOriginal);
+				}
+			});
+			
 			var timeOffsetAcc = 0; // time offset accumulator so we know when notes need to start relative to the beginning of the start of playing
 			for(var i = 0; i < notes.length; i++){
 				var thisNote = notes[i]; 
@@ -489,8 +522,8 @@ function scheduler(pianoRoll, allInstruments){
 				
 				var noteSetup = {
 					"note": thisNote,
-					"osc": oscToUse,
-					"gain": gainToUse,
+					"osc": oscsToUse,
+					"gain": gainsToUse,
 					"duration": realDuration,
 					"volume": volume,
 					"startTimeOffset": startTimeOffset
@@ -507,8 +540,10 @@ function scheduler(pianoRoll, allInstruments){
 	//console.log(instrumentOscNodes);
 	// start up the oscillators vrrroooooommmmmmmm
 	for(var inst in instrumentOscNodes){
-		instrumentOscNodes[inst].forEach((osc) => {
-			osc.start(thisTime);
+		instrumentOscNodes[inst].forEach((oscGroup) => {
+			oscGroup.forEach((osc) => {
+				osc.start(thisTime);
+			});
 		});
 	}
 	
@@ -519,8 +554,8 @@ function scheduler(pianoRoll, allInstruments){
 		currInstNotes.forEach((note) => {
 			
 			// schedule the notes!
-			var osc = note.osc;
-			var gain = note.gain;
+			var oscs = note.osc; // this is a list
+			var gains = note.gain; // this is a list
 			var duration = note.duration;
 			var volume = note.volume;
 			var startTimeOffset = note.startTimeOffset;
@@ -555,29 +590,60 @@ function scheduler(pianoRoll, allInstruments){
 				// TODO
 				//var currPreset = pianoRoll.instrumentPresets[instruments[i].waveType];
 				//var instrumentPresetNodes = processNote(thisNote.freq, volume, nextTime[i], pianoRoll, currPreset); 
-			}else{
-				osc.type = instruments[i].waveType;
-			
-				if(otherParams.freq < 440){
-					// need to set initial freq to 0 for low notes (C3 and below)
-					// otherwise gliding will be messed up for notes on one end of the spectrum
-					osc.frequency.setValueAtTime(0.0, 0.0);
-				}
+				
+				// schedule the gain nodes
+				gains.forEach((gain) => {
+					gain.gain.setTargetAtTime(volume, startTime, 0.0045); 
+					gain.gain.setTargetAtTime(0.0, (endTime - .0025), 0.0010);
+				});
+				
+				// schedule the osc nodes 
+				oscs.forEach((osc) => {
+					console.log(osc);
+					if(osc.frequency){
+						if(otherParams.freq < 440){
+							osc.frequency.setValueAtTime(0.0, 0.0);
+						}
 
-				if(otherParams.block.style === "glide"){
-					osc.frequency.setTargetAtTime(otherParams.freq, startTime, 0.025);
-				}else{
-					osc.frequency.setValueAtTime(otherParams.freq, startTime);
-				}
+						if(otherParams.block.style === "glide"){
+							osc.frequency.setTargetAtTime(otherParams.freq, startTime, 0.025);
+						}else{
+							osc.frequency.setValueAtTime(otherParams.freq, startTime);
+						}
+						
+						osc.frequency.setValueAtTime(0.0, endTime);
+					}
+				});				
 				
-				// setting gain value here depending on condition allows for the 'articulation' of notes without 
-				// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
-				// this is fixed by always setting gain to 0 if a note's frequency is 0.
-				gain.gain.setTargetAtTime(volume, startTime, 0.0045); 
+			}else{
 				
-				// cut the duration by just a little bit to give the impression of articulation
-				gain.gain.setTargetAtTime(0.0, (endTime - .0025), 0.0010);
-				osc.frequency.setValueAtTime(0.0, endTime);
+				oscs.forEach((osc) => {
+					osc.type = instruments[i].waveType;
+				
+					if(otherParams.freq < 440){
+						// need to set initial freq to 0 for low notes (C3 and below)
+						// otherwise gliding will be messed up for notes on one end of the spectrum
+						osc.frequency.setValueAtTime(0.0, 0.0);
+					}
+
+					if(otherParams.block.style === "glide"){
+						osc.frequency.setTargetAtTime(otherParams.freq, startTime, 0.025);
+					}else{
+						osc.frequency.setValueAtTime(otherParams.freq, startTime);
+					}
+					
+					osc.frequency.setValueAtTime(0.0, endTime);
+				});
+				
+				gains.forEach((gain) => {
+					// setting gain value here depending on condition allows for the 'articulation' of notes without 
+					// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
+					// this is fixed by always setting gain to 0 if a note's frequency is 0.
+					gain.gain.setTargetAtTime(volume, startTime, 0.0045); 
+					
+					// cut the duration by just a little bit to give the impression of articulation
+					gain.gain.setTargetAtTime(0.0, (endTime - .0025), 0.0010);
+				});
 			}
 		});
 	}

@@ -88,7 +88,6 @@ function createPresetInstrument(data, audioCtx){
 		"AudioBufferSourceNode": function(params){
 			
 			if(params["buffer"].channelData){
-				// only need to do this once
 				let bufferData = new Float32Array([...Object.values(params["buffer"].channelData)]); 
 				
 				//delete params["buffer"]['channelData']; // not a real param we can use for the constructor
@@ -138,7 +137,7 @@ function createPresetInstrument(data, audioCtx){
 			
 			// make connection
 			newOsc.connect(sinkNode);
-			console.log("connecting: " + newOsc.constructor.name + " to: " + sinkNode.constructor.name);
+			//console.log("connecting: " + newOsc.constructor.name + " to: " + sinkNode.constructor.name);
 			
 			// if source is a gain node, no need to go further
 			if(sinkNode.id.indexOf("Gain") < 0){
@@ -157,26 +156,14 @@ function createPresetInstrument(data, audioCtx){
 			}
 		});
 	});
-	
+
 	return nodeMap;
 }
 
-
-// handling a custom preset when clicking on a note 
-function onClickCustomPreset(pianoRollObject, waveType, parent){
-	var audioCtx = pianoRollObject.audioContext;
-	var presetData = pianoRollObject.instrumentPresets[waveType];
-	//console.log(presetData);
-	
-	// to debug why initial click produces no sound when using an imported preset,
-	// try using manually created audio nodes here and see if that works
-	// actually, it looks like the ADSR env is the issue? maybe a linearramp problem?
-	currPreset = createPresetInstrument(presetData, audioCtx);
+// get the gain nodes and the osc nodes objects that need to be played given a custom preset 
+// TODO: what about ADSR envelopes!?
+function getNodeNamesFromCustomPreset(currPreset){
 	//console.log(currPreset);
-	
-	// weird, but for some reason playing an ADSR-enveloped gain node initially produces no sound.
-	// after the first click, it works. :<
-	
 	var nodes = [...Object.keys(currPreset)];
 	var oscNodes = nodes.filter((nodeName) => {
 		return nodeName.indexOf("Osc") >= 0 || nodeName.indexOf("AudioBuffer") >= 0;
@@ -185,6 +172,45 @@ function onClickCustomPreset(pianoRollObject, waveType, parent){
 	var gainNodes = nodes.filter((nodeName) => {
 		return nodeName.indexOf("Gain") >= 0;
 	});
+	
+	return {
+		"gainNodes": gainNodes, 
+		"oscNodes": oscNodes
+	};
+}
+
+// this needs to be refactored lol
+function getNodesCustomPreset(customPreset){
+	
+	var nodes = [...Object.keys(customPreset)];
+	var oscNodes = nodes.filter((nodeName) => {
+		return nodeName.indexOf("Osc") >= 0 || nodeName.indexOf("AudioBuffer") >= 0;
+	});
+	oscNodes = oscNodes.map((osc) => customPreset[osc]);
+	
+	var gainNodes = nodes.filter((nodeName) => {
+		return nodeName.indexOf("Gain") >= 0;
+	});
+	gainNodes = gainNodes.map((gain) => customPreset[gain]);
+	return {
+		"gainNodes": gainNodes, 
+		"oscNodes": oscNodes
+	};
+}
+
+
+// handling a custom preset when clicking on a note 
+function onClickCustomPreset(pianoRollObject, waveType, parent){
+	
+	// weird, but for some reason playing an ADSR-enveloped gain node initially produces no sound.
+	// after the first click, it works. :<
+	var audioCtx = pianoRollObject.audioContext;
+	var presetData = pianoRollObject.instrumentPresets[waveType];
+	var currPreset = createPresetInstrument(presetData, audioCtx);
+	
+	var nodes = getNodeNamesFromCustomPreset(currPreset);
+	var oscNodes = nodes.oscNodes;
+	var gainNodes = nodes.gainNodes;
 	
 	var now = audioCtx.currentTime;
 	
