@@ -13,6 +13,9 @@
   across the page (i.e. any user activity on the page while playback occurred). it was a good exercise I guess to try anyway.
 
 current things to do now:
+	- clicking a note -> if clicking an already existing note, the volume should reflect that note's volume. otherwise use the instrument's volume.
+	- custom isntrument presets!!!!
+
 	- bug: 2 instruments, have a note that spans 6 columns, move to next isntrument, try placing note within area that note spans. it might not let you place a new note exactly.
 		- this might have to do with an existing note element (opacity is 0 b/c onion skin is off for that instrument it belongs to) in the parent cell
 	- delete instrument functionality

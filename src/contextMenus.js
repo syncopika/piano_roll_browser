@@ -12,7 +12,7 @@ function makeInstrumentContextMenu(pianoRollObject){
 			selector: '.context-menu-instrument', 
 			zIndex: 102,
 			build: function($trigger, e){
-				var instrumentOptions = pianoRollObject.defaultInstrumentSounds;				
+				var instrumentOptions = Object.assign({}, pianoRollObject.defaultInstrumentSounds);
 				var num = Object.keys(instrumentOptions).length + 1;
 				
 				for(var customPreset in pianoRollObject.instrumentPresets){

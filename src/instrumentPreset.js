@@ -16,12 +16,13 @@ class ADSREnvelope {
 		}
 	}
 	
-	applyADSR(targetNodeParam, time){
+	applyADSR(targetNodeParam, time, volToUse=null){
 		// targetNodeParam might be the gain property of a gain node, or a filter node for example
 		// the targetNode just needs to have fields that make sense to be manipulated with ADSR
 		// i.e. pass in gain.gain as targetNodeParam
 		// https://www.redblobgames.com/x/1618-webaudio/#orgeb1ffeb
-		let baseParamVal = targetNodeParam.value; // i.e. gain.gain.value
+
+		let baseParamVal = volToUse ? volToUse : targetNodeParam.value; // i.e. gain.gain.value
 		targetNodeParam.linearRampToValueAtTime(0.0, time);
 		targetNodeParam.linearRampToValueAtTime(baseParamVal, time + this.attack);
 		targetNodeParam.linearRampToValueAtTime(baseParamVal * this.sustainLevel, this.attack + this.decay);
@@ -76,7 +77,7 @@ function createPresetInstrument(data, audioCtx){
 		},
 		
 		"OscillatorNode": function(params){ 
-			return new OscillatorNode(audioCtx, params) ;
+			return new OscillatorNode(audioCtx, params);
 		},
 		
 		"ADSREnvelope": function(params){
@@ -99,6 +100,7 @@ function createPresetInstrument(data, audioCtx){
 			}
 			
 			let newAudioBuffSource = new AudioBufferSourceNode(audioCtx, params);
+			newAudioBuffSource.loop = true;
 			return newAudioBuffSource;
 		},
 		
@@ -119,6 +121,17 @@ function createPresetInstrument(data, audioCtx){
 			}
 		}
 	}
+	
+	// attach any envelopes as needed to the gain nodes 
+	let gainNodes = [...Object.keys(nodeMap)].filter((key) => key.indexOf("Gain") >= 0);
+	gainNodes.forEach((gain) => {
+		// TODO: for now we're assuming only 1 envelope for gain nodes (and for their gain prop)
+		let feed = data[gain].feedsFrom.filter((nodeName) => nodeName.indexOf("ADSR") >= 0);
+		if(feed.length >= 0){
+			var envelope = nodeMap[feed[0]]; // get the ADSREnvelope object ref
+			nodeMap[gain].envelope = envelope;  // attach it to this gain node for easy access as a prop called envelope
+		}
+	});
 	
 	// then link them up properly based on feedsInto and feedsFrom for each node given in the data
 	let oscNodes = [...Object.keys(nodeMap)].filter((key) => key.indexOf("Oscillator") >= 0 || key.indexOf("AudioBuffer") >= 0);
@@ -157,6 +170,7 @@ function createPresetInstrument(data, audioCtx){
 		});
 	});
 
+	//console.log(nodeMap);
 	return nodeMap;
 }
 

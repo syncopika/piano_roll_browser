@@ -352,10 +352,9 @@ function scheduler(pianoRoll, allInstruments){
 	// we can then reuse these nodes instead of making new ones for every single note, which is unnecessary 
 	// especially if we have a lot of notes that aren't part of chords and can be used with just one gain node and oscillator
 	
-	// TODO: need to be careful here! if we import a custom preset, we may be importing a network of nodes (that can be reused).
+	// need to be careful here! if we import a custom preset, we may be importing a network of nodes (that can be reused).
 	// we can still maintain a 1:1 gain to route relationship but instead of the usual case where we have 1 gain for a route, we 
-	// have one network of nodes (so maybe 2 gain nodes) for a route. we need to think about how to handle/represent this when 
-	// we lay out our routes.
+	// have one network of nodes (so maybe 2 gain nodes) for a route.
 	var instrumentGainNodes = {};
 	var instrumentOscNodes = {};
 	var gainCount = 0;
@@ -376,7 +375,7 @@ function scheduler(pianoRoll, allInstruments){
 			
 			if(pianoRoll.instrumentPresets[instruments[index].waveType]){
 				var presetData = pianoRoll.instrumentPresets[instruments[index].waveType];
-				var currPreset = createPresetInstrument(presetData, pianoRoll.audioContext); // TODO: fix audio context reference! what if it's recording?
+				var currPreset = createPresetInstrument(presetData, pianoRoll.audioContext);
 				var nodes = getNodesCustomPreset(currPreset);
 				
 				// note that these nodes are already connected
@@ -425,8 +424,8 @@ function scheduler(pianoRoll, allInstruments){
 		posTracker[instrumentIndex] = {}; // stores the end position (i.e. start + note width) of the last note assigned to a gain node for an instrument
 		
 		for(var j = 0; j < instrumentGainNodes[instrumentIndex].length; j++){
-			routes[instrumentIndex][i] = [];
-			posTracker[instrumentIndex][i] = 0;
+			routes[instrumentIndex][j] = [];
+			posTracker[instrumentIndex][j] = 0;
 		}
 		
 		// use instrumentNotePointers to take into account the startMarker 
@@ -472,7 +471,6 @@ function scheduler(pianoRoll, allInstruments){
 		var currInstGainNodes = instrumentGainNodes[index]; // this is a list of lists!
 		var currInstOscNodes = instrumentOscNodes[index];   // this is a list of lists!
 		
-		// for each gain node, hook to right dest 
 		var gainIndex = 0;
 		for(var route in instrumentRoutes){
 			var notes = instrumentRoutes[route];
@@ -480,7 +478,6 @@ function scheduler(pianoRoll, allInstruments){
 			var oscsToUse = currInstOscNodes[gainIndex];
 			
 			// hook up gain to the correct destination
-			// TODO: when creating gain nodes for custom presets, don't attach them to the destination since we do that here 
 			gainsToUse.forEach((gain) => {
 				if(pianoRoll.recording){
 					gain.connect(pianoRoll.audioContextDestMediaStream);
@@ -535,7 +532,7 @@ function scheduler(pianoRoll, allInstruments){
 					"duration": realDuration,
 					"volume": volume,
 					"startTimeOffset": startTimeOffset
-				}
+				};
 				allNotesPerInstrument[instrument].push(noteSetup);
 			}
 			gainIndex++;
@@ -545,8 +542,9 @@ function scheduler(pianoRoll, allInstruments){
 	
 	//console.log(routes);
 	//console.log(instrumentOscNodes);
-	// start up the oscillators vrrroooooommmmmmmm
 	var thisTime = ctx.currentTime;
+	
+	// start up the oscillators vrrroooooommmmmmmm
 	for(var inst in instrumentOscNodes){
 		instrumentOscNodes[inst].forEach((oscGroup) => {
 			oscGroup.forEach((osc) => {
@@ -578,6 +576,7 @@ function scheduler(pianoRoll, allInstruments){
 			pianoRoll.lastTime = Math.max(pianoRoll.lastTime, (thisTime + startTimeOffset));
 			
 			if(instruments[i].waveType === "percussion"){
+				// handling percussion!
 				// hmm gotta make a new osc for every percussion note? need to explore this some more.
 				var noteContainer = document.getElementById(otherParams.block.id).parentNode;
 				var octave = parseInt(noteContainer.id.match(/[0-9]/g)[0]);
@@ -598,6 +597,7 @@ function scheduler(pianoRoll, allInstruments){
 				});
 				
 			}else if(pianoRoll.instrumentPresets[instruments[i].waveType]){
+				// handling custom instrument preset!
 				var gainValueSum = 0;
 				gains.forEach((gain) => {
 					gainValueSum += gain.gain.value;
@@ -605,9 +605,17 @@ function scheduler(pianoRoll, allInstruments){
 				
 				// schedule the gain nodes
 				gains.forEach((gain) => {
-					var scaledVol = ((gain.gain.value / gainValueSum) * pianoRoll.currentInstrument.volume);
-					gain.gain.setTargetAtTime(scaledVol, startTime, 0.0045); 
-					gain.gain.setTargetAtTime(0.0, (endTime - .0025), 0.0010);
+					// scale the volume appropriately based on the current note's volume
+					var scaledVol = ((gain.gain.value / gainValueSum) * volume);
+					
+					if(gain.envelope){
+						// apply ADSR envelope as needed
+						gain.envelope.applyADSR(gain.gain, startTime, scaledVol);
+						gain.gain.setTargetAtTime(0.0, endTime, 0.0010);
+					}else{
+						gain.gain.setTargetAtTime(scaledVol, startTime, 0.0045);
+						gain.gain.setTargetAtTime(0.0, (endTime - .0025), 0.0010);
+					}
 				});
 				
 				// schedule the osc nodes 
@@ -628,7 +636,7 @@ function scheduler(pianoRoll, allInstruments){
 				});				
 				
 			}else{
-				
+				// handling regular instruments! (sine, square, triangle, sawtooth)
 				oscs.forEach((osc) => {
 					osc.type = instruments[i].waveType;
 				
