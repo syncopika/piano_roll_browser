@@ -484,6 +484,8 @@ function scheduler(pianoRoll, allInstruments){
 				}else{
 					gain.connect(pianoRoll.audioContextDestOriginal);
 				}
+				// make sure gain is silent until ready to play!
+				gain.gain.setValueAtTime(0.0, 0.0);
 			});
 			
 			var timeOffsetAcc = 0; // time offset accumulator so we know when notes need to start relative to the beginning of the start of playing
@@ -633,7 +635,7 @@ function scheduler(pianoRoll, allInstruments){
 						
 						osc.frequency.setValueAtTime(0.0, endTime);
 					}
-				});				
+				});
 				
 			}else{
 				// handling regular instruments! (sine, square, triangle, sawtooth)
