@@ -2,9 +2,7 @@
 a music sequencer inspired by LMMS, one of the best software applications ever!    
 also influenced a bit by PxTone Collage, another great application!      
 **it is highly recommended that Chrome be used for this application for proper functionality at the moment.**    
-    
-This project is a work-in-progress        
-    
+     
 ![screenshot of the piano roll](screenshots/current.png "current look")    
     
 ### cool features:    
@@ -36,6 +34,8 @@ Changing note lock size:
 ![changing note lock size](screenshots/note_lock.gif "changing note lock size")    
 	
 check out a demo! see the demo dropdown box.    
+    
+I've also implemented a very rudimentary custom instrument preset import ability (use this to create a custom instrument preset: https://github.com/syncopika/soundmaker). I have a couple example presets in /example_presets (test-preset2 and test-preset3) that work fine but test-preset.json, which has an ADSR envelope, is not working so well at the moment. Disclaimer: the functionality is currently pretty limited; there are lots of possible custom preset configurations that will break under my current implementation. So that feature is definitely a work-in-progress but you can maybe at least see its future potential! :)    
     
 ### current issues:        
 - downloading the audio isn't great on Chrome - the audio duration is messed up (see: https://stackoverflow.com/questions/38443084/how-can-i-add-predefined-length-to-audio-recorded-from-mediarecorder-in-chrome).    
