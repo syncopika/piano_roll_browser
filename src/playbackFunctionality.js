@@ -388,7 +388,7 @@ function scheduler(pianoRoll, allInstruments){
 				});
 				
 				newOscNodes.forEach((osc) => {
-					osc.id = ("gain" + (oscCount++));
+					osc.id = ("osc" + (oscCount++));
 				});
 			}else{
 				// only need 1 gain and 1 osc (with standard wave 'instruments')
@@ -411,12 +411,20 @@ function scheduler(pianoRoll, allInstruments){
 	var routes = {}; // map instrument to another map of gain nodes to the notes that should be played by those nodes
 	var posTracker = {};
 	
-	instruments.forEach((instrument, instrumentIndex) => {
+	for(var i = 0; i < instruments.length; i++){
+		
+		var instrument = instruments[i];
+		var instrumentIndex = i;
+		
+		if(instrumentGainNodes[instrumentIndex] === undefined){
+			// this instrument doesn't have any notes. skip it.
+			continue;
+		}
 		
 		routes[instrumentIndex] = {};
 		posTracker[instrumentIndex] = {}; // stores the end position (i.e. start + note width) of the last note assigned to a gain node for an instrument
 		
-		for(var i = 0; i < instrumentGainNodes[instrumentIndex].length; i++){
+		for(var j = 0; j < instrumentGainNodes[instrumentIndex].length; j++){
 			routes[instrumentIndex][i] = [];
 			posTracker[instrumentIndex][i] = 0;
 		}
@@ -437,17 +445,17 @@ function scheduler(pianoRoll, allInstruments){
 				// try each gain node in the map to see if they can handle this note. i.e. if another note should be playing for this gain 
 				// while this current note is supposed to start, then this gain node cannot support this current note.
 				// there should always be a possible gain node route option available
-				for(var i = 0; i < gainNodeRoutes.length; i++){
-					if(lastEndPositions[i] <= startPosCurrNote){
+				for(var j = 0; j < gainNodeRoutes.length; j++){
+					if(lastEndPositions[j] <= startPosCurrNote){
 						// we can use this gain node!
-						routes[instrumentIndex][i].push(note); // assign this note to the gain node
-						lastEndPositions[i] = endPosCurrNote;  // log its ending position 
+						routes[instrumentIndex][j].push(note); // assign this note to the gain node
+						lastEndPositions[j] = endPosCurrNote;  // log its ending position 
 						break;
 					}
 				}
 			});
 		}
-	});
+	}
 		
 	// preprocess the nodes further by figuring out how long each note should be and its start/stop times
 	// note that we should NOT actually stop any oscillators; they should just be set to 0 freq and 0 gain when they
@@ -535,10 +543,10 @@ function scheduler(pianoRoll, allInstruments){
 		index++;
 	}
 	
-	var thisTime = ctx.currentTime;
 	//console.log(routes);
 	//console.log(instrumentOscNodes);
 	// start up the oscillators vrrroooooommmmmmmm
+	var thisTime = ctx.currentTime;
 	for(var inst in instrumentOscNodes){
 		instrumentOscNodes[inst].forEach((oscGroup) => {
 			oscGroup.forEach((osc) => {
@@ -550,9 +558,12 @@ function scheduler(pianoRoll, allInstruments){
 	for(var i = 0; i < instruments.length; i++){
 		
 		var currInstNotes = allNotesPerInstrument[i];
+		if(currInstNotes === undefined){
+			// no notes for this instrument
+			continue;
+		}
 		
 		currInstNotes.forEach((note) => {
-			
 			// schedule the notes!
 			var oscs = note.osc; // this is a list
 			var gains = note.gain; // this is a list
@@ -587,19 +598,20 @@ function scheduler(pianoRoll, allInstruments){
 				});
 				
 			}else if(pianoRoll.instrumentPresets[instruments[i].waveType]){
-				// TODO
-				//var currPreset = pianoRoll.instrumentPresets[instruments[i].waveType];
-				//var instrumentPresetNodes = processNote(thisNote.freq, volume, nextTime[i], pianoRoll, currPreset); 
+				var gainValueSum = 0;
+				gains.forEach((gain) => {
+					gainValueSum += gain.gain.value;
+				});
 				
 				// schedule the gain nodes
 				gains.forEach((gain) => {
-					gain.gain.setTargetAtTime(volume, startTime, 0.0045); 
+					var scaledVol = ((gain.gain.value / gainValueSum) * pianoRoll.currentInstrument.volume);
+					gain.gain.setTargetAtTime(scaledVol, startTime, 0.0045); 
 					gain.gain.setTargetAtTime(0.0, (endTime - .0025), 0.0010);
 				});
 				
 				// schedule the osc nodes 
 				oscs.forEach((osc) => {
-					console.log(osc);
 					if(osc.frequency){
 						if(otherParams.freq < 440){
 							osc.frequency.setValueAtTime(0.0, 0.0);

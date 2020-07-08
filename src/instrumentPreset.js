@@ -219,7 +219,6 @@ function onClickCustomPreset(pianoRollObject, waveType, parent){
 		if(osc.frequency){
 			osc.frequency.value = pianoRollObject.noteFrequencies[parent];
 		}
-		//console.log(osc);
 		osc.start(0);
 		if(osc.stop){
 			osc.stop(now + .200);
