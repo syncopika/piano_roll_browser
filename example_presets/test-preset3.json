@@ -1,0 +1,63 @@
+{
+  "name": "test-preset3",
+  "data": {
+    "AudioDestinationNode": {
+      "feedsFrom": [
+        "GainNode1",
+        "GainNode2"
+      ],
+      "feedsInto": [],
+      "node": {
+        "maxChannelCount": 2
+      }
+    },
+    "GainNode1": {
+      "id": "GainNode1",
+      "feedsFrom": [
+        "OscillatorNode2"
+      ],
+      "feedsInto": [
+        "AudioDestinationNode"
+      ],
+      "node": {
+        "gain": 0.05000000074505806
+      }
+    },
+    "GainNode2": {
+      "id": "GainNode2",
+      "feedsFrom": [
+        "OscillatorNode1"
+      ],
+      "feedsInto": [
+        "AudioDestinationNode"
+      ],
+      "node": {
+        "gain": 0.20000000298023224
+      }
+    },
+    "OscillatorNode1": {
+      "id": "OscillatorNode1",
+      "feedsFrom": [],
+      "feedsInto": [
+        "GainNode2"
+      ],
+      "node": {
+        "type": "sine",
+        "frequency": 440,
+        "detune": 0
+      }
+    },
+    "OscillatorNode2": {
+      "id": "OscillatorNode2",
+      "feedsFrom": [],
+      "feedsInto": [
+        "GainNode1"
+      ],
+      "node": {
+        "type": "sawtooth",
+        "frequency": 440,
+        "detune": 371
+      }
+    }
+  }
+}
