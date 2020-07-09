@@ -104,7 +104,9 @@ function createPresetInstrument(data, audioCtx){
 			return newAudioBuffSource;
 		},
 		
-		"BiquadFilterNode": function(params){}
+		"BiquadFilterNode": function(params){
+			return new BiquadFilterNode(audioCtx, params);
+		}
 	}
 	
 	// set up all our nodes first
@@ -144,6 +146,7 @@ function createPresetInstrument(data, audioCtx){
 		// need to go down all the way to each node and make connections
 		// gain nodes don't need to be touched as they're already attached to the context dest by default
 		let connections = data[osc].feedsInto;
+		
 		connections.forEach((conn) => {
 			// connect the new osc node to this connection 
 			let sinkNode = nodeMap[conn];
@@ -154,16 +157,16 @@ function createPresetInstrument(data, audioCtx){
 			
 			// if source is a gain node, no need to go further
 			if(sinkNode.id.indexOf("Gain") < 0){
-				let stack = nodeStore[sinkNode.id]["feedsInto"];
+				let stack = data[sinkNode.id]["feedsInto"];
 				let newSource = sinkNode;
 				
 				while(stack.length > 0){
 					let next = stack.pop();
-					let currSink = nodeStore[next].node;
+					let currSink = nodeMap[next];
 					//console.log("connecting: " + newSource.constructor.name + " to: " + currSink.constructor.name);
 					newSource.connect(currSink);
 					newSource = currSink;
-					nextConnections = nodeStore[next]["feedsInto"].filter((name) => name.indexOf("Destination") < 0);
+					nextConnections = data[next]["feedsInto"].filter((name) => name.indexOf("Destination") < 0);
 					stack = stack.concat(nextConnections);
 				}
 			}
