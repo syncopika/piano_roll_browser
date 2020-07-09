@@ -35,8 +35,8 @@ Changing note lock size:
 	
 check out a demo! see the demo dropdown box.    
     
-I've also implemented a very rudimentary custom instrument preset import ability (use this to create a custom instrument preset: https://github.com/syncopika/soundmaker). I have a couple example presets in /example_presets (test-preset2 and test-preset3) that work fine but test-preset.json, which has an ADSR envelope, is not working so well at the moment. I also need to work out some issues with the biquad filter.    
-Disclaimer: the custom instrument functionality is currently pretty limited; there are lots of possible custom preset configurations that will break under my current implementation. So that feature is definitely a work-in-progress but you can maybe at least see its future potential! :)    
+I've also implemented a very rudimentary custom instrument preset import ability (use this to create a custom instrument preset: https://github.com/syncopika/soundmaker). I have a couple example presets in /example_presets (test-preset2 and test-preset3) that work fine but test-preset.json, which has an ADSR envelope, is not working so well at the moment. I also need to work out some issues with the biquad filter and get a better understanding of how it works.    
+Disclaimer: the custom instrument functionality is currently pretty limited; there are lots of possible custom preset configurations that will break under my current implementation. So this feature is definitely a work-in-progress but you can maybe at least see its future potential! :)    
     
 ### current issues:        
 - downloading the audio isn't great on Chrome - the audio duration is messed up (see: https://stackoverflow.com/questions/38443084/how-can-i-add-predefined-length-to-audio-recorded-from-mediarecorder-in-chrome).    
