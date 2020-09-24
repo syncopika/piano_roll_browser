@@ -328,6 +328,9 @@ function scheduler(pianoRoll, allInstruments){
 				var currNotePos = getNotePosition(currNote);
 				
 				if(currNotePos < (prevNotePos + prevNoteLen)){
+					// if the curr note starts before the curr note ends,
+					// we know that we need an additional gain node to be able 
+					// to play both notes simultaneously
 					if(!numGainNodePerInst[instIndex]){
 						numGainNodePerInst[instIndex] = 2;
 					}else{
@@ -340,6 +343,7 @@ function scheduler(pianoRoll, allInstruments){
 			if(!numGainNodePerInst[instIndex]){
 				numGainNodePerInst[instIndex] = group.length;
 			}else{
+				// ??? do we really need this?
 				numGainNodePerInst[instIndex] = Math.max(
 					numGainNodePerInst[instIndex],
 					group.length
@@ -374,6 +378,7 @@ function scheduler(pianoRoll, allInstruments){
 			var newOscNodes;
 			
 			if(pianoRoll.instrumentPresets[instruments[index].waveType]){
+				// handle custom instrument presets
 				var presetData = pianoRoll.instrumentPresets[instruments[index].waveType];
 				var currPreset = createPresetInstrument(presetData, pianoRoll.audioContext);
 				var nodes = getNodesCustomPreset(currPreset);
@@ -410,10 +415,9 @@ function scheduler(pianoRoll, allInstruments){
 	var routes = {}; // map instrument to another map of gain nodes to the notes that should be played by those nodes
 	var posTracker = {};
 	
-	for(var i = 0; i < instruments.length; i++){
+	for(var instrumentIndex = 0; instrumentIndex < instruments.length; instrumentIndex++){
 		
-		var instrument = instruments[i];
-		var instrumentIndex = i;
+		var instrument = instruments[instrumentIndex];
 		
 		if(instrumentGainNodes[instrumentIndex] === undefined){
 			// this instrument doesn't have any notes. skip it.
@@ -437,8 +441,9 @@ function scheduler(pianoRoll, allInstruments){
 			group.forEach((note, noteIndex) => {
 				var lastEndPositions = posTracker[instrumentIndex]; // this is a map!
 				var n = document.getElementById(note.block.id);
-				var endPosCurrNote = getNotePosition(n) + parseInt(n.style.width);
-				var startPosCurrNote = getNotePosition(n);
+				var notePos = getNotePosition(n);
+				var startPosCurrNote = notePos;
+				var endPosCurrNote = notePos + parseInt(n.style.width);
 				var gainNodeRoutes = instrumentGainNodes[instrumentIndex];
 				
 				// try each gain node in the map to see if they can handle this note. i.e. if another note should be playing for this gain 
@@ -470,10 +475,12 @@ function scheduler(pianoRoll, allInstruments){
 		var instrumentRoutes = routes[instrument];
 		var currInstGainNodes = instrumentGainNodes[index]; // this is a list of lists!
 		var currInstOscNodes = instrumentOscNodes[index];   // this is a list of lists!
-		
 		var gainIndex = 0;
+		
 		for(var route in instrumentRoutes){
 			var notes = instrumentRoutes[route];
+			//console.log(notes);
+			
 			var gainsToUse = currInstGainNodes[gainIndex];
 			var oscsToUse = currInstOscNodes[gainIndex];
 			
@@ -505,6 +512,7 @@ function scheduler(pianoRoll, allInstruments){
 				}
 				
 				var startTimeOffset = 0;
+				var thisNotePos;
 				if(i === 0){
 					// the first note on the piano roll might not start at the beginning (i.e. there might be an initial rest)
 					// so let's account for that here 
@@ -514,6 +522,7 @@ function scheduler(pianoRoll, allInstruments){
 						startPos = getNotePosition(document.getElementById(startMarker));
 					}
 					var firstNoteStart = getNotePosition(document.getElementById(notes[i].block.id));
+					thisNotePos = firstNoteStart;
 					if(firstNoteStart !== startPos){
 						startTimeOffset = getCorrectLength(firstNoteStart - startPos, pianoRoll) / 1000;
 					}
@@ -523,6 +532,7 @@ function scheduler(pianoRoll, allInstruments){
 					var thisNotePos = getNotePosition(document.getElementById(thisNote.block.id));
 					var timeDiff = getCorrectLength(thisNotePos - prevNotePos, pianoRoll) / 1000;
 					startTimeOffset = timeOffsetAcc + timeDiff;
+					thisNotePos = thisNotePos;
 				}
 
 				timeOffsetAcc = startTimeOffset;
@@ -533,17 +543,44 @@ function scheduler(pianoRoll, allInstruments){
 					"gain": gainsToUse,
 					"duration": realDuration,
 					"volume": volume,
-					"startTimeOffset": startTimeOffset
+					"startTimeOffset": startTimeOffset,
+					"position": thisNotePos
 				};
 				allNotesPerInstrument[instrument].push(noteSetup);
 			}
 			gainIndex++;
 		}
+		
+		// so calculating startTimeOffset seems to be a bit tricky and yields different values 
+		// for notes that should be started at the same time (i.e. in a chord). 
+		// to remedy this, go through all the notes again real quick and if we find notes that 
+		// should start at the same time, decide on an offset and fix the values as needed.
+		// use the positions of each note to figure out which start together
+		var positionMap = {}; // group notes by positions
+		var instrumentNotes = allNotesPerInstrument[instrument];
+		instrumentNotes.forEach((note) => {
+			if(positionMap[note.position]){
+				// record the pitches present at this column number
+				positionMap[note.position].push(note);
+			}else{
+				positionMap[note.position] = [note];
+			}
+		});
+		
+		// now only adjust the offset for notes in the same chord
+		for(var position in positionMap){
+			var chord = positionMap[position];
+			if(chord.length > 1){
+				// assign everyone the same startTimeOffset value
+				chord.forEach((note) => {
+					note.startTimeOffset = chord[0].startTimeOffset;
+				});
+			}
+		}
+		
 		index++;
 	}
-	
-	//console.log(routes);
-	//console.log(instrumentOscNodes);
+
 	var thisTime = ctx.currentTime;
 	
 	// start up the oscillators vrrroooooommmmmmmm
@@ -573,6 +610,9 @@ function scheduler(pianoRoll, allInstruments){
 			var startTime = thisTime + startTimeOffset;
 			var endTime = startTime + duration;
 			var otherParams = note.note;
+			
+			// useful for debugging time drift of notes' start times. I found out that I was getting non-uniform start offset values for chords.
+			//console.log(`instrument: ${instruments[i].name}; note: ${document.getElementById(otherParams.block.id).parentNode.id}; starting@ ${startTime} and ending@ ${endTime}; duration: ${duration}; start offset: ${startTimeOffset}`);
 			
 			// log the time the last note will play
 			pianoRoll.lastTime = Math.max(pianoRoll.lastTime, (thisTime + startTimeOffset));

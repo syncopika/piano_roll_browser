@@ -43,7 +43,7 @@ Disclaimer: the custom instrument functionality is currently pretty limited; the
     
 ### current next steps?:    
 - delete measures
-- still need to delete instruments.    
+- delete instruments
     
 ### features I would like to implement:    
 - ability to change color of highlight and color of note blocks, i.e. different for each instrument    
@@ -57,6 +57,8 @@ varying lengths and pitches with the help of a grid, put these notes in an array
 My implementation does not use the canvas element like some other piano roll implementations and instead relies on just DOM manipulation of a grid to manipulate notes.
 Users can place and move notes freely on the piano roll. In order to do that, my program looks at a couple of factors: the location of the cursor and the note lock size, which can be an 8th note (1 block on the piano roll), 16th note (half a block), or 32nd note. The note lock size determines the incremental distance a note block can be moved. The smaller the note, the more possible locations within a piano roll block it could be placed. For note movement, the cursor's location is taken into account and if it is over a piano roll block, my program determines, based on the cursor's x-position, what position within the piano roll block the cursor is closest to and places the note at that position.    
     
+Additionally, I wanted to keep it light, simple and easily portable so I minimized the number of dependencies (just jQuery! :D).    
+    
 For the context menus used to edit instruments and notes, I used the awesome jQuery contextMenu library provided here: https://swisnl.github.io/jQuery-contextMenu/. Thanks very much to them!
     
 ### demos:    
@@ -66,7 +68,7 @@ Sand Canyon (Kirby's Dream Land 3) - Jun Ishikawa
     
 3_4 time demo - my own composition    
     
-なかよしセンセーション (Princess Connect! Re:Dive) - 大久保 薫
+なかよしセンセーション (Princess Connect! Re:Dive) - Kaoru Okubo
 
 
     

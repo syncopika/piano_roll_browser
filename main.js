@@ -425,7 +425,12 @@ function validateProject(project){
 			
 	});
 	
-	return measures && tempo && composer && title && subdivision && instruments;
+	return measures && 
+		   tempo && 
+		   composer && 
+		   title && 
+		   subdivision && 
+		   instruments;
 }
 
 
@@ -466,6 +471,8 @@ function getDemo(selectedDemo){
 		clearGridAll(pianoRoll);
 		// reset playMarker if set 
 		pianoRoll.playMarker = null;
+		// stop playing if currently playing
+		stopPlay(pianoRoll);
 		var data = JSON.parse(httpRequest.responseText);
 		processData(data);
 	}

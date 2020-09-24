@@ -6,15 +6,8 @@
 - onion-skin sometimes prevents resizing ability? (can't reproduce currrently :/)
 - looping implementation was questionable and removed for now
 
-- looks like reducing the number of audio nodes helps performance in terms of less latency (yay!) but I think since we reuse nodes and don't
-  call stop on them for each note like we previously did, this doesn't quite make scheduling as on-point as it previously was (boooo!) and could
-  introduce a bit more lag time in the scheduling. not sure if having better scheduling is more favorable to have than latency due to number of nodes.
-  but tbh, the latency with the previous implementation where every note got its own oscillator node was really only noticeable if you tried to scroll
-  across the page (i.e. any user activity on the page while playback occurred). it was a good exercise I guess to try anyway.
-
 current things to do now:
 	- clicking a note -> if clicking an already existing note, the volume should reflect that note's volume. otherwise use the instrument's volume.
-
 	- bug: 2 instruments, have a note that spans 6 columns, move to next isntrument, try placing note within area that note spans. it might not let you place a new note exactly.
 		- this might have to do with an existing note element (opacity is 0 b/c onion skin is off for that instrument it belongs to) in the parent cell
 	- delete instrument functionality
@@ -26,3 +19,4 @@ current things to do now:
 	- add metronome? is scheduler scheduling on time?
 	- accessibility?
 	- maybe make it at least a little mobile friendly, i.e. support also touch events?
+	- refactor? things like play and stopPlay - should those be piano roll methods instead of standalone functions?
