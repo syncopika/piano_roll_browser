@@ -8,12 +8,10 @@
 
 current things to do now:
 	- clicking a note -> if clicking an already existing note, the volume should reflect that note's volume. otherwise use the instrument's volume.
-
 	- bug: 2 instruments, have a note that spans 6 columns, move to next isntrument, try placing note within area that note spans. it might not let you place a new note exactly.
 		- this might have to do with an existing note element (opacity is 0 b/c onion skin is off for that instrument it belongs to) in the parent cell
 	- delete instrument functionality
 	- delete measure functionality
-	- if something is currently playing and a demo is switched, play should be turned off.
 	- improve percussion
 	- the pianoNotes div (i.e. mobile piano bar) implementation could be cleaned up a bit maybe?
 	- haven't found the exact cause yet but sometimes notes aren't getting picked up (maybe because of onion-skin) and you have to 
@@ -21,3 +19,4 @@ current things to do now:
 	- add metronome? is scheduler scheduling on time?
 	- accessibility?
 	- maybe make it at least a little mobile friendly, i.e. support also touch events?
+	- refactor? things like play and stopPlay - should those be piano roll methods instead of standalone functions?
