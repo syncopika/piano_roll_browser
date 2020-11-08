@@ -652,8 +652,8 @@ function scheduler(pianoRoll, allInstruments){
 					
 					if(gain.envelope){
 						// apply ADSR envelope as needed
-						gain.envelope.applyADSR(gain.gain, startTime, scaledVol);
-						gain.gain.setTargetAtTime(0.0, endTime, 0.0010);
+						gain.envelope.applyADSR(gain.gain, startTime, duration, scaledVol);
+						//gain.gain.setTargetAtTime(0.0, endTime, 0.0010);
 					}else{
 						gain.gain.setTargetAtTime(scaledVol, startTime, 0.0045);
 						gain.gain.setTargetAtTime(0.0, (endTime - .0025), 0.0010);

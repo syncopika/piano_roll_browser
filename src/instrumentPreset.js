@@ -16,18 +16,24 @@ class ADSREnvelope {
 		}
 	}
 	
-	applyADSR(targetNodeParam, time, volToUse=null){
-		// targetNodeParam might be the gain property of a gain node, or a filter node for example
+	applyADSR(targetNodeParam, time, duration, volToUse=null){
+		// @targetNodeParam might be the gain property of a gain node, or a filter node for example
 		// the targetNode just needs to have fields that make sense to be manipulated with ADSR
 		// i.e. pass in gain.gain as targetNodeParam
+		// @time == current time
+		// @duration == how long the note should last. it may be less than the sum of the params + start time
+		// so we need to make sure the node is stopped when it needs to be.
+		//
+		// helpful:
 		// https://www.redblobgames.com/x/1618-webaudio/#orgeb1ffeb
+		// https://blog.landr.com/adsr-envelopes-infographic/
 
 		let baseParamVal = volToUse ? volToUse : targetNodeParam.value; // i.e. gain.gain.value
-		targetNodeParam.linearRampToValueAtTime(0.0, time);
+		targetNodeParam.linearRampToValueAtTime(0.0, 0);
 		targetNodeParam.linearRampToValueAtTime(baseParamVal, time + this.attack);
-		targetNodeParam.linearRampToValueAtTime(baseParamVal * this.sustainLevel, this.attack + this.decay);
-		targetNodeParam.linearRampToValueAtTime(baseParamVal * this.sustainLevel, this.attack + this.decay + this.sustain);
-		targetNodeParam.linearRampToValueAtTime(0.0, this.attack + this.decay + this.sustain + this.release);
+		targetNodeParam.linearRampToValueAtTime(baseParamVal * this.sustainLevel, time + this.attack + this.decay);
+		targetNodeParam.linearRampToValueAtTime(baseParamVal * this.sustainLevel, time + this.attack + this.decay + this.sustain);
+		targetNodeParam.linearRampToValueAtTime(0.0, Math.min(time + duration, (time + this.attack + this.decay + this.sustain + this.release)));
 		return targetNodeParam;
 	}
 }
@@ -130,7 +136,7 @@ function createPresetInstrument(data, audioCtx){
 		// TODO: for now we're assuming only 1 envelope for gain nodes (and for their gain prop)
 		let feed = data[gain].feedsFrom.filter((nodeName) => nodeName.indexOf("ADSR") >= 0);
 		if(feed.length >= 0){
-			var envelope = nodeMap[feed[0]]; // get the ADSREnvelope object ref
+			let envelope = nodeMap[feed[0]]; // get the ADSREnvelope object ref
 			nodeMap[gain].envelope = envelope;  // attach it to this gain node for easy access as a prop called envelope
 		}
 	});
@@ -181,12 +187,12 @@ function createPresetInstrument(data, audioCtx){
 // TODO: what about ADSR envelopes!?
 function getNodeNamesFromCustomPreset(currPreset){
 	//console.log(currPreset);
-	var nodes = [...Object.keys(currPreset)];
-	var oscNodes = nodes.filter((nodeName) => {
+	let nodes = [...Object.keys(currPreset)];
+	let oscNodes = nodes.filter((nodeName) => {
 		return nodeName.indexOf("Osc") >= 0 || nodeName.indexOf("AudioBuffer") >= 0;
 	});
 	
-	var gainNodes = nodes.filter((nodeName) => {
+	let gainNodes = nodes.filter((nodeName) => {
 		return nodeName.indexOf("Gain") >= 0;
 	});
 	
@@ -196,16 +202,16 @@ function getNodeNamesFromCustomPreset(currPreset){
 	};
 }
 
-// this needs to be refactored lol
+// TODO: this needs to be refactored lol
 function getNodesCustomPreset(customPreset){
 	
-	var nodes = [...Object.keys(customPreset)];
-	var oscNodes = nodes.filter((nodeName) => {
+	let nodes = [...Object.keys(customPreset)];
+	let oscNodes = nodes.filter((nodeName) => {
 		return nodeName.indexOf("Osc") >= 0 || nodeName.indexOf("AudioBuffer") >= 0;
 	});
 	oscNodes = oscNodes.map((osc) => customPreset[osc]);
 	
-	var gainNodes = nodes.filter((nodeName) => {
+	let gainNodes = nodes.filter((nodeName) => {
 		return nodeName.indexOf("Gain") >= 0;
 	});
 	gainNodes = gainNodes.map((gain) => customPreset[gain]);
@@ -221,18 +227,18 @@ function onClickCustomPreset(pianoRollObject, waveType, parent){
 	
 	// weird, but for some reason playing an ADSR-enveloped gain node initially produces no sound.
 	// after the first click, it works. :<
-	var audioCtx = pianoRollObject.audioContext;
-	var presetData = pianoRollObject.instrumentPresets[waveType];
-	var currPreset = createPresetInstrument(presetData, audioCtx);
+	let audioCtx = pianoRollObject.audioContext;
+	let presetData = pianoRollObject.instrumentPresets[waveType];
+	let currPreset = createPresetInstrument(presetData, audioCtx);
 	
-	var nodes = getNodeNamesFromCustomPreset(currPreset);
-	var oscNodes = nodes.oscNodes;
-	var gainNodes = nodes.gainNodes;
+	let nodes = getNodeNamesFromCustomPreset(currPreset);
+	let oscNodes = nodes.oscNodes;
+	let gainNodes = nodes.gainNodes;
 	
-	var now = audioCtx.currentTime;
+	let now = audioCtx.currentTime;
 	
 	oscNodes.forEach((oscName) => {
-		var osc = currPreset[oscName];
+		let osc = currPreset[oscName];
 		if(osc.frequency){
 			osc.frequency.value = pianoRollObject.noteFrequencies[parent];
 		}
@@ -242,7 +248,7 @@ function onClickCustomPreset(pianoRollObject, waveType, parent){
 		}
 	});
 	
-	var gainValueSum = 0;
+	let gainValueSum = 0;
 	gainNodes.forEach((name) => {
 		gainValueSum += currPreset[name].gain.value;
 	});
@@ -252,7 +258,7 @@ function onClickCustomPreset(pianoRollObject, waveType, parent){
 		// let's scale our gain nodes' gain values appropriately based on the instrument's current volume value.
 		// divide this gain value from the sum of all the gain values for this preset,
 		// then multiply it by the curr. instrument's volume to get the equivalent proportion of gain values in the context of this instrument's volume.
-		var gainNode = currPreset[gainName];
+		let gainNode = currPreset[gainName];
 
 		//gainNode.gain.value = pianoRollObject.currentInstrument.volume;
 		gainNode.gain.value = ((gainNode.gain.value / gainValueSum) * pianoRollObject.currentInstrument.volume);
@@ -262,9 +268,9 @@ function onClickCustomPreset(pianoRollObject, waveType, parent){
 		// apply any ADSR envelopes that feed into this gainNode 
 		presetData[gainName].feedsFrom.forEach((feed) => {
 			if(feed.indexOf("ADSR") >= 0){
-				var adsr = feed;
-				var envelope = currPreset[adsr];
-				envelope.applyADSR(gainNode.gain, now);
+				let adsr = feed;
+				let envelope = currPreset[adsr];
+				envelope.applyADSR(gainNode.gain, now, .200);
 			}else{
 				gainNode.gain.setTargetAtTime(gainNode.gain.value, now, 0.002);
 			}
