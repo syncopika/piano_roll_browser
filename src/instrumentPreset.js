@@ -5,7 +5,7 @@ class ADSREnvelope {
 		this.sustain = 0;
 		this.decay = 0;
 		this.release = 0;
-		this.sustainLevel = 0;
+		this.sustainLevel = 1;
 	}
 	
 	updateParams(params){
@@ -27,9 +27,9 @@ class ADSREnvelope {
 		// helpful:
 		// https://www.redblobgames.com/x/1618-webaudio/#orgeb1ffeb
 		// https://blog.landr.com/adsr-envelopes-infographic/
-
+		console.log("time: " + time + ", duration: " + duration);
 		let baseParamVal = volToUse ? volToUse : targetNodeParam.value; // i.e. gain.gain.value
-		targetNodeParam.linearRampToValueAtTime(0.0, 0);
+		targetNodeParam.linearRampToValueAtTime(0.0, time);
 		targetNodeParam.linearRampToValueAtTime(baseParamVal, time + this.attack);
 		targetNodeParam.linearRampToValueAtTime(baseParamVal * this.sustainLevel, time + this.attack + this.decay);
 		targetNodeParam.linearRampToValueAtTime(baseParamVal * this.sustainLevel, time + this.attack + this.decay + this.sustain);
