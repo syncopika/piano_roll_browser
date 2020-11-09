@@ -5,7 +5,7 @@ class ADSREnvelope {
 		this.sustain = 0;
 		this.decay = 0;
 		this.release = 0;
-		this.sustainLevel = 1;
+		this.sustainLevel = 1; // should it be 1?
 	}
 	
 	updateParams(params){
@@ -15,11 +15,11 @@ class ADSREnvelope {
 			}
 		}
 	}
-	
+
 	applyADSR(targetNodeParam, time, duration, volToUse=null){
 		// @targetNodeParam might be the gain property of a gain node, or a filter node for example
 		// the targetNode just needs to have fields that make sense to be manipulated with ADSR
-		// i.e. pass in gain.gain as targetNodeParam
+		// i.e. pass in gain.gain as targetNodeParam for applying the envelope to a gain node
 		// @time == current time
 		// @duration == how long the note should last. it may be less than the sum of the params + start time
 		// so we need to make sure the node is stopped when it needs to be.
@@ -27,13 +27,24 @@ class ADSREnvelope {
 		// helpful:
 		// https://www.redblobgames.com/x/1618-webaudio/#orgeb1ffeb
 		// https://blog.landr.com/adsr-envelopes-infographic/
+		// https://www.vdveen.net/webaudio/waprog.htm
+		// https://sound.stackexchange.com/questions/27798/what-time-range-is-used-for-adsr-envelopes
+		// https://github.com/sonic-pi-net/sonic-pi/blob/main/etc/doc/tutorial/02.4-Durations-with-Envelopes.md
+		// https://stackoverflow.com/questions/34694580/how-do-i-correctly-cancel-a-currently-changing-audioparam-in-the-web-audio-api
+		this.sustainLevel = 1;
+
 		console.log("time: " + time + ", duration: " + duration);
 		let baseParamVal = volToUse ? volToUse : targetNodeParam.value; // i.e. gain.gain.value
+		
+		// you want to keep the value changes from the envelope steady throughout even if the note duration is not long enough to use the whole envelope
+		targetNodeParam.cancelAndHoldAtTime(time);
+		
+		//targetNodeParam.setValueAtTime(0.0, time);
 		targetNodeParam.linearRampToValueAtTime(0.0, time);
 		targetNodeParam.linearRampToValueAtTime(baseParamVal, time + this.attack);
 		targetNodeParam.linearRampToValueAtTime(baseParamVal * this.sustainLevel, time + this.attack + this.decay);
 		targetNodeParam.linearRampToValueAtTime(baseParamVal * this.sustainLevel, time + this.attack + this.decay + this.sustain);
-		targetNodeParam.linearRampToValueAtTime(0.0, Math.min(time + duration, (time + this.attack + this.decay + this.sustain + this.release)));
+		targetNodeParam.linearRampToValueAtTime(0.0, time + this.attack + this.decay + this.sustain + this.release + duration);
 		return targetNodeParam;
 	}
 }

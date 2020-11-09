@@ -484,6 +484,9 @@ function scheduler(pianoRoll, allInstruments){
 			var gainsToUse = currInstGainNodes[gainIndex];
 			var oscsToUse = currInstOscNodes[gainIndex];
 			
+			console.log(gainsToUse);
+			console.log(oscsToUse);
+			
 			// hook up gain to the correct destination
 			gainsToUse.forEach((gain) => {
 				if(pianoRoll.recording){
