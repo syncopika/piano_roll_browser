@@ -5,7 +5,7 @@ class ADSREnvelope {
 		this.sustain = 0;
 		this.decay = 0;
 		this.release = 0;
-		this.sustainLevel = 1; // should it be 1?
+		this.sustainLevel = 0;
 	}
 	
 	updateParams(params){
@@ -23,23 +23,13 @@ class ADSREnvelope {
 		// @time == current time
 		// @duration == how long the note should last. it may be less than the sum of the params + start time
 		// so we need to make sure the node is stopped when it needs to be.
-		//
-		// helpful:
-		// https://www.redblobgames.com/x/1618-webaudio/#orgeb1ffeb
-		// https://blog.landr.com/adsr-envelopes-infographic/
-		// https://www.vdveen.net/webaudio/waprog.htm
-		// https://sound.stackexchange.com/questions/27798/what-time-range-is-used-for-adsr-envelopes
-		// https://github.com/sonic-pi-net/sonic-pi/blob/main/etc/doc/tutorial/02.4-Durations-with-Envelopes.md
-		// https://stackoverflow.com/questions/34694580/how-do-i-correctly-cancel-a-currently-changing-audioparam-in-the-web-audio-api
-		this.sustainLevel = 1;
+		this.sustainLevel = this.sustainLevel === 0 ? 1 : this.sustainLevel;
 
-		console.log("time: " + time + ", duration: " + duration);
 		let baseParamVal = volToUse ? volToUse : targetNodeParam.value; // i.e. gain.gain.value
 		
 		// you want to keep the value changes from the envelope steady throughout even if the note duration is not long enough to use the whole envelope
 		targetNodeParam.cancelAndHoldAtTime(time);
 		
-		//targetNodeParam.setValueAtTime(0.0, time);
 		targetNodeParam.linearRampToValueAtTime(0.0, time);
 		targetNodeParam.linearRampToValueAtTime(baseParamVal, time + this.attack);
 		targetNodeParam.linearRampToValueAtTime(baseParamVal * this.sustainLevel, time + this.attack + this.decay);
@@ -47,41 +37,6 @@ class ADSREnvelope {
 		targetNodeParam.linearRampToValueAtTime(0.0, time + this.attack + this.decay + this.sustain + this.release + duration);
 		return targetNodeParam;
 	}
-}
-
-function importInstrumentPreset(pianoRoll){
-	
-	let audioCtx = pianoRoll.audioContext;
-	let input = document.getElementById('importInstrumentPresetInput');
-	
-	function processInstrumentPreset(e){
-		let reader = new FileReader();
-		let file = e.target.files[0];
-		
-		if(file){
-			reader.onload = (function(theFile){
-				return function(e){ 
-					let data = JSON.parse(e.target.result);
-					
-					if(data['name'] === undefined){
-						console.log("cannot load preset because it has no name!");
-						return;
-					}
-					
-					let presetName = data['name'];
-				
-					// store the preset in the PianoRoll obj 
-					pianoRoll.instrumentPresets[presetName] = data.data;
-				}
-			})(file);
-		}
-
-		//read the file as a URL
-		reader.readAsText(file);
-	}
-	
-	input.addEventListener('change', processInstrumentPreset, false);
-	input.click();
 }
 
 // sets up all the audio nodes needed for this instrument preset

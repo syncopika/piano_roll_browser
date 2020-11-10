@@ -479,13 +479,8 @@ function scheduler(pianoRoll, allInstruments){
 		
 		for(var route in instrumentRoutes){
 			var notes = instrumentRoutes[route];
-			//console.log(notes);
-			
 			var gainsToUse = currInstGainNodes[gainIndex];
 			var oscsToUse = currInstOscNodes[gainIndex];
-			
-			console.log(gainsToUse);
-			console.log(oscsToUse);
 			
 			// hook up gain to the correct destination
 			gainsToUse.forEach((gain) => {

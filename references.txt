@@ -25,15 +25,23 @@ https://stackoverflow.com/questions/45534302/jquery-how-to-disable-not-allowed-c
 https://stackoverflow.com/questions/18094134/fixed-gradient-background-with-css
 
 // super, super important!
-// https://github.com/WebAudio/web-audio-api/issues/76#issuecomment-107679878
+https://github.com/WebAudio/web-audio-api/issues/76#issuecomment-107679878
 
 // more instrument sounds?
-// http://stackoverflow.com/questions/18752925/html5-audio-getting-the-sound-of-piano
-// https://dev.opera.com/articles/drum-sounds-webaudio/
+http://stackoverflow.com/questions/18752925/html5-audio-getting-the-sound-of-piano
+https://dev.opera.com/articles/drum-sounds-webaudio/
+
+// ADSR stuff
+https://www.redblobgames.com/x/1618-webaudio/#orgeb1ffeb
+https://blog.landr.com/adsr-envelopes-infographic/
+https://www.vdveen.net/webaudio/waprog.htm
+https://sound.stackexchange.com/questions/27798/what-time-range-is-used-for-adsr-envelopes
+https://github.com/sonic-pi-net/sonic-pi/blob/main/etc/doc/tutorial/02.4-Durations-with-Envelopes.md
+https://stackoverflow.com/questions/34694580/how-do-i-correctly-cancel-a-currently-changing-audioparam-in-the-web-audio-api
 
 // make it recordable?
-// https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createMediaStreamDestination
-// https://stackoverflow.com/questions/38443084/how-can-i-add-predefined-length-to-audio-recorded-from-mediarecorder-in-chrome
+https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createMediaStreamDestination
+https://stackoverflow.com/questions/38443084/how-can-i-add-predefined-length-to-audio-recorded-from-mediarecorder-in-chrome
 
 // super helpful hints on how to synchronize web audio properly 
 https://www.html5rocks.com/en/tutorials/audio/scheduling/#disqus_thread
