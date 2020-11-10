@@ -471,9 +471,9 @@ function validateProject(project){
 // load in the example instrument presets
 function loadExamplePresets(){
 	let presets = [
-		"/example_presets/delaySine.json",
-		"/example_presets/noisySine.json",
-		"/example_presets/dissonant.json"
+		"example_presets/delaySine.json",
+		"example_presets/noisySine.json",
+		"example_presets/dissonant.json"
 	];
 	
 	presets.forEach((preset) => {
