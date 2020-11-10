@@ -1,5 +1,5 @@
 {
-  "name": "testpreset1",
+  "name": "delaySine",
   "data": {
 	  "AudioDestinationNode": {
 		"feedsFrom": [
@@ -42,7 +42,7 @@
 		  "GainNode1"
 		],
 		"node": {
-		  "attack": 0.62,
+		  "attack": 0.15,
 		  "sustain": 0,
 		  "decay": 0,
 		  "release": 0,

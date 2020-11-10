@@ -398,7 +398,42 @@ function getFile(e){
 
 	//read the file as a URL
 	reader.readAsText(file);
-};
+}
+
+function importInstrumentPreset(pianoRoll){
+	
+	let audioCtx = pianoRoll.audioContext;
+	let input = document.getElementById('importInstrumentPresetInput');
+	
+	function processInstrumentPreset(e){
+		let reader = new FileReader();
+		let file = e.target.files[0];
+		
+		if(file){
+			reader.onload = (function(theFile){
+				return function(e){ 
+					let data = JSON.parse(e.target.result);
+					
+					if(data['name'] === undefined){
+						console.log("cannot load preset because it has no name!");
+						return;
+					}
+					
+					let presetName = data['name'];
+				
+					// store the preset in the PianoRoll obj 
+					pianoRoll.instrumentPresets[presetName] = data.data;
+				}
+			})(file);
+			
+			//read the file as a URL
+			reader.readAsText(file);
+		}
+	}
+	
+	input.addEventListener('change', processInstrumentPreset, false);
+	input.click();
+}
 
 // some basic validation, not comprehensive (i.e. not going to check whether every note has all the necessary fields)
 function validateProject(project){
@@ -433,6 +468,24 @@ function validateProject(project){
 		   instruments;
 }
 
+// load in the example instrument presets
+function loadExamplePresets(){
+	let presets = [
+		"/example_presets/delaySine.json",
+		"/example_presets/noisySine.json",
+		"/example_presets/dissonant.json"
+	];
+	
+	presets.forEach((preset) => {
+		fetch(preset)
+			.then(response => response.json())
+			.then(data => {
+				let name = data.name;
+				pianoRoll.instrumentPresets[name] = data.data;
+			});
+	});
+}
+loadExamplePresets();
 
 /****
 
@@ -443,7 +496,7 @@ if testing locally, remember that Chrome
 doesn't allow cross-origin resource sharing
 
 use python -m http.server to launch 
-a local server. then access this page through it. 
+a local server. then access index.html through localhost:8000. 
 
 ****/
 
