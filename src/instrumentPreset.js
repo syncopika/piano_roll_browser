@@ -34,7 +34,8 @@ class ADSREnvelope {
 		targetNodeParam.linearRampToValueAtTime(baseParamVal, time + this.attack);
 		targetNodeParam.linearRampToValueAtTime(baseParamVal * this.sustainLevel, time + this.attack + this.decay);
 		targetNodeParam.linearRampToValueAtTime(baseParamVal * this.sustainLevel, time + this.attack + this.decay + this.sustain);
-		targetNodeParam.linearRampToValueAtTime(0.0, time + this.attack + this.decay + this.sustain + this.release + duration);
+		targetNodeParam.linearRampToValueAtTime(0.0, time + duration + this.attack + this.decay + this.sustain + this.release);
+		
 		return targetNodeParam;
 	}
 }

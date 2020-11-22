@@ -1,12 +1,12 @@
 # piano_roll_browser    
 a music sequencer inspired by LMMS, one of the best software applications ever!    
 also influenced a bit by PxTone Collage, another great application!      
-**it is highly recommended that Chrome be used for this application for proper functionality at the moment.**    
+**it is highly recommended that Chrome be used for this application for optimal functionality at the moment.**    
      
 ![screenshot of the piano roll](screenshots/current.png "current look")    
     
 ### cool features:    
-- saveable projects    
+- saveable projects (as .json)    
 - can click-and-drag to move and resize notes (down to as small as 32nd notes)   
 - each note is customizable    
 - togglable onion skin    
@@ -21,21 +21,22 @@ also influenced a bit by PxTone Collage, another great application!
     
 - change the note lock size to adjust the range of note sizes and positions!    
     
-Instrument context-menu on right-click:    
+**Instrument context-menu on right-click:**    
 ![instrument context menu](screenshots/instrument_menu.gif "instrument context menu")   
     
-Note context-menu on right-click:    
+**Note context-menu on right-click:**    
 ![note context menu](screenshots/note_menu.gif "note context menu")   
     
-Resizing notes:    
+**Resizing notes:**    
 ![resizing notes](screenshots/note_resize.gif "resizing notes")    
     
-Changing note lock size:    
+**Changing note lock size:**    
 ![changing note lock size](screenshots/note_lock.gif "changing note lock size")    
 	
-check out a demo! see the demo dropdown box.    
+**check out a demo! see the demo dropdown box.**    
     
-I've also implemented a very rudimentary custom instrument preset import ability (use this to create a custom instrument preset: https://github.com/syncopika/soundmaker). I have a couple example presets in /example_presets (test-preset2 and test-preset3) that work fine but test-preset.json, which has an ADSR envelope, is not working so well at the moment. I also need to work out some issues with the biquad filter and get a better understanding of how it works.    
+I've also implemented a rudimentary custom instrument preset import ability (use this to create a custom instrument preset: https://github.com/syncopika/soundmaker). You can see some basic example presets in /example_presets, which are imported automatically in my demo.    
+    
 Disclaimer: the custom instrument functionality is currently pretty limited; there are lots of possible custom preset configurations that will break under my current implementation. So this feature is definitely a work-in-progress but you can maybe at least see its future potential! :)    
     
 ### current issues:        

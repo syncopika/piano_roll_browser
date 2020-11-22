@@ -1,0 +1,54 @@
+{
+  "name": "belltone",
+  "data": {
+    "AudioDestinationNode": {
+      "feedsFrom": [
+        "GainNode1"
+      ],
+      "feedsInto": [],
+      "node": {
+        "maxChannelCount": 2
+      }
+    },
+    "GainNode1": {
+      "id": "GainNode1",
+      "feedsFrom": [
+        "OscillatorNode1",
+        "ADSREnvelope1"
+      ],
+      "feedsInto": [
+        "AudioDestinationNode"
+      ],
+      "node": {
+        "gain": 0.11999999731779099
+      }
+    },
+    "OscillatorNode1": {
+      "id": "OscillatorNode1",
+      "feedsFrom": [],
+      "feedsInto": [
+        "GainNode1"
+      ],
+      "node": {
+        "type": "sine",
+        "frequency": 440,
+        "detune": 0
+      }
+    },
+    "ADSREnvelope1": {
+      "id": "ADSREnvelope1",
+      "feedsFrom": [],
+      "feedsInto": [
+        "GainNode1"
+      ],
+      "node": {
+        "attack": 0,
+        "sustain": 1,
+        "decay": 0.3,
+        "release": 0,
+        "sustainLevel": 0.3,
+        "id": "ADSREnvelope1"
+      }
+    }
+  }
+}
