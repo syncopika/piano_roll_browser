@@ -1,15 +1,14 @@
 - for custom instrument presets, applying glide to a note doesn't produce the desired effect.
-- (maybe) figure out Edge bugs and how to fix (i.e. script 438, 5007 errors)
+  - also, for custom instruments, sometimes 'play all' doesn't play a custom preset (or rather, it's silent but the blue play marker seems to work)
+    This one is hard to track. I don't think it can be an async issue. check again how custom presets are being handled for the scheduler?
+
 - on Firefox: when playing my demos (except for the 3/4 example), the first note always seems to be skipped.
   otherwise, performance on Firefox seems to have improved considerably from at least a year ago for my application.
   
-- onion-skin sometimes prevents resizing ability? (can't reproduce currrently :/)
 - looping implementation was questionable and removed for now
 
 current things to do now:
 	- clicking a note -> if clicking an already existing note, the volume should reflect that note's volume. otherwise use the instrument's volume.
-	- bug: 2 instruments, have a note that spans 6 columns, move to next isntrument, try placing note within area that note spans. it might not let you place a new note exactly.
-		- this might have to do with an existing note element (opacity is 0 b/c onion skin is off for that instrument it belongs to) in the parent cell
 	- delete instrument functionality
 	- delete measure functionality
 	- improve percussion

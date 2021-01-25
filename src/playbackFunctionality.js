@@ -731,7 +731,7 @@ function loopSignal(pianoRollObject, allInstruments){
 function play(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
-		pianoRoll.isPlaying = true;
+		pianoRollObject.isPlaying = true;
 		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject.currentInstrument, pianoRollObject);
 		scheduler(pianoRollObject, false);
 	}
@@ -764,8 +764,9 @@ function stopPlay(pianoRollObject){
 	pianoRollObject.isPlaying = false;
 
 	for(var i = 0; i < pianoRollObject.timers.length; i++){
-		pianoRollObject.timers[i].stop(0);
-		pianoRollObject.timers[i].ended = null; // unhook onendFunc 
+		var node = pianoRollObject.timers[i];
+		node.stop(0);
+		node.ended = null; // unhook onendFunc 
 	}
 	
 	for(var j = 0; j < pianoRollObject.instruments.length; j++){

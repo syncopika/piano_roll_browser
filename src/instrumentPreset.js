@@ -192,8 +192,6 @@ function getNodesCustomPreset(customPreset){
 // handling a custom preset when clicking on a note 
 function onClickCustomPreset(pianoRollObject, waveType, parent){
 	
-	// weird, but for some reason playing an ADSR-enveloped gain node initially produces no sound.
-	// after the first click, it works. :<
 	let audioCtx = pianoRollObject.audioContext;
 	let presetData = pianoRollObject.instrumentPresets[waveType];
 	let currPreset = createPresetInstrument(presetData, audioCtx);
