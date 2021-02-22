@@ -47,7 +47,13 @@ function clickNote(id, waveType, pianoRollObject){
 				
 				// borrow the currentInstrument's gain node 
 				var gain = pianoRollObject.currentInstrument.gain;
-				osc.connect(gain);
+				
+				// setup the StereoPannerNode
+				var panNode = pianoRollObject.audioContext.createStereoPanner();
+				var panVal = pianoRollObject.currentInstrument.pan;
+				osc.connect(panNode);
+				panNode.connect(gain);
+				panNode.pan.setValueAtTime(panVal, now);
 				
 				// set the volume of a clicked note to whatever the current isntrument's volume is 
 				gain.gain.setTargetAtTime(pianoRollObject.currentInstrument.volume, now, 0.002);
@@ -581,8 +587,14 @@ function scheduler(pianoRoll, allInstruments){
 
 	var thisTime = ctx.currentTime;
 	
-	// start up the oscillators vrrroooooommmmmmmm
+	// start up the oscillators
 	for(var inst in instrumentOscNodes){
+		//console.log(instruments[inst]);
+		// TODO: to support panning, we need to add the pan node
+		// between the osc and gain nodes, i.e. osc -> pan -> gain
+		// probably need to keep track of pan nodes somewhere (and consider custom presets, i.e. in instrumentPreset.js).
+		// we also need to make sure we activate the pan node when the osc nodes are started, which complicates things a bit :/
+		
 		instrumentOscNodes[inst].forEach((oscGroup) => {
 			oscGroup.forEach((osc) => {
 				osc.start(thisTime);

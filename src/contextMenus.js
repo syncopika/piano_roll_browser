@@ -74,13 +74,31 @@ function makeInstrumentContextMenu(pianoRollObject){
 							},
 							events: {
 								change: function(e){
-									//var instrumentId = parseInt( e.data.$trigger.attr("id") ) - 1; 
 									// update current instrument's volume 
 									pianoRollObject.currentInstrument.volume = parseFloat( this.options[e.target.options[e.target.selectedIndex].value - 1].textContent );
 								}
 							}
 						},
 						sep3: "-------------",
+						"Change panning": {
+							name: "change panning",
+							type: "select",
+							options: {1: -1, 2: -.75, 3: -.5, 4: -.25, 5: 0.0, 6: 0.25, 7: 0.5, 8: 0.75, 9: 1},
+							selected: function(){
+								for(key in this.options){	
+									if(parseFloat(this.options[key].textContent) === pianoRollObject.currentInstrument.pan){
+										return parseInt(key) + 1;
+									}
+								}
+							},
+							events: {
+								change: function(e){
+									// update current instrument's panning value
+									pianoRollObject.currentInstrument.pan = parseFloat( this.options[e.target.options[e.target.selectedIndex].value - 1].textContent );
+								}
+							}
+						},
+						sep4: "-------------",
 						"Show onion-skin for this instrument": {
 							name: "Toggle onion-skin", 
 							type: "checkbox",
@@ -91,7 +109,7 @@ function makeInstrumentContextMenu(pianoRollObject){
 								}
 							}
 						},
-						sep4: "-------------",
+						sep5: "-------------",
 						"Delete": {
 							name: "Delete", 
 							icon: "delete",

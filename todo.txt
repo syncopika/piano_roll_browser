@@ -8,6 +8,7 @@
 - looping implementation was questionable and removed for now
 
 current things to do now:
+	- add panning functionality for instruments
 	- clicking a note -> if clicking an already existing note, the volume should reflect that note's volume. otherwise use the instrument's volume.
 	- delete instrument functionality
 	- delete measure functionality
