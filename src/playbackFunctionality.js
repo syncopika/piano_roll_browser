@@ -490,11 +490,21 @@ function scheduler(pianoRoll, allInstruments){
 			
 			// hook up gain to the correct destination
 			gainsToUse.forEach((gain) => {
+				
+				// take into account current instrument's panning
+				var panNode = pianoRoll.audioContext.createStereoPanner();
+				var panVal = pianoRoll.instruments[instrument].pan;
+				gain.connect(panNode);
+				
 				if(pianoRoll.recording){
-					gain.connect(pianoRoll.audioContextDestMediaStream);
+					panNode.connect(pianoRoll.audioContextDestMediaStream);
 				}else{
-					gain.connect(pianoRoll.audioContextDestOriginal);
+					panNode.connect(pianoRoll.audioContextDestOriginal);
 				}
+				
+				// set pan node value
+				panNode.pan.setValueAtTime(panVal, 0.0);
+				
 				// make sure gain is silent until ready to play!
 				gain.gain.setValueAtTime(0.0, 0.0);
 			});

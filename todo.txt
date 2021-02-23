@@ -2,6 +2,16 @@
   - also, for custom instruments, sometimes 'play all' doesn't play a custom preset (or rather, it's silent but the blue play marker seems to work)
     This one is hard to track. I don't think it can be an async issue. check again how custom presets are being handled for the scheduler?
 
+sometimes this error shows up with a custom preset:
+playbackFunctionality.js:677 Uncaught (in promise) TypeError: Failed to execute 'setTargetAtTime' on 'AudioParam': The provided float value is non-finite.
+    at playbackFunctionality.js:677
+    at Array.forEach (<anonymous>)
+    at playbackFunctionality.js:668
+    at Array.forEach (<anonymous>)
+    at scheduler (playbackFunctionality.js:622)
+    at playAll (playbackFunctionality.js:767)
+    at main.js:115
+
 - on Firefox: when playing my demos (except for the 3/4 example), the first note always seems to be skipped.
   otherwise, performance on Firefox seems to have improved considerably from at least a year ago for my application.
   
@@ -9,6 +19,7 @@
 
 current things to do now:
 	- add panning functionality for instruments
+	  - mostly works so far :D; currently does not apply to percussion instruments though
 	- clicking a note -> if clicking an already existing note, the volume should reflect that note's volume. otherwise use the instrument's volume.
 	- delete instrument functionality
 	- delete measure functionality

@@ -128,7 +128,7 @@ function createPresetInstrument(data, audioCtx){
 			newOsc.connect(sinkNode);
 			//console.log("connecting: " + newOsc.constructor.name + " to: " + sinkNode.constructor.name);
 			
-			// if source is a gain node, no need to go further
+			// if sink is a gain node, no need to go further
 			if(sinkNode.id.indexOf("Gain") < 0){
 				let stack = data[sinkNode.id]["feedsInto"];
 				let newSource = sinkNode;
@@ -169,23 +169,16 @@ function getNodeNamesFromCustomPreset(currPreset){
 	};
 }
 
-// TODO: this needs to be refactored lol
 function getNodesCustomPreset(customPreset){
+
+	let nodes = getNodeNamesFromCustomPreset(customPreset);
 	
-	let nodes = [...Object.keys(customPreset)];
-	let oscNodes = nodes.filter((nodeName) => {
-		return nodeName.indexOf("Osc") >= 0 || nodeName.indexOf("AudioBuffer") >= 0;
-	});
-	oscNodes = oscNodes.map((osc) => customPreset[osc]);
+	for(let nodeType in nodes){
+		// remap so that instead of a list of names, we get a list of nodes
+		nodes[nodeType] = nodes[nodeType].map((node) => customPreset[node])
+	}
 	
-	let gainNodes = nodes.filter((nodeName) => {
-		return nodeName.indexOf("Gain") >= 0;
-	});
-	gainNodes = gainNodes.map((gain) => customPreset[gain]);
-	return {
-		"gainNodes": gainNodes, 
-		"oscNodes": oscNodes
-	};
+	return nodes;
 }
 
 
