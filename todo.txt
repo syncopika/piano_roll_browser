@@ -1,16 +1,7 @@
 - for custom instrument presets, applying glide to a note doesn't produce the desired effect.
   - also, for custom instruments, sometimes 'play all' doesn't play a custom preset (or rather, it's silent but the blue play marker seems to work)
     This one is hard to track. I don't think it can be an async issue. check again how custom presets are being handled for the scheduler?
-
-sometimes this error shows up with a custom preset:
-playbackFunctionality.js:677 Uncaught (in promise) TypeError: Failed to execute 'setTargetAtTime' on 'AudioParam': The provided float value is non-finite.
-    at playbackFunctionality.js:677
-    at Array.forEach (<anonymous>)
-    at playbackFunctionality.js:668
-    at Array.forEach (<anonymous>)
-    at scheduler (playbackFunctionality.js:622)
-    at playAll (playbackFunctionality.js:767)
-    at main.js:115
+	- I think it has to do with the part where I silence all the gain nodes initially. it overwrites gain values I need later for scaling volume (this is important for custom presets)
 
 - on Firefox: when playing my demos (except for the 3/4 example), the first note always seems to be skipped.
   otherwise, performance on Firefox seems to have improved considerably from at least a year ago for my application.
@@ -18,12 +9,12 @@ playbackFunctionality.js:677 Uncaught (in promise) TypeError: Failed to execute 
 - looping implementation was questionable and removed for now
 
 current things to do now:
-	- add panning functionality for instruments
-	  - mostly works so far :D; currently does not apply to percussion instruments though
+	- use sliders for changing value of volume, pan instead of dropdown
 	- clicking a note -> if clicking an already existing note, the volume should reflect that note's volume. otherwise use the instrument's volume.
 	- delete instrument functionality
 	- delete measure functionality
 	- improve percussion
+	  - no panning currently
 	- the pianoNotes div (i.e. mobile piano bar) implementation could be cleaned up a bit maybe?
 	- haven't found the exact cause yet but sometimes notes aren't getting picked up (maybe because of onion-skin) and you have to 
           delete them + re-add.

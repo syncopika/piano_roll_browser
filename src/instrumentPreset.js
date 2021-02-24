@@ -45,7 +45,7 @@ function createPresetInstrument(data, audioCtx){
 
 	const nodeTypes = {
 		
-		"GainNode": function(params){ 
+		"GainNode": function(params){
 			return new GainNode(audioCtx, params);
 		},
 		
@@ -89,7 +89,7 @@ function createPresetInstrument(data, audioCtx){
 		for(let type in nodeTypes){
 			if(nodeName.indexOf(type) >= 0){
 				// find the right node function to call based on nodeName
-				let audioNode = nodeTypes[type](nodeInfo.node); // create new node
+				let audioNode = nodeTypes[type](nodeInfo.node); // create new node				
 				nodeMap[nodeName] = audioNode; // add it to the map
 				audioNode.id = nodeInfo.id;
 				break;
@@ -170,7 +170,6 @@ function getNodeNamesFromCustomPreset(currPreset){
 }
 
 function getNodesCustomPreset(customPreset){
-
 	let nodes = getNodeNamesFromCustomPreset(customPreset);
 	
 	for(let nodeType in nodes){
