@@ -46,7 +46,13 @@ function createPresetInstrument(data, audioCtx){
 	const nodeTypes = {
 		
 		"GainNode": function(params){
-			return new GainNode(audioCtx, params);
+			const gain = new GainNode(audioCtx, params);
+			
+			// need to add the gain value as an extra property so we don't lose it
+			// when changing the actual value of the gain. this is needed when scaling volume
+			// for custom instruments with multiple gain nodes.
+			gain.baseGainValue = gain.gain.value;
+			return gain;
 		},
 		
 		"OscillatorNode": function(params){ 

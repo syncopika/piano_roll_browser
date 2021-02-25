@@ -1,7 +1,6 @@
-- for custom instrument presets, applying glide to a note doesn't produce the desired effect.
-  - also, for custom instruments, sometimes 'play all' doesn't play a custom preset (or rather, it's silent but the blue play marker seems to work)
-    This one is hard to track. I don't think it can be an async issue. check again how custom presets are being handled for the scheduler?
-	- I think it has to do with the part where I silence all the gain nodes initially. it overwrites gain values I need later for scaling volume (this is important for custom presets)
+- speeding up the tempo cuts notes to incorrect lengths (I think, at least for the intrada-pezel demo) when playing all instruments at a higher tempo. 
+  - playing an instrument individually at that tempo seems to be fine though...
+  - need to spend some time checking the math for calculating times? - watch out for drift
 
 - on Firefox: when playing my demos (except for the 3/4 example), the first note always seems to be skipped.
   otherwise, performance on Firefox seems to have improved considerably from at least a year ago for my application.
@@ -16,8 +15,6 @@ current things to do now:
 	- improve percussion
 	  - no panning currently
 	- the pianoNotes div (i.e. mobile piano bar) implementation could be cleaned up a bit maybe?
-	- haven't found the exact cause yet but sometimes notes aren't getting picked up (maybe because of onion-skin) and you have to 
-          delete them + re-add.
 	- add metronome? is scheduler scheduling on time?
 	- accessibility?
 	- maybe make it at least a little mobile friendly, i.e. support also touch events?

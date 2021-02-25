@@ -666,19 +666,30 @@ function scheduler(pianoRoll, allInstruments){
 				// for handling custom instrument preset!
 				var gainValueSum = 0.0;
 				gains.forEach((gain) => {
-					gainValueSum += gain.gain.value;
+					if(gain.baseGainValue){
+						// I'm not completely sure if it's safe to assume all gains here will
+						// have the baseGainValue property, even though they should, I think,
+						// since they're part of a custom preset
+						gainValueSum += gain.baseGainValue;
+					}
 				});
 				
 				// schedule the gain nodes
-				gains.forEach((gain) => {
-					// scale the volume appropriately based on the current note's volume
-					var scaledVol = (gain.gain.value / gainValueSum) * volume;
+				gains.forEach((gain) => {					
+					
+					var gainValue = gain.gain.value;
+					
+					// scale the volume appropriately based on the current note's volume 
+					// if there's a baseGainValue property
+					if(gain.baseGainValue){
+						gainValue = (gain.baseGainValue / gainValueSum) * volume;
+					}
 					
 					if(gain.envelope){
 						// apply ADSR envelope as needed
-						gain.envelope.applyADSR(gain.gain, startTime, duration, scaledVol);
-					}else{
-						gain.gain.setTargetAtTime(scaledVol, startTime, 0.0045);
+						gain.envelope.applyADSR(gain.gain, startTime, duration, gainValue);
+					}else{					
+						gain.gain.setTargetAtTime(gainValue, startTime, 0.0045);
 						gain.gain.setTargetAtTime(0.0, (endTime - .0025), 0.0010);
 					}
 				});
