@@ -260,7 +260,8 @@ function Instrument(name, gain, notesArray){
 	this.activeNotes = {};			// 
 	this.waveType = "sine"; 		// sine wave by default 
 	
-	this.volume = 0.2; 
+	this.volume = 0.2;
+	this.pan = 0.0;
 	this.onionSkinOn = true;
 }
 

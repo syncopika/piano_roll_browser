@@ -327,10 +327,8 @@ function addNote(id, pianoRollObject, evt){
 // @param id: the html element id of a row cell / note container
 // @param color: the color to highlight with 
 function highlightRow(id, color){
-	// get id of parent
-	var parent = document.getElementById(id).parentNode.id;
-	// highlight
-	$('#' + parent).css('background-color', color);
+	var parent = document.getElementById(id).parentNode;
+	parent.style.backgroundColor = color;
 }
 
 // clear the notes of an instrument (which effectively clears the grid of their notes)
@@ -558,7 +556,7 @@ function showOnionSkin(pianoRollObject){
 				}else{
 					note.style.opacity = 0.3;
 				}
-				note.style.zIndex = 0;
+				note.style.zIndex = -1;
 				note.classList.remove("context-menu-one");
 			}
 		}

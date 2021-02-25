@@ -60,7 +60,12 @@ Users can place and move notes freely on the piano roll. In order to do that, my
     
 Additionally, I wanted to keep it light, simple and easily portable so I minimized the number of dependencies (just jQuery! :D).    
     
-For the context menus used to edit instruments and notes, I used the awesome jQuery contextMenu library provided here: https://swisnl.github.io/jQuery-contextMenu/. Thanks very much to them!
+For the context menus used to edit instruments and notes, I used the awesome jQuery contextMenu library provided here: https://swisnl.github.io/jQuery-contextMenu/. Thanks very much to them!    
+    
+### installation:    
+You don't need to install anything to use the piano roll itself locally; however, if you want to load in the demos and example custom presets, you'll need to serve the html page first on a local server. If you have Python, you can just run `python -m http.server` in this repo after you've downloaded it and navigate to `http://localhost:8000`. If you have node and npm, run `npm install` in this repo to get the dependencies (which also includes the needed libraries for running the tests!) and then run `node server.js`. Then navigate to `http://localhost:3000/` to see the piano roll.    
+    
+To run the tests, make sure the dependencies have been downloaded via `npm install`. Then run `npm run test`.    
     
 ### demos:    
 Intrada - Johann Pezel (1639 - 1694). One of my favorite brass quintet pieces!    

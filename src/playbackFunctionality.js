@@ -47,7 +47,13 @@ function clickNote(id, waveType, pianoRollObject){
 				
 				// borrow the currentInstrument's gain node 
 				var gain = pianoRollObject.currentInstrument.gain;
-				osc.connect(gain);
+				
+				// setup the StereoPannerNode
+				var panNode = pianoRollObject.audioContext.createStereoPanner();
+				var panVal = pianoRollObject.currentInstrument.pan;
+				osc.connect(panNode);
+				panNode.connect(gain);
+				panNode.pan.setValueAtTime(panVal, now);
 				
 				// set the volume of a clicked note to whatever the current isntrument's volume is 
 				gain.gain.setTargetAtTime(pianoRollObject.currentInstrument.volume, now, 0.002);
@@ -315,9 +321,9 @@ function scheduler(pianoRoll, allInstruments){
 				// get the longest note in curr group 
 				var longestCurrNote = document.getElementById(group[0].block.id);
 				group.forEach((note) => {
-					var n = document.getElementById(note.block.id);
-					if(parseInt(n.style.width) > parseInt(longestCurrNote.style.width)){
-						longestCurrNote = n;
+					var htmlNote = document.getElementById(note.block.id);
+					if(parseInt(htmlNote.style.width) > parseInt(longestCurrNote.style.width)){
+						longestCurrNote = htmlNote;
 					}
 				});
 
@@ -364,7 +370,7 @@ function scheduler(pianoRoll, allInstruments){
 	var gainCount = 0;
 	var oscCount = 0;
 
-	for(var index in numGainNodePerInst){ 
+	for(var index in numGainNodePerInst){
 		instrumentGainNodes[index] = [];
 		instrumentOscNodes[index] = [];
 
@@ -440,10 +446,10 @@ function scheduler(pianoRoll, allInstruments){
 			
 			group.forEach((note, noteIndex) => {
 				var lastEndPositions = posTracker[instrumentIndex]; // this is a map!
-				var n = document.getElementById(note.block.id);
-				var notePos = getNotePosition(n);
+				var htmlNote = document.getElementById(note.block.id);
+				var notePos = getNotePosition(htmlNote);
 				var startPosCurrNote = notePos;
-				var endPosCurrNote = notePos + parseInt(n.style.width);
+				var endPosCurrNote = notePos + parseInt(htmlNote.style.width);
 				var gainNodeRoutes = instrumentGainNodes[instrumentIndex];
 				
 				// try each gain node in the map to see if they can handle this note. i.e. if another note should be playing for this gain 
@@ -484,12 +490,26 @@ function scheduler(pianoRoll, allInstruments){
 			
 			// hook up gain to the correct destination
 			gainsToUse.forEach((gain) => {
+				
+				// take into account current instrument's panning
+				var panNode = pianoRoll.audioContext.createStereoPanner();
+				var panVal = pianoRoll.instruments[instrument].pan;
+				gain.connect(panNode);
+				
 				if(pianoRoll.recording){
-					gain.connect(pianoRoll.audioContextDestMediaStream);
+					panNode.connect(pianoRoll.audioContextDestMediaStream);
 				}else{
-					gain.connect(pianoRoll.audioContextDestOriginal);
+					panNode.connect(pianoRoll.audioContextDestOriginal);
 				}
-				// make sure gain is silent until ready to play!
+				
+				// set pan node value
+				panNode.pan.setValueAtTime(panVal, 0.0);
+				
+				// silence gains initially
+				// TODO: yes this part is necessary (don't know the exact details but it makes sure the audio can start normally, otherwise
+				// you get an awful blast of sound without it). but - for custom presets, we wipe out their gain values (i.e. a preset may
+				// have multiple gain nodes, each mapping to a specific wave sound and so they need to keep those values). we need to keep
+				// these values somewhere to refer to when scaling the volume.
 				gain.gain.setValueAtTime(0.0, 0.0);
 			});
 			
@@ -581,8 +601,13 @@ function scheduler(pianoRoll, allInstruments){
 
 	var thisTime = ctx.currentTime;
 	
-	// start up the oscillators vrrroooooommmmmmmm
+	// start up the oscillators
 	for(var inst in instrumentOscNodes){
+		//console.log(instruments[inst]);
+		// TODO: to support panning, we need to add the pan node
+		// between the osc and gain nodes, i.e. osc -> pan -> gain
+		// probably need to keep track of pan nodes somewhere (and consider custom presets, i.e. in instrumentPreset.js).
+		// we also need to make sure we activate the pan node when the osc nodes are started, which complicates things a bit :/
 		instrumentOscNodes[inst].forEach((oscGroup) => {
 			oscGroup.forEach((osc) => {
 				osc.start(thisTime);
@@ -602,6 +627,7 @@ function scheduler(pianoRoll, allInstruments){
 			// schedule the notes!
 			var oscs = note.osc; // this is a list
 			var gains = note.gain; // this is a list
+			
 			var duration = note.duration;
 			var volume = note.volume;
 			var startTimeOffset = note.startTimeOffset;
@@ -637,23 +663,33 @@ function scheduler(pianoRoll, allInstruments){
 				});
 				
 			}else if(pianoRoll.instrumentPresets[instruments[i].waveType]){
-				// handling custom instrument preset!
-				var gainValueSum = 0;
+				// for handling custom instrument preset!
+				var gainValueSum = 0.0;
 				gains.forEach((gain) => {
-					gainValueSum += gain.gain.value;
+					if(gain.baseGainValue){
+						// I'm not completely sure if it's safe to assume all gains here will
+						// have the baseGainValue property, even though they should, I think,
+						// since they're part of a custom preset
+						gainValueSum += gain.baseGainValue;
+					}
 				});
 				
 				// schedule the gain nodes
-				gains.forEach((gain) => {
-					// scale the volume appropriately based on the current note's volume
-					var scaledVol = ((gain.gain.value / gainValueSum) * volume);
+				gains.forEach((gain) => {					
+					
+					var gainValue = gain.gain.value;
+					
+					// scale the volume appropriately based on the current note's volume 
+					// if there's a baseGainValue property
+					if(gain.baseGainValue){
+						gainValue = (gain.baseGainValue / gainValueSum) * volume;
+					}
 					
 					if(gain.envelope){
 						// apply ADSR envelope as needed
-						gain.envelope.applyADSR(gain.gain, startTime, duration, scaledVol);
-						//gain.gain.setTargetAtTime(0.0, endTime, 0.0010);
-					}else{
-						gain.gain.setTargetAtTime(scaledVol, startTime, 0.0045);
+						gain.envelope.applyADSR(gain.gain, startTime, duration, gainValue);
+					}else{					
+						gain.gain.setTargetAtTime(gainValue, startTime, 0.0045);
 						gain.gain.setTargetAtTime(0.0, (endTime - .0025), 0.0010);
 					}
 				});
@@ -731,7 +767,7 @@ function loopSignal(pianoRollObject, allInstruments){
 function play(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
-		pianoRoll.isPlaying = true;
+		pianoRollObject.isPlaying = true;
 		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject.currentInstrument, pianoRollObject);
 		scheduler(pianoRollObject, false);
 	}
@@ -764,14 +800,17 @@ function stopPlay(pianoRollObject){
 	pianoRollObject.isPlaying = false;
 
 	for(var i = 0; i < pianoRollObject.timers.length; i++){
-		pianoRollObject.timers[i].stop(0);
-		pianoRollObject.timers[i].ended = null; // unhook onendFunc 
+		var node = pianoRollObject.timers[i];
+		node.stop(0);
+		node.ended = null; // unhook onendFunc 
+		node.disconnect();
 	}
 	
 	for(var j = 0; j < pianoRollObject.instruments.length; j++){
+		// I don't think this actually helps since we might have multiple gains per instrument :<
 		pianoRollObject.instruments[j].gain.disconnect();
 		
-		// create a new gain for each instrument! 
+		// create a new gain for each instrument (this really is only needed when clicking notes, not playback)
 		var newGain = initGain(pianoRollObject.audioContext);
 		newGain.connect(pianoRollObject.audioContext.destination);
 		pianoRollObject.instruments[j].gain = newGain;

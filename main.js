@@ -237,6 +237,7 @@ function generateJSON(){
 		var currInstrument = pianoRoll.instruments[i];
 		instrumentData["name"] = currInstrument["name"];
 		instrumentData["volume"] = currInstrument["volume"];
+		instrumentData["pan"] = currInstrument["pan"];
 		instrumentData["waveType"] = currInstrument["waveType"];
 		instrumentData["onionSkinOn"] = currInstrument["onionSkinOn"];
 		instrumentData["notes"] = {};
@@ -325,6 +326,9 @@ function processData(data){
 		addNewInstrument(data.instruments[i].name, false, pianoRoll);
 		
 		var newInstrument = data.instruments[i];
+		if(newInstrument.pan === undefined){
+			newInstrument.pan = 0.0;
+		}
 		
 		// set up a fresh new gain node for each instrument 
 		var newGain = initGain(pianoRoll.audioContext);

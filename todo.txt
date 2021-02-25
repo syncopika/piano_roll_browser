@@ -1,21 +1,20 @@
-- for custom instrument presets, applying glide to a note doesn't produce the desired effect.
-- (maybe) figure out Edge bugs and how to fix (i.e. script 438, 5007 errors)
+- speeding up the tempo cuts notes to incorrect lengths (I think, at least for the intrada-pezel demo) when playing all instruments at a higher tempo. 
+  - playing an instrument individually at that tempo seems to be fine though...
+  - need to spend some time checking the math for calculating times? - watch out for drift
+
 - on Firefox: when playing my demos (except for the 3/4 example), the first note always seems to be skipped.
   otherwise, performance on Firefox seems to have improved considerably from at least a year ago for my application.
   
-- onion-skin sometimes prevents resizing ability? (can't reproduce currrently :/)
 - looping implementation was questionable and removed for now
 
 current things to do now:
+	- use sliders for changing value of volume, pan instead of dropdown
 	- clicking a note -> if clicking an already existing note, the volume should reflect that note's volume. otherwise use the instrument's volume.
-	- bug: 2 instruments, have a note that spans 6 columns, move to next isntrument, try placing note within area that note spans. it might not let you place a new note exactly.
-		- this might have to do with an existing note element (opacity is 0 b/c onion skin is off for that instrument it belongs to) in the parent cell
 	- delete instrument functionality
 	- delete measure functionality
 	- improve percussion
+	  - no panning currently
 	- the pianoNotes div (i.e. mobile piano bar) implementation could be cleaned up a bit maybe?
-	- haven't found the exact cause yet but sometimes notes aren't getting picked up (maybe because of onion-skin) and you have to 
-          delete them + re-add.
 	- add metronome? is scheduler scheduling on time?
 	- accessibility?
 	- maybe make it at least a little mobile friendly, i.e. support also touch events?

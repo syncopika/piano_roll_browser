@@ -45,8 +45,14 @@ function createPresetInstrument(data, audioCtx){
 
 	const nodeTypes = {
 		
-		"GainNode": function(params){ 
-			return new GainNode(audioCtx, params);
+		"GainNode": function(params){
+			const gain = new GainNode(audioCtx, params);
+			
+			// need to add the gain value as an extra property so we don't lose it
+			// when changing the actual value of the gain. this is needed when scaling volume
+			// for custom instruments with multiple gain nodes.
+			gain.baseGainValue = gain.gain.value;
+			return gain;
 		},
 		
 		"OscillatorNode": function(params){ 
@@ -89,7 +95,7 @@ function createPresetInstrument(data, audioCtx){
 		for(let type in nodeTypes){
 			if(nodeName.indexOf(type) >= 0){
 				// find the right node function to call based on nodeName
-				let audioNode = nodeTypes[type](nodeInfo.node); // create new node
+				let audioNode = nodeTypes[type](nodeInfo.node); // create new node				
 				nodeMap[nodeName] = audioNode; // add it to the map
 				audioNode.id = nodeInfo.id;
 				break;
@@ -128,7 +134,7 @@ function createPresetInstrument(data, audioCtx){
 			newOsc.connect(sinkNode);
 			//console.log("connecting: " + newOsc.constructor.name + " to: " + sinkNode.constructor.name);
 			
-			// if source is a gain node, no need to go further
+			// if sink is a gain node, no need to go further
 			if(sinkNode.id.indexOf("Gain") < 0){
 				let stack = data[sinkNode.id]["feedsInto"];
 				let newSource = sinkNode;
@@ -169,31 +175,21 @@ function getNodeNamesFromCustomPreset(currPreset){
 	};
 }
 
-// TODO: this needs to be refactored lol
 function getNodesCustomPreset(customPreset){
+	let nodes = getNodeNamesFromCustomPreset(customPreset);
 	
-	let nodes = [...Object.keys(customPreset)];
-	let oscNodes = nodes.filter((nodeName) => {
-		return nodeName.indexOf("Osc") >= 0 || nodeName.indexOf("AudioBuffer") >= 0;
-	});
-	oscNodes = oscNodes.map((osc) => customPreset[osc]);
+	for(let nodeType in nodes){
+		// remap so that instead of a list of names, we get a list of nodes
+		nodes[nodeType] = nodes[nodeType].map((node) => customPreset[node])
+	}
 	
-	let gainNodes = nodes.filter((nodeName) => {
-		return nodeName.indexOf("Gain") >= 0;
-	});
-	gainNodes = gainNodes.map((gain) => customPreset[gain]);
-	return {
-		"gainNodes": gainNodes, 
-		"oscNodes": oscNodes
-	};
+	return nodes;
 }
 
 
 // handling a custom preset when clicking on a note 
 function onClickCustomPreset(pianoRollObject, waveType, parent){
 	
-	// weird, but for some reason playing an ADSR-enveloped gain node initially produces no sound.
-	// after the first click, it works. :<
 	let audioCtx = pianoRollObject.audioContext;
 	let presetData = pianoRollObject.instrumentPresets[waveType];
 	let currPreset = createPresetInstrument(presetData, audioCtx);

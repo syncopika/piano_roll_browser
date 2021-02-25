@@ -147,6 +147,7 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	column.style.display = 'inline-block';
 	column.style.width = "40px";
 	column.style.height = "15px";
+	column.style.zIndex = "5";
 	column.style.verticalAlign = "middle";
 	column.style.backgroundColor = "transparent";
 	column.setAttribute("type", "default"); 
