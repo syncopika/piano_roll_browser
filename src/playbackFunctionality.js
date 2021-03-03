@@ -506,7 +506,7 @@ function scheduler(pianoRoll, allInstruments){
 				panNode.pan.setValueAtTime(panVal, 0.0);
 				
 				// silence gains initially
-				// TODO: yes this part is necessary (don't know the exact details but it makes sure the audio can start normally, otherwise
+				// yes, this part is necessary (don't know the exact details but it makes sure the audio can start normally, otherwise
 				// you get an awful blast of sound without it). but - for custom presets, we wipe out their gain values (i.e. a preset may
 				// have multiple gain nodes, each mapping to a specific wave sound and so they need to keep those values). we need to keep
 				// these values somewhere to refer to when scaling the volume.
@@ -713,6 +713,16 @@ function scheduler(pianoRoll, allInstruments){
 				
 			}else{
 				// handling regular instruments! (sine, square, triangle, sawtooth)
+				gains.forEach((gain) => {
+					// setting gain value here depending on condition allows for the 'articulation' of notes without 
+					// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
+					// this is fixed by always setting gain to 0 if a note's frequency is 0.
+					gain.gain.setTargetAtTime(volume, startTime, 0.0045);  // setting the time-constant to a really small value helps produce a softer attack for notes.
+					
+					// cut the duration by just a little bit to give the impression of articulation
+					gain.gain.setTargetAtTime(0.0, (endTime - .0025), 0.0010);
+				});
+				
 				oscs.forEach((osc) => {
 					osc.type = instruments[i].waveType;
 				
@@ -731,15 +741,6 @@ function scheduler(pianoRoll, allInstruments){
 					osc.frequency.setValueAtTime(0.0, endTime);
 				});
 				
-				gains.forEach((gain) => {
-					// setting gain value here depending on condition allows for the 'articulation' of notes without 
-					// the 'helicopter' sound when a certain note frequency is 0 but gain is not 0.
-					// this is fixed by always setting gain to 0 if a note's frequency is 0.
-					gain.gain.setTargetAtTime(volume, startTime, 0.0045); 
-					
-					// cut the duration by just a little bit to give the impression of articulation
-					gain.gain.setTargetAtTime(0.0, (endTime - .0025), 0.0010);
-				});
 			}
 		});
 	}

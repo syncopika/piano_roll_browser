@@ -477,14 +477,7 @@ function changeTempo(pianoRollObject){
 	// go through all instruments and adjust duration of each note in their note arrays
 	// according to new current tempo
 	for(var i = 0; i < pianoRollObject.instruments.length; i++){
-		if(pianoRollObject.instruments[i] !== pianoRollObject.currentInstrument){
-			var noteArray = pianoRollObject.instruments[i].notes;
-			for(var j = 0; j < noteArray.length; j++){
-				if(noteArray[j].duration > 1){
-					noteArray[j].duration = getCorrectLength(noteArray[j].block.length, pianoRollObject);
-				}
-			}
-		}
+		pianoRollObject.instruments[i].notes = readInNotes(pianoRollObject.instruments[i], pianoRollObject); // readInNotes is from playbackFunctionality.js
 	}
 }
 

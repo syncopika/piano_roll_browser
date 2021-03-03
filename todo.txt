@@ -1,6 +1,4 @@
-- speeding up the tempo cuts notes to incorrect lengths (I think, at least for the intrada-pezel demo) when playing all instruments at a higher tempo. 
-  - playing an instrument individually at that tempo seems to be fine though...
-  - need to spend some time checking the math for calculating times? - watch out for drift
+- need to spend some time checking the math for calculating start times? - watch out for drift
 
 - on Firefox: when playing my demos (except for the 3/4 example), the first note always seems to be skipped.
   otherwise, performance on Firefox seems to have improved considerably from at least a year ago for my application.
