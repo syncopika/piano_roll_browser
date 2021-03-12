@@ -493,7 +493,7 @@ function scheduler(pianoRoll, allInstruments){
 				
 				// take into account current instrument's panning
 				var panNode = pianoRoll.audioContext.createStereoPanner();
-				var panVal = pianoRoll.instruments[instrument].pan;
+				var panVal = allInstruments ? pianoRoll.instruments[instrument].pan : instruments[0].pan;
 				gain.connect(panNode);
 				
 				if(pianoRoll.recording){
