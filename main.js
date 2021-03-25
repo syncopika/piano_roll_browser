@@ -84,11 +84,9 @@ $(window).scroll(function(){
 // add event listeners to buttons (and other clickable elements)
 function bindButtons(pianoRollObject){
 
-	/*
 	document.getElementById('delMeasure').addEventListener('click', function(){
 		deleteMeasure(pianoRollObject);
 	});
-	*/
 
 	document.getElementById('addMeasure').addEventListener('click', function(){
 		addNewMeasure(pianoRollObject);

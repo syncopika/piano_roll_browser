@@ -392,6 +392,13 @@ function deleteMeasure(pianoRollObject){
 	
 	// TODO: finish me
 	var lastMeasureStartColNum = (pianoRollObject.numberOfMeasures-1) * pianoRollObject.subdivision;
+	
+	// figure out what measures need to be deleted
+	console.log(lastMeasureStartColNum);
+	
+	// go through each instrument's activenotes and delete
+	
+	// remove the columns from the ui
 }
 
 
