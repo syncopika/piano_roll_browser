@@ -5,7 +5,6 @@
 	relies on dom elements with the class 'context-menu-instrument'
 	
 *******/
-
 function makeInstrumentContextMenu(pianoRollObject){
     $(function(){
 		$.contextMenu({
@@ -114,9 +113,33 @@ function makeInstrumentContextMenu(pianoRollObject){
 							name: "Delete", 
 							icon: "delete",
 							callback: function(key, options){
-								// TODO: implement me
-								//console.log(options);
-								//alert(options.$trigger.attr("id") );
+								// what if current instrument is the one to be deleted?
+								var instrumentNum = options.$trigger.attr("id");
+								var instrumentTableElement = options.$trigger[0];
+								
+								// for now, let's only allow deletion for instruments other than the first instrument
+								if(instrumentNum > 1){
+									var instrument = pianoRollObject.instruments[instrumentNum - 1];
+								
+									// remove all of this instrument's notes
+									for(var noteId in instrument.activeNotes){
+										var noteElement = instrument.activeNotes[noteId];
+										noteElement.parentNode.removeChild(noteElement);
+									}
+									
+									// remove it from pianoRollObject
+									pianoRollObject.instruments.splice(instrumentNum-1, 1);
+									
+									// then remove it from the instrument table
+									instrumentTableElement.parentNode.removeChild(instrumentTableElement);
+									
+									// set current instrument to the first instrument
+									pianoRollObject.currentInstrument = pianoRollObject.instruments[0];
+									
+									// click the first instrument to show its notes
+									$('#1').click();
+								}
+								
 							}
 						}
 					}

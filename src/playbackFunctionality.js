@@ -779,7 +779,9 @@ function playAll(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
 		pianoRollObject.isPlaying = true;
-		pianoRollObject.currentInstrument.notes = readInNotes(pianoRollObject.currentInstrument, pianoRollObject);
+		for(var instrument of pianoRollObject.instruments){
+			instrument.notes = readInNotes(instrument, pianoRollObject);
+		}
 		scheduler(pianoRollObject, true);
 	}
 }

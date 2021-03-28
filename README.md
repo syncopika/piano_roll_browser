@@ -43,8 +43,7 @@ Disclaimer: the custom instrument functionality is currently pretty limited; the
 - downloading the audio isn't great on Chrome - the audio duration is messed up (see: https://stackoverflow.com/questions/38443084/how-can-i-add-predefined-length-to-audio-recorded-from-mediarecorder-in-chrome).    
     
 ### current next steps?:    
-- delete measures
-- delete instruments
+- refactoring + tests    
     
 ### features I would like to implement:    
 - ability to change color of highlight and color of note blocks, i.e. different for each instrument    
