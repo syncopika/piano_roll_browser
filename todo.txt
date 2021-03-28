@@ -8,8 +8,6 @@
 current things to do now:
 	- use sliders for changing value of volume, pan instead of dropdown
 	- clicking a note -> if clicking an already existing note, the volume should reflect that note's volume. otherwise use the instrument's volume.
-	- delete instrument functionality
-	- delete measure functionality
 	- improve percussion
 	  - no panning currently
 	- the pianoNotes div (i.e. mobile piano bar) implementation could be cleaned up a bit maybe?

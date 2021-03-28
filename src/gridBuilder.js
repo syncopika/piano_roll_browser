@@ -171,15 +171,9 @@ function createColumnCell(pitch, colNum, pianoRollObject){
 	return column;
 }
 
-// helper function to replace '#' in string 
 function replaceSharp(string){
 	// this adjustment is only necessary for labeling the DOM elements so that they're clickable
-	// previously, without this adjustment, sometimes you'd get a string id with two '#' chars for the sharp notes,
-	// because of how I decided to label my ids. since you also need a # for jQuery selection, adjustment is necessary. 
-	if(string.indexOf('#') != -1){
-		return string.replace('#', 's'); // s for sharp
-	}
-	return string;
+	return string.replace('#', 's'); // s for sharp
 }
 
 
