@@ -502,9 +502,6 @@ function changeTempo(pianoRollObject){
 		return;
 	}
 	
-	var tempoText = document.getElementById("tempo");
-	tempoText.innerHTML = selectedTempo + " bpm";
-	
 	// getting milliseconds PER EIGHTH NOTE (1 block on grid)
 	pianoRollObject.currentTempo = ((Math.round((60000 / selectedTempo) * 1000)) / 2000 );
 	

@@ -30,12 +30,6 @@ table, tr, td{
 	white-space: nowrap;
 }
 
-#wavetypeLabel, #tempoLabel{
-	font-family: 'arial', 'gothic ms';
-	font-size: 14px;
-	padding-left: 10px;
-}
-
 #changeTempo{
 	width: 40px;
 }

@@ -67,7 +67,11 @@
 			</select>
 		</li>
 		<li>|</li>
-		<li><h2 id='tempo'>120 bpm</h2></li>
+		<li>
+			<label id='tempoLabel'> tempo: </label>
+			<input id='changeTempo' type='text' value='120'>
+			<button class='btn' id='changeTempoBtn'> change tempo </button>
+		</li>
 		<li>|</li>
 		<li id='titleLabel'><h2> title:  </h2></li>
 		<li><h2 id='pieceTitle'> hi </h2></li>
@@ -93,37 +97,30 @@
 		
 		<li><button class='btn' onclick='fileHandler()'> import project </button></li>
 		<input type='file' id='importFile' style='display: none'>
-		
-		<!-- on hold -->
+
 		<li><button id='importInstrumentPreset' class='btn'> import instrument preset </button></li>
 		<input type='file' id='importInstrumentPresetInput' style='display: none'>
+		
+		<li id='demo'>
+			<label> demo: </label>
+			<select onchange="getDemo(this)">
+				<option label=""></option>
+				<option>
+					intrada-pezel
+				</option>
+				<option>
+					sand canyon
+				</option>
+				<option>
+					3_4 time demo
+				</option>
+				<option>
+					nakayoshi sensation
+				</option>
+			</select>
+		</li>
 	</ul>
 	
-	<li>
-		<label id='tempoLabel'> tempo: 
-			<input id='changeTempo' type='text'>
-		</label>
-	</li>
-	<li><button class='btn' id='changeTempoBtn'> change tempo </button></li>
-
-	<div id='demo'>
-		<label> demo: </label>
-		<select onchange="getDemo(this)">
-			<option label=""></option>
-			<option>
-				intrada-pezel
-			</option>
-			<option>
-				sand canyon
-			</option>
-			<option>
-				3_4 time demo
-			</option>
-			<option>
-				nakayoshi sensation
-			</option>
-		</select>
-	</div>
 </div>
 
 
