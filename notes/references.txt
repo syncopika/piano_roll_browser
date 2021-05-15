@@ -49,3 +49,6 @@ https://github.com/cwilso/metronome/blob/master/js/metronome.js
 http://catarak.github.io/blog/2014/12/02/web-audio-timing-tutorial/
 https://github.com/catarak/web-audio-sequencer/blob/master/javascripts/app.js
 http://sriku.org/blog/2013/01/30/taming-the-scriptprocessornode/#replacing-oscillator-with-scriptprocessornode
+
+// svg icons
+https://stackoverflow.com/questions/53699098/responsive-svg-viewbox/53699141

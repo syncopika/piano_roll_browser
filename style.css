@@ -91,7 +91,7 @@ table, tr, td{
 .btn{
 	border: 1px solid #000;
 	border-radius: 2px;
-	padding: 4px;
+	padding: 2px;
 	box-shadow: .1em .1em #d3d3d3;
 }
 
@@ -102,3 +102,9 @@ table, tr, td{
 select, option{
 	height: 24px;
 }
+
+img{
+	width: 3vw;
+	height: auto; 
+}
+
