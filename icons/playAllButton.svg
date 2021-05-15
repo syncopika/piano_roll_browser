@@ -70,7 +70,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -79,13 +79,6 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(-13.229167,-13.229167)">
-    <rect
-       style="fill:#808080;stroke-width:0.264583"
-       id="rect10"
-       width="146.27678"
-       height="97.895836"
-       x="13.229167"
-       y="13.229167" />
     <path
        sodipodi:type="star"
        style="fill:#00ff00;stroke-width:0.264583"

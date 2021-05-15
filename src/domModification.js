@@ -494,9 +494,9 @@ function drawNotes(instrumentObject){
 
 // this function relies on an INPUT box's ID to get the user-inputted tempo
 // @param pianoRollObject: instance of PianoRoll
-function changeTempo(pianoRollObject){
-	var tempoInput = document.getElementById("changeTempo");
-	var selectedTempo = parseInt(tempoInput.value);
+// @param tempoElement: the HTML input element to read the tempo from
+function changeTempo(pianoRollObject, tempoElement){
+	var selectedTempo = parseInt(tempoElement.value);
 	
 	if(isNaN(selectedTempo)){
 		return;
@@ -708,10 +708,10 @@ function addNewInstrument(name, createBool, pianoRollObject){
 try{
 	module.exports = {
 		addNote: addNote,
+		createNewNoteElement: createNewNoteElement,
 		highlightRow: highlightRow,
 		clearGrid: clearGrid,
 		clearGridAll: clearGridAll,
-		showCurrentNote: showCurrentNote,
 		addNewMeasure: addNewMeasure,
 		deleteMeasure: deleteMeasure,
 		chooseInstrument: chooseInstrument,

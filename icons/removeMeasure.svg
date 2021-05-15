@@ -112,7 +112,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -121,13 +121,6 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(-35.529762,-29.351017)">
-    <rect
-       style="fill:#808080;stroke-width:0.272309"
-       id="rect10"
-       width="146.27678"
-       height="103.6966"
-       x="35.71875"
-       y="29.351019" />
     <ellipse
        style="opacity:1;mix-blend-mode:color;fill:#d80a00;fill-opacity:1;stroke-width:0.264583;filter:url(#filter2932)"
        id="path121"

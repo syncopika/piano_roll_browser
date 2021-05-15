@@ -39,6 +39,7 @@ describe('testing gridBuilder.js', function(){
 		// expect 33 elements in the header: 8 cells * 4 measures = 32 + 1 for the piano keys
 
 		expect(document.getElementById(el.id).children.length).to.equal(33);
+		document.body.removeChild(el);
 	});
 	
 	// 61 unique notes for current config 
@@ -58,6 +59,9 @@ describe('testing gridBuilder.js', function(){
 		const numUniqueNotes = 73; // 6 octaves + C8
 		expect(document.getElementById(el.id).children.length).to.equal(numUniqueNotes);
 		expect(document.getElementById(pianoNotes.id).children.length).to.equal(numUniqueNotes);
+		
+		document.body.removeChild(el);
+		document.body.removeChild(pianoNotes);
 	});
 	 
 	it('testing highlightHeader', function(){
@@ -69,6 +73,8 @@ describe('testing gridBuilder.js', function(){
 		highlightHeader("col_1", pianoRoll);
 		expect(pianoRoll.playMarker).to.equal("col_1");
 		expect(document.getElementById("col_1").style.backgroundColor).to.equal("rgb(50, 205, 50)");
+		
+		document.body.removeChild(el);
 		
 		// as an integration test later simulate a click on another header column 
 		// and check that the previous one does not have a colored background anymore
