@@ -11,6 +11,20 @@ describe('testing classes.js', function(){
 	it('testing PianoRoll class', function(){
 		var pianoRoll = new PianoRoll()
 		assert(pianoRoll.numberOfMeasures === 4);
+		assert(pianoRoll.currentTempo === 250);
+		assert(pianoRoll.subdivision === 8);
+		assert(pianoRoll.timeSignature === "4/4");
+		assert(pianoRoll.audioContext === undefined);
+		assert(pianoRoll.init !== undefined);
+		
+		// check note styles
+		assert(Object.keys(pianoRoll.defaultNoteStyles).length === 4);
+		
+		// check default instruments
+		assert(Object.keys(pianoRoll.defaultInstrumentSounds).length === 5);
+		
+		// check note size map (i.e. 8th, 16th, 32nd mapped to their cell size in px)
+		assert(Object.keys(pianoRoll.noteSizeMap).length === 3);
 	});
 	
 	it('testing Instrument class', function(){

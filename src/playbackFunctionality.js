@@ -765,6 +765,7 @@ function loopSignal(pianoRollObject, allInstruments){
 
 
 // play notes for current instrument
+// @param pianoRollObject: an instance of PianoRoll
 function play(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
@@ -775,6 +776,7 @@ function play(pianoRollObject){
 }
 
 // play all instruments
+// @param pianoRollObject: an instance of PianoRoll
 function playAll(pianoRollObject){
 	var ctx = pianoRollObject.audioContext;
 	if(!pianoRollObject.isPlaying || (pianoRollObject.isPlaying && pianoRollObject.lastTime < ctx.currentTime)){
@@ -787,6 +789,7 @@ function playAll(pianoRollObject){
 }
 
 // record playback (for all instruments)
+// @param pianoRollObject: an instance of PianoRoll
 function recordPlay(pianoRollObject){
 	if(pianoRollObject.recording){
 		return;
@@ -798,6 +801,7 @@ function recordPlay(pianoRollObject){
 }
 
 //stop playback
+// @param pianoRollObject: an instance of PianoRoll
 function stopPlay(pianoRollObject){
 
 	pianoRollObject.isPlaying = false;
@@ -841,7 +845,9 @@ function stopPlay(pianoRollObject){
 }
 
 
-//create a new instrument 
+//create a new instrument
+// @param name: name of the instrument
+// @param pianoRollObject: instance of PianoRoll
 function createNewInstrument(name, pianoRollObject){
 	// make new gain node for the instrument 
 	var newGain = initGain(pianoRollObject.audioContext);
@@ -851,12 +857,6 @@ function createNewInstrument(name, pianoRollObject){
 	var newInstrument = new Instrument("new_instrument", newGain, []);
 	pianoRollObject.instruments.push(newInstrument);
 }
-
-
-function deleteInstrument(){
-	//TODO: implement me
-}
-
 
 try {
 	module.exports = {

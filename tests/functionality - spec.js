@@ -34,8 +34,7 @@ describe('testing playbackFunctionality.js', function(){
 		
 		// check 16th note at 120bpm
 		expect(getCorrectLength(20, pianoRoll)).to.equal(125);
-	});
-	
+	});	
 
 	it('testing stopPlay', function(){
 		stopPlay(pianoRoll);

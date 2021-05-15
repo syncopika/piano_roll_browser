@@ -32,11 +32,17 @@
 	<h2 id='title'> piano roll fun! &#127929;</h2>
 
 	<ul id='metadata'>
+		<li id='titleLabel'><h2> title:  </h2></li>
+		<li><h2 id='pieceTitle'> hi </h2></li>
+		<li>|</li>
+		<li id='composerLabel'><h2> composer:  </h2></li>
+		<li><h2 id='composer'> hi </h2></li>
+		<li>|</li>
 		<li><h2 id='measures'></h2></li>
 		<li>|</li>
 		<li>
 			<label for="lockType">
-				lock type: 
+				note lock type: 
 			</label>
 			<select name="lockType" id="lockType" onchange="updateLockNoteSize(this)">
 				<option>8th</option>
@@ -67,45 +73,86 @@
 			</select>
 		</li>
 		<li>|</li>
-		<li><h2 id='tempo'>120 bpm</h2></li>
-		<li>|</li>
-		<li id='titleLabel'><h2> title:  </h2></li>
-		<li><h2 id='pieceTitle'> hi </h2></li>
-		<li>|</li>
-		<li id='composerLabel'><h2> composer:  </h2></li>
-		<li><h2 id='composer'> hi </h2></li>
+		<li>
+			<label id='tempoLabel'> tempo: </label>
+			<input id='changeTempo' type='text' value='120'>
+		</li>
 		<li>|</li>
 		<li><h2><a href='https://github.com/syncopika/piano_roll_browser'>help!</a></h2></li>
 	</ul>
 
-	<ul id='buttons'>
-		<li><button id='play' class='btn'> play! </button></li>
-		<li><button id='playAll' class='btn'> play <b>all</b>! </button></li>
-		<li><button id='stopPlay' class='btn'> stop! </button></li>
-		<!--<li><button id='loop' class='btn'>loop</button></li>-->
-		<li><button id='record' class='btn'> record </button></li>
-		<li><button id='addMeasure' class='btn'> add new measure </button></li>
-		<li><button id='delMeasure' class='btn'> delete measure </button></li>
 
-		<li><button id='addInstrument' class='btn'> add new instrument </button></li>
-		<li><button id='clearGrid' class='btn'> clear grid </button></li>
-		<li><button class='btn' onclick='generateJSON()'> save & export project </button></li>
+	<ul id='buttons'>
+		<li>
+			<button id='play' title='play current instrument' class='btn'>
+				<img src='./icons/playButton.svg'>
+			</button>
+		</li>
 		
-		<li><button class='btn' onclick='fileHandler()'> import project </button></li>
+		<li>
+			<button id='playAll' title='play all instruments' class='btn'>
+				<img src='./icons/playAllButton.svg'>
+			</button>
+		</li>
+		
+		<li>
+			<button id='stopPlay' title='stop' class='btn'>
+				<img src='./icons/stopButton.svg'>
+			</button>
+		</li>
+		
+		<!--<li><button id='loop' class='btn'>loop</button></li>-->
+		<li>
+			<button id='record' title='record' class='btn'>
+				<img src='./icons/recordButton.svg'>
+			</button>
+		</li>
+		
+		<li>
+			<button id='addMeasure' title='add new measure' class='btn'>
+				<img src='./icons/addMeasure.svg'>
+			</button>
+		</li>
+		
+		<li>
+			<button id='delMeasure' title='remove last measure' class='btn'>
+				<img src='./icons/removeMeasure.svg'>
+			</button>
+		</li>
+
+		<li>
+			<button id='addInstrument' title='add instrument' class='btn'>
+				<img src='./icons/addInstrument.svg'>
+			</button>
+		</li>
+		
+		<li>
+			<button id='clearGrid' title='clear grid' class='btn'>
+				<img src='./icons/clearGrid.svg'>
+			</button>
+		</li>
+		
+		<li>
+			<button class='btn' title='download project' onclick='generateJSON()'>
+				<img src='./icons/saveProject.svg'>
+			</button>
+		</li>
+		
+		<li>
+			<button class='btn' title='import project' onclick='fileHandler()'>
+				<img src='./icons/importProject.svg'>
+			</button>
+		</li>
 		<input type='file' id='importFile' style='display: none'>
-		
-		<!-- on hold -->
-		<li><button id='importInstrumentPreset' class='btn'> import instrument preset </button></li>
+
+		<li>
+			<button id='importInstrumentPreset' title='import instrument preset' class='btn'>
+				<img src='./icons/importInstrument.svg'>
+			</button>
+		</li>
 		<input type='file' id='importInstrumentPresetInput' style='display: none'>
 	</ul>
 	
-	<li>
-		<label id='tempoLabel'> tempo: 
-			<input id='changeTempo' type='text'>
-		</label>
-	</li>
-	<li><button class='btn' id='changeTempoBtn'> change tempo </button></li>
-
 	<div id='demo'>
 		<label> demo: </label>
 		<select onchange="getDemo(this)">
@@ -124,6 +171,7 @@
 			</option>
 		</select>
 	</div>
+	
 </div>
 
 

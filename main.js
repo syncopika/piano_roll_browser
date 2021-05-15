@@ -127,8 +127,8 @@ function bindButtons(pianoRollObject){
 		})
 	});
 	
-	document.getElementById('changeTempoBtn').addEventListener('click', function(){
-		changeTempo(pianoRoll);
+	document.getElementById("changeTempo").addEventListener('change', function(){
+		changeTempo(pianoRoll, this);
 	});
 	
 	// be able to change name of piece and composer 
@@ -216,7 +216,7 @@ function generateJSON(){
 	
 	// add metadata first 
 	data["measures"] = pianoRoll.numberOfMeasures;
-	data["tempo"] = parseInt( document.getElementById("tempo").textContent );
+	data["tempo"] = parseInt( document.getElementById("changeTempo").value );
 	
 	// put in composer info, name of piece 
 	data["composer"] = document.getElementById("composer").textContent;
@@ -292,8 +292,7 @@ function processData(data){
 	redrawCellBorders(pianoRoll, 'columnHeaderRow');
 	
 	// set new tempo acording to json data
-	var tempoText = document.getElementById("tempo");
-	tempoText.innerHTML = data.tempo + " bpm";
+	document.getElementById("changeTempo").value = data.tempo;
 	pianoRoll.currentTempo = ((1/(data.tempo / 60000))/2) // length of 8th note in ms. based on tempo
 	
 	// now put the data on the grid 
