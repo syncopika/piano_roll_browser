@@ -419,7 +419,7 @@ function PianoManager(audioCtx) {
 	
 	// load in the notes
 	for(let note in this.noteMap){
-		const fileToFetch = "../example_presets/piano/piano-" + note + '.ogg';
+		const fileToFetch = "example_presets/piano/piano-" + note + '.ogg';
 		const newSource = this.audioCtx.createBufferSource();
 		
 		// https://developer.mozilla.org/en-US/docs/Web/API/Body/arrayBuffer
