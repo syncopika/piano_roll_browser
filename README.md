@@ -2,7 +2,7 @@
 a music sequencer inspired by LMMS, one of the best software applications ever!    
 also influenced a bit by PxTone Collage, another great application!      
 **it is highly recommended that Chrome be used for this application for optimal functionality at the moment.**    
-     
+    
 ![screenshot of the piano roll](screenshots/current.png "current look")    
     
 ### cool features:    
@@ -11,7 +11,7 @@ also influenced a bit by PxTone Collage, another great application!
 - each note is customizable    
 - togglable onion skin    
 - recordable    
-     
+    
 ### instructions:    
 - To change the name of the piece or the composer, double-click on 'title' or 'composer', just above the buttons.     
     
@@ -54,17 +54,22 @@ Disclaimer: the custom instrument functionality is currently pretty limited; the
 The objective of my piano roll, at least conceptually, is I think fairly straightforward. The goal is to arrange a number of notes with
 varying lengths and pitches with the help of a grid, put these notes in an array and then create OscillatorNodes for each note so that a musical phrase can be played back.    
     
-My implementation does not use the canvas element like some other piano roll implementations and instead relies on just DOM manipulation of a grid to manipulate notes.
+An important point about audio nodes: one limitation is that the performance of what the Web Audio API has to offer is based on the user's computer CPU. Depending on the computer, the creation of new, separate audio nodes per musical note can cause considerable lag and render an application useless (this number can get very large especially because some instruments involve multiple nodes per note). In this application I calculate the minimum number of nodes needed for each instrument based on the maximum number of notes playing at the same time for that instrument. This technique appears to work pretty well and improved performance considerably on my laptop. But another potential thing to fix might be the way I'm scheduling notes. Instead of scheduling them all upfront and creating all the necessary nodes at once, maybe I can create them gradually.
+    
+My implementation does not use the canvas element like some other piano roll implementations and instead relies on just DOM manipulation of a grid to manipulate notes.    
+    
 Users can place and move notes freely on the piano roll. In order to do that, my program looks at a couple of factors: the location of the cursor and the note lock size, which can be an 8th note (1 block on the piano roll), 16th note (half a block), or 32nd note. The note lock size determines the incremental distance a note block can be moved. The smaller the note, the more possible locations within a piano roll block it could be placed. For note movement, the cursor's location is taken into account and if it is over a piano roll block, my program determines, based on the cursor's x-position, what position within the piano roll block the cursor is closest to and places the note at that position.    
     
-Additionally, I wanted to keep it light, simple and easily portable so I minimized the number of dependencies (just jQuery! :D).    
+Additionally, I wanted to keep it light, simple and easily portable so I minimized the number of dependencies (just jQuery!).    
     
 For the terrible svg icons, I used Inkscape :)    
+    
+For the piano instrument sounds I used the Steinway D from the Equinox Grand Pianos soundfont.    
     
 For the context menus used to edit instruments and notes, I used the awesome jQuery contextMenu library provided here: https://swisnl.github.io/jQuery-contextMenu/. Thanks very much to them!    
     
 ### installation:    
-You don't need to install anything to use the piano roll itself locally; however, if you want to load in the demos and example custom presets, you'll need to serve the html page first on a local server. If you have Python, you can just run `python -m http.server` in this repo after you've downloaded it and navigate to `http://localhost:8000`. If you have node and npm, run `npm install` in this repo to get the dependencies (which also includes the needed libraries for running the tests!) and then run `node server.js`. Then navigate to `http://localhost:3000/` to see the piano roll.    
+You don't need to install anything to use the piano roll itself (limited to just the basic sounds such as sine, sawtooth, triangle and square) locally; however, if you want to load in the demos and example custom presets, you'll need to serve the html page first on a local server. If you have Python, you can just run `python -m http.server` in this repo after you've downloaded it and navigate to `http://localhost:8000`. If you have node and npm, run `npm install` in this repo to get the dependencies (which also includes the needed libraries for running the tests!) and then run `node server.js`. Then navigate to `http://localhost:3000/` to see the piano roll.    
     
 To run the tests, make sure the dependencies have been downloaded via `npm install`. Then run `npm run test`.    
     

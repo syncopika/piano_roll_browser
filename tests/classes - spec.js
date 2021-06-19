@@ -21,7 +21,7 @@ describe('testing classes.js', function(){
 		assert(Object.keys(pianoRoll.defaultNoteStyles).length === 4);
 		
 		// check default instruments
-		assert(Object.keys(pianoRoll.defaultInstrumentSounds).length === 5);
+		assert(Object.keys(pianoRoll.defaultInstrumentSounds).length === 6);
 		
 		// check note size map (i.e. 8th, 16th, 32nd mapped to their cell size in px)
 		assert(Object.keys(pianoRoll.noteSizeMap).length === 3);

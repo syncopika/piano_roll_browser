@@ -6,8 +6,8 @@
 - looping implementation was questionable and removed for now
 
 current things to do now:
+	- some kind of visual signal for note volume?
 	- use sliders for changing value of volume, pan instead of dropdown
-	- clicking a note -> if clicking an already existing note, the volume should reflect that note's volume. otherwise use the instrument's volume.
 	- improve percussion
 	  - no panning currently
 	- the pianoNotes div (i.e. mobile piano bar) implementation could be cleaned up a bit maybe?

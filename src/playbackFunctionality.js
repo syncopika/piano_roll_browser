@@ -23,24 +23,24 @@ function initGain(context){
 // plays the corresponding pitch of a block when clicked 
 // @param id: an HTML element id 
 // @param waveType: a string representing the sound type (i.e. sine, triangle, etc.)
+// @param volume: a float number representing the volume that the note should sound
 // @param pianoRollObject: an instance of PianoRoll
-function clickNote(id, waveType, pianoRollObject){
-
+function clickNote(id, waveType, volume, pianoRollObject){
 	// resume the context per the Web Audio autoplay policy 
 	pianoRollObject.audioContext.resume().then(() => {
-
 		if(waveType === "percussion"){
-			clickPercussionNote(id, pianoRollObject);
+			clickPercussionNote(id, volume, pianoRollObject);
+		}else if(waveType === "piano"){
+			clickPianoNote(id, volume, pianoRollObject);
 		}else{
-			var parent = document.getElementById(id).parentNode.id;
-			parent = parent.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
+			var parent = document.getElementById(id).parentNode.id.replace('s', '#'); // replace any 's' with '#' so we can match a key in noteFrequencies
 			var now = pianoRollObject.audioContext.currentTime;
 			
 			if(pianoRoll.instrumentPresets[waveType]){
 				// custom intrument preset!
 				onClickCustomPreset(pianoRollObject, waveType, parent);
 			}else{	
-				// create a new oscillator just for this note 
+				// create a new oscillator just for this note
 				var osc = pianoRollObject.audioContext.createOscillator();
 				osc.type = waveType;
 				osc.frequency.setValueAtTime(pianoRollObject.noteFrequencies[parent], 0);
@@ -55,8 +55,8 @@ function clickNote(id, waveType, pianoRollObject){
 				panNode.connect(gain);
 				panNode.pan.setValueAtTime(panVal, now);
 				
-				// set the volume of a clicked note to whatever the current isntrument's volume is 
-				gain.gain.setTargetAtTime(pianoRollObject.currentInstrument.volume, now, 0.002);
+				// set volume
+				gain.gain.setTargetAtTime(volume, now, 0.002);
 				osc.start(0);
 				
 				// silence the oscillator 
@@ -67,29 +67,51 @@ function clickNote(id, waveType, pianoRollObject){
 	});
 }
 
-// like clickNote but for percussion notes
-function clickPercussionNote(id, pianoRollObject){
-	
-	var parent = document.getElementById(id).parentNode.id;
-	parent = parent.replace('s', '#')
-	
+function clickPercussionNote(id, volume, pianoRollObject){
+	var parent = document.getElementById(id).parentNode.id.replace('s', '#');
 	var context = pianoRollObject.audioContext;
 	var gain = pianoRollObject.currentInstrument.gain;
-	var time = pianoRollObject.audioContext.currentTime;
+	var now = pianoRollObject.audioContext.currentTime;
 	var octave = parseInt(parent.match(/[0-9]/g)[0]);
-	var volume = pianoRollObject.currentInstrument.volume;
 	
 	if(octave >= 2 && octave <= 4){
 		// kick drum 
-		pianoRollObject.PercussionManager.kickDrumNote(pianoRollObject.noteFrequencies[parent], volume, time, false);		
+		pianoRollObject.PercussionManager.kickDrumNote(pianoRollObject.noteFrequencies[parent], volume, now, false);		
 	}else if(octave === 5){
 		// snare drum 
-		pianoRollObject.PercussionManager.snareDrumNote(pianoRollObject.noteFrequencies[parent], volume, time, false);		
+		pianoRollObject.PercussionManager.snareDrumNote(pianoRollObject.noteFrequencies[parent], volume, now, false);		
 	}else{
 		// hi-hat 
-		pianoRollObject.PercussionManager.hihatNote(volume, time, false);
+		pianoRollObject.PercussionManager.hihatNote(volume, now, false);
 	}
 }
+
+function clickPianoNote(id, volume, pianoRollObject){
+	var noteName = document.getElementById(id).parentNode.id.split("col")[0]; // get the note name, i.e. D7, Ds6
+	var context = pianoRollObject.audioContext;
+	var gain = pianoRollObject.currentInstrument.gain;
+	var now = pianoRollObject.audioContext.currentTime;
+	var noteDataBuf = pianoRollObject.PianoManager.noteMap[noteName].buffer;
+	
+	var newNoteBufferNode = context.createBufferSource();
+	newNoteBufferNode.buffer = noteDataBuf;
+	
+	// setup the StereoPannerNode
+	var panNode = pianoRollObject.audioContext.createStereoPanner();
+	var panVal = pianoRollObject.currentInstrument.pan;
+	newNoteBufferNode.connect(panNode);
+	panNode.connect(gain);
+	panNode.pan.setValueAtTime(panVal, now);
+	
+	// set volume (the piano notes are quiet so they need to be amplified a bit more)
+	gain.gain.setTargetAtTime(volume*4, now, 0.002);
+	newNoteBufferNode.start(0);
+	
+	// silence the oscillator 
+	gain.gain.setTargetAtTime(0.0, now + 0.300, 0.002);
+	newNoteBufferNode.stop(now + .300);
+}
+
 
 // sort an instrument's notes by position 
 // an instrument's activeNotes map is evaluated and a new map where the key 
@@ -125,7 +147,6 @@ function sortNotesByPosition(instrument){
 // @param pianoRollObject: an instance of PianoRoll
 // @return: an array of arrays containing Note objects
 function readInNotes(instrument, pianoRollObject){
-	
 	var notePosMap = sortNotesByPosition(instrument);
 	var tempo = pianoRollObject.currentTempo;
 	var allNotes = [];
@@ -187,7 +208,6 @@ function getNotePosition(noteElement){
 	
 ****/
 function scheduler(pianoRoll, allInstruments){
-	
 	var ctx = pianoRoll.audioContext;
 	var startMarker = pianoRoll.playMarker; // if user specified a certain column to start playing at 
 	var startPos = 0;
@@ -211,7 +231,6 @@ function scheduler(pianoRoll, allInstruments){
 		}
 	}
 	
-	// make a copy of pianoRoll.instruments so that we can edit the array
 	// i.e. when an instrument is done, I can set the index of that instrument in the array to null as a flag
 	// also, for each instrument set their index in instrumentNotePointers to 0, which means that playing should 
 	// start at the beginning (0 being the index of the first note of that instrument)
@@ -247,7 +266,6 @@ function scheduler(pianoRoll, allInstruments){
 	
 	// in the case where the user specified a measure to start playing at
 	if(startMarker){
-
 		startPos = getNotePosition(document.getElementById(startMarker));
 	
 		for(var i = 0; i < instruments.length; i++){
@@ -291,19 +309,16 @@ function scheduler(pianoRoll, allInstruments){
 		);
 		pianoRoll.timers.push(highlightOsc); // maybe should use a separate timers array?
 	});
-
 	
 	// figure out for each instrument the minumum number of gain nodes and oscillator nodes we need 
 	// in order to minimize the number of nodes we need to create since that adds performance overhead
 	var numGainNodePerInst = {};
 	instruments.forEach((instrument, instIndex) => {
-		//console.log(instrument.notes);
 		var prevNote = null;
 		var currNote = null;
 		var start = instrumentNotePointers[instIndex];
 
 		for(var index = start; index < instrument.notes.length; index++){
-			
 			var group = instrument.notes[index];			
 
 			if(index > start){
@@ -379,7 +394,6 @@ function scheduler(pianoRoll, allInstruments){
 		// and take its gain nodes and osc nodes and add them as lists to the above lists. 
 		// so in the end we should have a list of lists for gain and osc nodes 
 		for(var i = 0; i < numGainNodePerInst[index]; i++){
-			
 			var newGainNodes;
 			var newOscNodes;
 			
@@ -422,7 +436,6 @@ function scheduler(pianoRoll, allInstruments){
 	var posTracker = {};
 	
 	for(var instrumentIndex = 0; instrumentIndex < instruments.length; instrumentIndex++){
-		
 		var instrument = instruments[instrumentIndex];
 		
 		if(instrumentGainNodes[instrumentIndex] === undefined){
@@ -441,7 +454,6 @@ function scheduler(pianoRoll, allInstruments){
 		// use instrumentNotePointers to take into account the startMarker 
 		var start = instrumentNotePointers[instrumentIndex];
 		for(var index = start; index < instrument.notes.length; index++){
-			
 			var group = instrument.notes[index];
 			
 			group.forEach((note, noteIndex) => {
@@ -468,14 +480,11 @@ function scheduler(pianoRoll, allInstruments){
 	}
 		
 	// preprocess the nodes further by figuring out how long each note should be and its start/stop times
-	// note that we should NOT actually stop any oscillators; they should just be set to 0 freq and 0 gain when they
-	// should not be playing
-	// combine all notes of each instrument into an array
-	// each element in the array will be a map of note properties and the osc node that should play that note.
+	// note that we should NOT actually stop any oscillators; they should just be set to 0 freq and 0 gain when they should not be playing
+	// combine all notes of each instrument into an array. each element will be a map of note properties and the osc node for that note.
 	var allNotesPerInstrument = {};
 	var index = 0;
 	for(var instrument in routes){
-		
 		allNotesPerInstrument[instrument] = [];
 		
 		var instrumentRoutes = routes[instrument];
@@ -490,7 +499,6 @@ function scheduler(pianoRoll, allInstruments){
 			
 			// hook up gain to the correct destination
 			gainsToUse.forEach((gain) => {
-				
 				// take into account current instrument's panning
 				var panNode = pianoRoll.audioContext.createStereoPanner();
 				var panVal = allInstruments ? pianoRoll.instruments[instrument].pan : instruments[0].pan;
@@ -518,7 +526,7 @@ function scheduler(pianoRoll, allInstruments){
 				var thisNote = notes[i]; 
 				var volume = thisNote.freq > 0.0 ? parseFloat(thisNote.block.volume) : 0.0;
 				
-				// by default, ~70% of the note duration should be played 
+				// by default, 70% of the note duration should be played 
 				// the rest of the time can be devoted to the spacer 
 				var realDuration;
 				if(thisNote.block.style === "staccato"){
@@ -574,6 +582,7 @@ function scheduler(pianoRoll, allInstruments){
 		// to remedy this, go through all the notes again real quick and if we find notes that 
 		// should start at the same time, decide on an offset and fix the values as needed.
 		// use the positions of each note to figure out which start together
+		// TODO: correct time scheduling precision errors? or look into gradual scheduling, if possible?
 		var positionMap = {}; // group notes by positions
 		var instrumentNotes = allNotesPerInstrument[instrument];
 		instrumentNotes.forEach((note) => {
@@ -603,11 +612,6 @@ function scheduler(pianoRoll, allInstruments){
 	
 	// start up the oscillators
 	for(var inst in instrumentOscNodes){
-		//console.log(instruments[inst]);
-		// TODO: to support panning, we need to add the pan node
-		// between the osc and gain nodes, i.e. osc -> pan -> gain
-		// probably need to keep track of pan nodes somewhere (and consider custom presets, i.e. in instrumentPreset.js).
-		// we also need to make sure we activate the pan node when the osc nodes are started, which complicates things a bit :/
 		instrumentOscNodes[inst].forEach((oscGroup) => {
 			oscGroup.forEach((osc) => {
 				osc.start(thisTime);
@@ -616,7 +620,6 @@ function scheduler(pianoRoll, allInstruments){
 	}
 	
 	for(var i = 0; i < instruments.length; i++){
-		
 		var currInstNotes = allNotesPerInstrument[i];
 		if(currInstNotes === undefined){
 			// no notes for this instrument
@@ -626,8 +629,7 @@ function scheduler(pianoRoll, allInstruments){
 		currInstNotes.forEach((note) => {
 			// schedule the notes!
 			var oscs = note.osc; // this is a list
-			var gains = note.gain; // this is a list
-			
+			var gains = note.gain; // this is a list	
 			var duration = note.duration;
 			var volume = note.volume;
 			var startTimeOffset = note.startTimeOffset;
@@ -642,7 +644,7 @@ function scheduler(pianoRoll, allInstruments){
 			pianoRoll.lastTime = Math.max(pianoRoll.lastTime, (thisTime + startTimeOffset));
 			
 			if(instruments[i].waveType === "percussion"){
-				// handling percussion!
+				// handling percussion! in this case we're not caring about oscs and gains
 				// hmm gotta make a new osc for every percussion note? need to explore this some more.
 				var noteContainer = document.getElementById(otherParams.block.id).parentNode;
 				var octave = parseInt(noteContainer.id.match(/[0-9]/g)[0]);
@@ -662,6 +664,30 @@ function scheduler(pianoRoll, allInstruments){
 					osc.stop(endTime);
 				});
 				
+			}else if(instruments[i].waveType === "piano"){
+				// handling piano. in this case we're not caring about oscs (but we can use the gain nodes)
+				// because for now we will create a new buffersource node for each note
+				// in this case, we can be sure that there would be a 1:1 mapping of gain node to audio buffer node
+				var noteName = document.getElementById(otherParams.block.id).parentNode.id.split('col')[0]; // i.e. get D7 from D7col_3
+				
+				var newAudioBufferNode = ctx.createBufferSource();
+				newAudioBufferNode.buffer = pianoRoll.PianoManager.getAudioBufferForNote(noteName);
+				
+				oscs.forEach((osc) => {
+					osc.disconnect();
+				});
+				
+				gains.forEach((gain) => {
+					newAudioBufferNode.connect(gain);
+					pianoRoll.timers.push(newAudioBufferNode); // so we can stop playing whenever
+					
+					// the piano is kinda quiet so raise the volume a bit
+					gain.gain.setTargetAtTime(volume*4, startTime, 0.0045);
+					gain.gain.setTargetAtTime(0.0, (endTime - .0025), 0.0010);
+					
+					newAudioBufferNode.start(startTime);
+					newAudioBufferNode.stop(endTime);
+				});
 			}else if(pianoRoll.instrumentPresets[instruments[i].waveType]){
 				// for handling custom instrument preset!
 				var gainValueSum = 0.0;
@@ -676,7 +702,6 @@ function scheduler(pianoRoll, allInstruments){
 				
 				// schedule the gain nodes
 				gains.forEach((gain) => {					
-					
 					var gainValue = gain.gain.value;
 					
 					// scale the volume appropriately based on the current note's volume 
