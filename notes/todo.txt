@@ -6,6 +6,7 @@
 - looping implementation was questionable and removed for now
 
 current things to do now:
+	- be able to mute instruments
 	- some kind of visual signal for note volume?
 	- use sliders for changing value of volume, pan instead of dropdown
 	- improve percussion
