@@ -32,10 +32,12 @@ bindButtons(pianoRoll);
 /**** 
 	INFORMATION ABOUT THE CURRENT SETUP 
 ****/
-$('#measures').html("number of measures: " + pianoRoll.numberOfMeasures);
+$('#measures').html("measure count: " + pianoRoll.numberOfMeasures);
 //$('#timeSig').html("time signature: " + pianoRoll.timeSignature);
 $('#subdiv').html("subdivision: " + pianoRoll.subdivision);
 
+// flag for toggling the toolbar to be static or sticky
+var toggleStickyToolbar = false;
 
 /**** 
 	SET UP INITIAL INSTRUMENT 
@@ -75,6 +77,11 @@ $(window).scroll(function(){
 	
 	// also move the toolbar as well 
 	$('#toolbar').css('left', $(window).scrollLeft());
+	if(toggleStickyToolbar){
+		$('#toolbar').css('top', $(window).scrollTop());
+	}else{
+		$('#toolbar').css('top', 0);
+	}
 	
 	// and the footer 
 	$('.footer').css('left', $(window).scrollLeft());
@@ -133,7 +140,6 @@ function bindButtons(pianoRollObject){
 	
 	// be able to change name of piece and composer 
 	document.getElementById('titleLabel').addEventListener('dblclick', function(){
-
 		var title = document.getElementById('pieceTitle');
 		var userInput = prompt('new title name:');
 		
@@ -145,7 +151,6 @@ function bindButtons(pianoRollObject){
 	});
 	
 	document.getElementById('composerLabel').addEventListener('dblclick', function(){
-
 		var name = document.getElementById('composer');
 		var userInput = prompt('new composer name:');
 		
@@ -154,6 +159,10 @@ function bindButtons(pianoRollObject){
 		}
 		
 		name.textContent = userInput;
+	});
+	
+	document.getElementById('toggleStickyToolbar').addEventListener('click', function(){
+		toggleStickyToolbar = !toggleStickyToolbar;
 	});
 	
 	/*
@@ -173,7 +182,7 @@ function bindButtons(pianoRollObject){
 		redrawCellBorders(pianoRollObject, 'columnHeaderRow');
 		
 		// update measure count 
-		$('#measures').text( "number of measures: " + pianoRollObject.numberOfMeasures );
+		$('#measures').text( "measure count: " + pianoRollObject.numberOfMeasures );
 	});
 	
 	// import instrument preset
@@ -307,7 +316,7 @@ function processData(data){
 	}
 	
 	// update num of measures 
-	$('#measures').text( "number of measures: " + pianoRoll.numberOfMeasures );
+	$('#measures').text( "measure count: " + pianoRoll.numberOfMeasures );
 
 	// then assign instruments array the data 
 	pianoRoll.instruments = []; // clear instruments array 

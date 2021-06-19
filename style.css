@@ -42,9 +42,10 @@ table, tr, td{
 #toolbar{
 	/* border: 1px solid #000; */
 	position: relative;
-	width: 90%;
 	margin: 0 auto;
 	text-align: center;
+	background-color: #fff;
+	z-index: 1000;
 }
 
 #toolbar ul{

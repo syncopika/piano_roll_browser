@@ -370,7 +370,7 @@ function addNewMeasure(pianoRollObject){
 	
 	// updating the measure count - notice specific id of element!
 	var measureCounterElement = document.getElementById("measures");
-	measureCounterElement.textContent = "number of measures: " + pianoRollObject.numberOfMeasures;
+	measureCounterElement.textContent = "measure count: " + pianoRollObject.numberOfMeasures;
 }
 
 // deletes the last measure
@@ -417,7 +417,7 @@ function deleteMeasure(pianoRollObject){
 			
 			// update ui with correct num measures
 			var measureCounterElement = document.getElementById("measures");
-			measureCounterElement.textContent = "number of measures: " + pianoRollObject.numberOfMeasures;
+			measureCounterElement.textContent = "measure count: " + pianoRollObject.numberOfMeasures;
 		}
 	}
 }

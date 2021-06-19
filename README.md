@@ -62,7 +62,7 @@ Users can place and move notes freely on the piano roll. In order to do that, my
     
 Additionally, I wanted to keep it light, simple and easily portable so I minimized the number of dependencies (just jQuery!).    
     
-For the terrible svg icons, I used Inkscape :)    
+For the terrible svg icons, I used Inkscape :) I will hopefully improve these at some point.    
     
 For the piano instrument sounds I used the Steinway D from the Equinox Grand Pianos soundfont.    
     

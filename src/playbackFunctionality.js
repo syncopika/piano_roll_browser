@@ -681,9 +681,8 @@ function scheduler(pianoRoll, allInstruments){
 					newAudioBufferNode.connect(gain);
 					pianoRoll.timers.push(newAudioBufferNode); // so we can stop playing whenever
 					
-					// the piano is kinda quiet so raise the volume a bit
-					gain.gain.setTargetAtTime(volume*4, startTime, 0.0045);
-					gain.gain.setTargetAtTime(0.0, (endTime - .0025), 0.0010);
+					gain.gain.setTargetAtTime(volume*4, startTime, 0.0045); // the piano is kinda quiet so raise the volume a bit
+					gain.gain.setTargetAtTime(0.0, (endTime - .0025), 0.0070);
 					
 					newAudioBufferNode.start(startTime);
 					newAudioBufferNode.stop(endTime);
