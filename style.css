@@ -44,6 +44,7 @@ table, tr, td{
 	margin: 0 auto;
 	text-align: center;
 	background-color: #fff;
+	z-index: 101;
 }
 
 #toolbar ul{
