@@ -6,7 +6,6 @@ const noteSizeMap = {
 	"16th": 20,
 	"32nd": 10,
 };
-Object.freeze(noteSizeMap); // prevent any edits to noteSizeMap
 
 
 /******
@@ -22,14 +21,12 @@ const noteFrequencies = {
 	"Ab7": 3322.44,
 	"G#7": 3322.44,
 	"G7": 3135.96,
-	"Gb7": 2959.96,
 	"F#7": 2959.96,
 	"F7": 2793.83,
 	"E7": 2637.02,
 	"Eb7": 2489.02,
 	"D#7": 2489.02,
 	"D7": 2349.32,
-	"Db7": 2217.46,
 	"C#7": 2217.46,
 
 	"C7": 2093.00,
@@ -40,14 +37,12 @@ const noteFrequencies = {
 	"Ab6": 1661.22,
 	"G#6": 1661.22,
 	"G6": 1567.98,
-	"Gb6": 1479.98,
 	"F#6": 1479.98,
 	"F6": 1396.91,
 	"E6": 1318.51,
 	"Eb6": 1244.51,
 	"D#6": 1244.51,
 	"D6": 1174.66,
-	"Db6": 1108.73,
 	"C#6": 1108.73,
 	"C6": 1046.50,
 
@@ -58,14 +53,12 @@ const noteFrequencies = {
 	"Ab5": 830.61,
 	"G#5": 830.61,
 	"G5": 783.99,
-	"Gb5": 739.99,
 	"F#5": 739.99,
 	"F5": 698.46,
 	"E5": 659.25,
 	"Eb5": 622.25,
 	"D#5": 622.25,
 	"D5": 587.33,
-	"Db5": 554.37,
 	"C#5": 554.37,
 	"C5": 523.25,
 
@@ -76,14 +69,12 @@ const noteFrequencies = {
 	"Ab4": 415.30,
 	"G#4": 415.30,
 	"G4": 392.00,
-	"Gb4": 369.99,
 	"F#4": 369.99,
 	"F4": 349.23,
 	"E4": 329.63,
 	"Eb4": 311.13,
 	"D#4": 311.13,
 	"D4": 293.66,
-	"Db4": 277.18,
 	"C#4": 277.18,
 	"C4": 261.63,
 	
@@ -94,14 +85,12 @@ const noteFrequencies = {
 	"Ab3": 207.63,
 	"G#3": 207.63,
 	"G3": 196.00,
-	"Gb3": 185.00,
 	"F#3": 185.00,
 	"F3": 174.61,
 	"E3": 164.81,
 	"Eb3": 155.56,
 	"D#3": 155.56,
 	"D3": 146.83,
-	"Db3": 138.59,
 	"C#3": 138.59,
 	"C3": 130.81,
 	
@@ -112,18 +101,15 @@ const noteFrequencies = {
 	"Ab2": 103.83,
 	"G#2": 103.83,
 	"G2": 98.00,
-	"Gb2": 92.50,
 	"F#2": 92.50,
 	"F2": 87.31,
 	"E2": 82.41,
 	"Eb2": 77.78,
 	"D#2": 77.78,
 	"D2": 73.42,
-	"Db2": 69.30,
 	"C#2": 69.30,
 	"C2": 65.41
 };
-Object.freeze(noteFrequencies); // prevent any edits to noteFrequencies
 
 /******
 	default instrument sound choices
@@ -134,6 +120,7 @@ const defaultInstruments = {
 	3: "sawtooth",
 	4: "triangle",
 	5: "percussion",
+	6: "piano"
 };
 
 
@@ -152,7 +139,6 @@ const defaultNoteStyles = {
 	3: "staccato",
 	4: "glide",
 };
-Object.freeze(defaultNoteStyles);
 
 /****** 
 	
@@ -247,6 +233,8 @@ function PianoRoll(){
 		})(this);
 		
 		this.PercussionManager = new PercussionManager(this);
+		
+		this.PianoManager = new PianoManager(this.audioContext);
 	}
 
 }
@@ -396,7 +384,7 @@ function PercussionManager(pianoRollObject){
 		// add gain to the noise filter 
 		var noiseEnvelope = context.createGain();
 		noiseFilter.connect(noiseEnvelope);
-		//noiseEnvelope.connect(context.destination);
+		
 		if(pianoRollObject.recording){
 			noiseEnvelope.connect(pianoRoll.audioContextDestMediaStream);
 		}
@@ -407,7 +395,6 @@ function PercussionManager(pianoRollObject){
 			
 		if(!returnBool){
 			// this is for clicking a note (not setting up a note for playback)
-			// filter the noise buffer 
 			noise.start(time);
 			noise.stop(time + 0.2);
 		}else{
@@ -415,6 +402,40 @@ function PercussionManager(pianoRollObject){
 		}
 	}
 }
+
+// until I think or learn of a better way to do this, let's try getting realistic piano sounds
+// via loading in .ogg files of each note on the piano roll and using AudioBufferSourceNodes :D
+function PianoManager(audioCtx) {
+	this.audioCtx = audioCtx;
+	
+	this.noteMap = {};
+	for(let note in noteFrequencies){
+		this.noteMap[note.replace('#', 's')] = "";
+	}
+	
+	this.getAudioBufferForNote = function(note){
+		return this.noteMap[note].buffer;
+	};
+	
+	// load in the notes
+	for(let note in this.noteMap){
+		const fileToFetch = "../example_presets/piano/piano-" + note + '.ogg';
+		const newSource = this.audioCtx.createBufferSource();
+		
+		// https://developer.mozilla.org/en-US/docs/Web/API/Body/arrayBuffer
+		const req = new Request(fileToFetch);
+		
+		fetch(req).then((res) => {
+			return res.arrayBuffer();
+		}).then((buffer) => {
+			this.audioCtx.decodeAudioData(buffer, (decodedData) => {
+				newSource.buffer = decodedData; // newSource will be a buffer source node that will be a reference node that we'll use to create the nodes for playing the notes
+				this.noteMap[note] = newSource;
+			});
+		});
+	}
+}
+
 
 try{
 	module.exports = {

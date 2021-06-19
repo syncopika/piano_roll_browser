@@ -188,7 +188,7 @@ function getNodesCustomPreset(customPreset){
 
 
 // handling a custom preset when clicking on a note 
-function onClickCustomPreset(pianoRollObject, waveType, parent){
+function onClickCustomPreset(pianoRollObject, waveType, volume, parent){
 	
 	let audioCtx = pianoRollObject.audioContext;
 	let presetData = pianoRollObject.instrumentPresets[waveType];
@@ -217,14 +217,13 @@ function onClickCustomPreset(pianoRollObject, waveType, parent){
 	});
 	
 	gainNodes.forEach((gainName) => {
-
 		// let's scale our gain nodes' gain values appropriately based on the instrument's current volume value.
 		// divide this gain value from the sum of all the gain values for this preset,
 		// then multiply it by the curr. instrument's volume to get the equivalent proportion of gain values in the context of this instrument's volume.
 		let gainNode = currPreset[gainName];
 
 		//gainNode.gain.value = pianoRollObject.currentInstrument.volume;
-		gainNode.gain.value = ((gainNode.gain.value / gainValueSum) * pianoRollObject.currentInstrument.volume);
+		gainNode.gain.value = ((gainNode.gain.value / gainValueSum) * volume);
 		
 		gainNode.connect(pianoRollObject.audioContextDestOriginal);
 		
@@ -239,36 +238,4 @@ function onClickCustomPreset(pianoRollObject, waveType, parent){
 			}
 		});
 	});
-	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
