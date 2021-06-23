@@ -55,10 +55,12 @@ pianoRoll.currentInstrument = pianoRoll.instruments[0];
 buildGridHeader('columnHeaderRow', pianoRoll);
 buildGrid('piano', pianoRoll);
 
+// load in piano notes
+pianoRoll.PianoManager.loadPianoNotes(document.getElementById('loadingMsg'));
+
 
 // allow components like the toolbar to move with the user when scrolling right after more measures are added 
 $(window).scroll(function(){
-
 	// change position of the piano notes bar on the left to move 
 	// with horizontal scroll 
 	$('#pianoNotes').css('top', $("#C8").position().top);
@@ -211,7 +213,6 @@ http://stackoverflow.com/questions/728360/how-do-i-correctly-clone-a-javascript-
 
 ****/
 function generateJSON(){
-
 	var nameOfFile = prompt("please enter name: ");
 	if(nameOfFile === null){
 		return;
@@ -411,7 +412,6 @@ function getFile(e){
 }
 
 function importInstrumentPreset(pianoRoll){
-	
 	let audioCtx = pianoRoll.audioContext;
 	let input = document.getElementById('importInstrumentPresetInput');
 	
@@ -479,7 +479,7 @@ function validateProject(project){
 }
 
 // load in the example instrument presets
-function loadExamplePresets(){
+function loadExamplePresets(pElement){
 	let presets = [
 		"example_presets/belltone.json",
 		"example_presets/delaySine.json",
@@ -487,16 +487,24 @@ function loadExamplePresets(){
 		"example_presets/dissonant.json"
 	];
 	
+	let count = presets.length;
+	pElement.textContent = "loading custom instrument presets...";
+	
 	presets.forEach((preset) => {
 		fetch(preset)
 			.then(response => response.json())
 			.then(data => {
 				let name = data.name;
 				pianoRoll.instrumentPresets[name] = data.data;
+				
+				count--;
+				if(count === 0){
+					pElement.textContent = "";
+				}
 			});
 	});
 }
-loadExamplePresets();
+loadExamplePresets(document.getElementById('loadingMsg'));
 
 /****
 
@@ -512,7 +520,6 @@ a local server. then access index.html through localhost:8000.
 ****/
 
 function getDemo(selectedDemo){
-
 	// get the selected demo from the dropbox
 	// selectedDemo is the path to the demo to load 
 	if(selectedDemo.options[selectedDemo.selectedIndex].text === ""){

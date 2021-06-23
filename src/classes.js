@@ -232,8 +232,7 @@ function PianoRoll(){
 			}
 		})(this);
 		
-		this.PercussionManager = new PercussionManager(this);
-		
+		this.PercussionManager = new PercussionManager(this);		
 		this.PianoManager = new PianoManager(this.audioContext);
 	}
 
@@ -418,22 +417,33 @@ function PianoManager(audioCtx) {
 	};
 	
 	// load in the notes
-	for(let note in this.noteMap){
-		const fileToFetch = "example_presets/piano/piano-" + note + '.ogg';
-		const newSource = this.audioCtx.createBufferSource();
+	this.loadPianoNotes = function(pElement){
 		
-		// https://developer.mozilla.org/en-US/docs/Web/API/Body/arrayBuffer
-		const req = new Request(fileToFetch);
+		let totalNotes = Object.keys(this.noteMap).length;
+		pElement.textContent = "loading in piano notes...";
 		
-		fetch(req).then((res) => {
-			return res.arrayBuffer();
-		}).then((buffer) => {
-			this.audioCtx.decodeAudioData(buffer, (decodedData) => {
-				newSource.buffer = decodedData; // newSource will be a buffer source node that will be a reference node that we'll use to create the nodes for playing the notes
-				this.noteMap[note] = newSource;
+		for(let note in this.noteMap){
+			const fileToFetch = "example_presets/piano/piano-" + note + '.ogg';
+			const newSource = this.audioCtx.createBufferSource();
+			
+			// https://developer.mozilla.org/en-US/docs/Web/API/Body/arrayBuffer
+			const req = new Request(fileToFetch);
+			
+			fetch(req).then((res) => {
+				return res.arrayBuffer();
+			}).then((buffer) => {
+				this.audioCtx.decodeAudioData(buffer, (decodedData) => {
+					newSource.buffer = decodedData; // newSource will be a buffer source node that will be a reference node that we'll use to create the nodes for playing the notes
+					this.noteMap[note] = newSource;
+					
+					totalNotes--;
+					if(totalNotes === 0){
+						pElement.textContent = "";
+					}
+				});
 			});
-		});
-	}
+		}
+	};
 }
 
 
