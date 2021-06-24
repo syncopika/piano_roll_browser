@@ -38,7 +38,7 @@ function clickNote(id, waveType, volume, pianoRollObject){
 			
 			if(pianoRoll.instrumentPresets[waveType]){
 				// custom intrument preset!
-				onClickCustomPreset(pianoRollObject, waveType, parent);
+				onClickCustomPreset(pianoRollObject, waveType, volume, parent);
 			}else{	
 				// create a new oscillator just for this note
 				var osc = pianoRollObject.audioContext.createOscillator();
