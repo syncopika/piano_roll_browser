@@ -1,7 +1,7 @@
 # piano_roll_browser    
 a music sequencer inspired by LMMS, one of the best software applications ever!    
 also influenced a bit by PxTone Collage, another great application!      
-**it is highly recommended that Chrome be used for this application for optimal functionality at the moment.**    
+**it is highly recommended that Chrome be used for this application for optimal functionality (except for recording) at the moment.**    
     
 ![screenshot of the piano roll](screenshots/current.png "current look")    
     
@@ -32,6 +32,9 @@ also influenced a bit by PxTone Collage, another great application!
     
 **Changing note lock size:**    
 ![changing note lock size](screenshots/note_lock.gif "changing note lock size")    
+    
+**toggling sticky toolbar:**    
+![toggle sticky toolbar](screenshots/sticky_toolbar.gif "toggling the toolbar to be sticky")    
 	
 **check out a demo! see the demo dropdown box.**    
     

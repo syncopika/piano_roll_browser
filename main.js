@@ -163,8 +163,9 @@ function bindButtons(pianoRollObject){
 		name.textContent = userInput;
 	});
 	
-	document.getElementById('toggleStickyToolbar').addEventListener('click', function(){
+	document.getElementById('toggleStickyToolbar').addEventListener('click', function(evt){
 		toggleStickyToolbar = !toggleStickyToolbar;
+		evt.target.parentNode.style.backgroundColor = toggleStickyToolbar ? "#d0d0d0" : "";
 	});
 	
 	/*
