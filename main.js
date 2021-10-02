@@ -508,10 +508,6 @@ function loadExamplePresets(pElement){
 loadExamplePresets(document.getElementById('loadingMsg'));
 
 /****
-
-separate file reader function 
-for my local JSON file demos 
-
 if testing locally, remember that Chrome
 doesn't allow cross-origin resource sharing
 
@@ -519,7 +515,6 @@ use python -m http.server to launch
 a local server. then access index.html through localhost:8000. 
 
 ****/
-
 function getDemo(selectedDemo){
 	// get the selected demo from the dropbox
 	// selectedDemo is the path to the demo to load 
@@ -552,3 +547,82 @@ function getDemo(selectedDemo){
 	httpRequest.send();
 }
 
+
+
+
+/////////////////////// database-specific (mongodb) stuff
+/****
+	save current project to database!
+****/
+function saveProjectToDB(){
+	var jsonData;
+	
+	pianoRoll.currentInstrument.notes = readInNotes(pianoRoll);
+	
+	var data = {};
+	
+	// add metadata first 
+	data["measures"] = parseInt( document.getElementById('measures').textContent.match(/[0-9]{1,}/g)[0] );
+	data["tempo"] = parseInt( document.getElementById("tempo").textContent );
+	
+	// put in composer info, name of piece 
+	data["composer"] = document.getElementById("composer").textContent;
+	data["title"] = document.getElementById("pieceTitle").textContent;
+	
+	// now collect instruments
+	// each instrument's data will be in an array mapped to the "instruments" key 
+	data["instruments"] = [];
+	for(var i = 0; i < pianoRoll.instruments.length; i++){
+		data["instruments"].push(  pianoRoll.instruments[i]  );
+	}
+	jsonData = JSON.stringify(data);
+	
+	$.ajax({
+		type: 'POST',
+		url: '/save_score',
+		dataType: "JSON",
+		data: {
+			score: jsonData // the query attribute is "score"!
+		},
+		success: function(response){				
+			// TODO: add to the 'choose score' dropdown and make it the currently selected score?
+			console.log("posted score to database");
+		}
+	});
+}
+
+
+/****
+	select a score of this user in the db
+****/
+function selectProject(selectedPrj){
+	// get the selected demo from the dropbox
+	// selectedDemo is the path to the demo to load 
+	if(selectedPrj.options[selectedPrj.selectedIndex].text === ""){
+		return;
+	}
+	
+	// need to make a request for the score!
+	var data;
+	var selectedScore = selectedPrj.options[selectedPrj.selectedIndex].text;
+	$.ajax({
+		type: 'GET',
+		url: '/get_score/?name=' + selectedScore,
+		success: function(response){				
+			console.log("got score");
+			
+			var userScores = response[0].local.scores;
+			for(var i = 0; i < userScores.length; i++){
+				if(userScores[i].title.trim() === selectedScore){
+					data = userScores[i];
+				}
+			}
+			
+			// request was successful. process json data now.
+			pianoRoll.playMarker = null;
+			stopPlay(pianoRoll);
+			clearGridAll(pianoRoll);
+			processData(data);
+		}
+	});
+}

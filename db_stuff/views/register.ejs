@@ -1,0 +1,74 @@
+<!doctype html>
+
+<html>
+
+<head>
+	<title> register - Piano Roll Online </title>
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.1.js"></script>
+</head>
+
+<style>
+	body{
+		font-family: Arial;
+	}
+	#registerForm{
+		display: block;
+		margin: 10% auto;
+		padding: 20px;
+		border: 1px solid #000;
+		border-radius: 10px;
+		width: 30%;
+		text-align: center;
+	}
+	h1{
+		text-align: center;
+	}
+</style>
+
+
+<body>
+
+	<div id='registerForm'>
+	
+		<h1> Welcome to Piano Roll Online </h1>
+		
+		<h2> please register here: </h2>
+		
+		<!-- show message that comes back with authentication, if any -->
+		<% if(message.length > 0) { %>
+			<div class='alert'> <%= message %></div>
+		<% } %>
+		
+		<!-- register form -->
+		<form action='/register' method='post'>
+			<div>
+				<label id='user'> user name: <input name='username' type='text'></label>
+			</div>
+			
+			<br>
+			
+			<div>
+				<label id='pass'> password: <input name='password' type='password'></label>
+			</div>
+			
+			<br>
+			
+			<button id='submit'> enter </button>
+		</form>
+	
+		<!--
+		
+		<br>
+		<br>
+		<hr />
+		
+			<h1> make a captcha here - i am not a robot </h1>
+		-->
+		
+		<br>
+	
+	</div>
+
+</body>
+
+</html>

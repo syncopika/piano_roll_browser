@@ -1,0 +1,256 @@
+<!-- profile page for piano roll app -->
+
+<!doctype html>
+
+
+<html>
+
+<head>
+	<title> <%= user.local.username %>'s profile - Piano Roll Online </title>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+</head>
+
+<style>
+	body{
+		font-family: Arial;
+	}
+	
+	#avatar{
+		text-align: center;
+	}
+	
+	#userFacts{
+		float:left;
+		height: 100%;
+		width: 15%;
+	}
+	
+	#scores{
+		float:left;
+		text-align:center;
+		/* border-left: 1px solid #000; */
+		width: 70%;
+		height: 100%;
+	}
+	
+	#header{
+		text-decoration: underline;
+	}
+	#avatar{
+		display: block;
+		height: 150px;
+		width: 150px;
+		border: 1px solid #000;
+	}
+	
+	#container{
+		margin-left: 2%;
+	}
+	
+	#toggleEdit{
+		cursor: pointer;
+	}
+	
+	#toggleEdit:hover, #logout:hover{
+		color: #5d6066;
+	}
+	
+	.scoreList > *{
+		display: inline-block;
+	}
+	
+	.delete:hover{
+		color: #f00;
+		cursor: pointer;
+	}
+	
+	a{
+		text-decoration: none;
+		color: #000;
+	}
+	
+	a:hover{
+		color: #5d6066;
+	}
+</style>
+
+
+<body>
+
+<div id='container'>
+
+	<!-- basic info about user -->
+	<div id='userFacts'>
+		<h2> welcome back <%= user.local.username %> </h2>
+		
+		<div id='avatar'>
+			<p> avatar feature in progress...</p>
+		</div>
+		
+		<div id='locationField'>
+			<h3 id='locationText'> location: <%=  user.local.location %> </h3>
+		</div>
+		
+		<h3> joined: <%= user.local.joinDate %> </h3>
+		
+		<br>
+		
+		<div id='about'>
+			<h3> about </h3>
+				<div id='aboutField'>
+					<p id='aboutText'> <%=  user.local.about %> <p>
+				</div>
+			<hr />
+		</div>
+		
+		<br>
+		
+		<h4> <a href="/pianoRoll"> go to piano roll </a> </h4>
+		<!-- <h4> <a href=""> check out public scores </a> </h4> -->
+		<h4 id="toggleEdit" onclick="editProfile()"> edit profile </h4>
+		<h4 id="logout"><a href="/logout"> logout </a></h4>
+		
+	</div>
+	
+	<!-- the user's scores -->
+	<div id='scores'>
+		<h3 id='header'> your scores </h3>
+		<!-- some container with columns and rows to display scores for user -->
+		<div id=''>
+			<% for(var i = 0; i < user.local.scores.length; i++){ %>
+				<div class="scoreList" id=<%=  user.local.scores[i].title %>>
+					<h3> <%=  user.local.scores[i].title %> </h3>
+					<p> | </p>
+					<p class="delete" onclick="deleteScore(this.parentNode.id)"> delete </p>
+				</div>
+			<% } %>
+		</div>
+	</div>
+	
+
+		
+</div>
+
+<script>
+	function saveInfo(){
+		//console.log("saving edits.");
+		
+		// collect the info from the textareas  
+		var locInfo = document.getElementById('editLocation').value.trim();
+		var aboutInfo = document.getElementById('editAbout').value.trim();
+		
+		//console.log(locInfo);
+		//console.log(aboutInfo);
+		
+		/* save the info in the textareas to the database, update the display, and remove textareas */
+		// is there going to be a problem if the ampersand appears in the textarea????? :/
+		$.ajax({
+			type: 'POST',
+			url: '/profile/?' + 'location=' + locInfo + '&' + 'about=' + aboutInfo,
+			success: function(response){				
+				console.log("saved info.");
+				
+				// display the changes on the client side immediately!
+				var updatedLocInfo = document.getElementById('locationText');
+				updatedLocInfo.textContent = "location: " + locInfo;
+				
+				var updatedAbout = document.getElementById('aboutText');
+				updatedAbout.textContent = aboutInfo;
+			}
+		});
+		
+		// use cancelEdit to remove the editing stuff 
+		cancelEdit();
+		
+	}
+	
+	function cancelEdit(){
+		//console.log("cancelling edit.");
+		
+		/* simply remove the text areas */
+		var locationTextbox = document.getElementById("editLocation");
+		locationTextbox.parentNode.removeChild(locationTextbox);
+		
+		var aboutTextbox = document.getElementById("editAbout");
+		aboutTextbox.parentNode.removeChild(aboutTextbox);
+		
+		// remove the buttons also!
+		var sbutton = document.getElementById("saveButton");
+		var cbutton = document.getElementById("cancelButton");
+		sbutton.parentNode.removeChild(sbutton);
+		cbutton.parentNode.removeChild(cbutton);
+	}
+	function editProfile(){
+	
+		// check if already editing. 
+		// there are many choices to check if editing is on currently, but I will choose the presence of the save button.
+		if(document.getElementById('saveButton') !== null){
+			return;
+		}
+	
+		// edit sections (location, about)
+		// show textareas corresponding to the fields
+		// what about if user clicks edit, but then tries to navigate away from page? need some check for that?
+		
+		var loc = document.getElementById('locationField');
+		var about = document.getElementById('aboutField');
+		
+		var locationTextarea = document.createElement("textarea");
+		locationTextarea.id = "editLocation";
+		
+		var currLocation = document.getElementById('locationText').textContent;
+		locationTextarea.value = currLocation.substring(currLocation.indexOf(":") + 1).trim();
+		loc.appendChild(locationTextarea);
+		
+		var aboutTextarea = document.createElement("textarea");
+		var currAbout = document.getElementById('aboutText').textContent.trim();
+		aboutTextarea.id = "editAbout";
+		aboutTextarea.value = currAbout;
+		about.appendChild(aboutTextarea);
+		
+		// add a 'save changes' button and 'cancel' button 
+		var saveButton = document.createElement("button");
+		saveButton.innerHTML = "save changes";
+		saveButton.id = "saveButton";
+		
+		var cancelButton = document.createElement("button");
+		cancelButton.innerHTML = "cancel";
+		
+		var buttonLocation = document.getElementById('userFacts');
+		
+		// attach each button with their corresponding function 
+		saveButton.addEventListener("click", saveInfo);
+		cancelButton.addEventListener("click", cancelEdit);
+		cancelButton.id = "cancelButton";
+		
+		buttonLocation.appendChild(saveButton);
+		buttonLocation.appendChild(cancelButton);
+		
+	}
+	
+	// delete a score 
+	function deleteScore(scoreName){
+		
+		$.ajax({
+		type: 'DELETE',
+		url: '/delete_score?name=' + scoreName,
+		success: function(response){				
+			if(response === "success"){
+				
+				console.log("removed score: " + scoreName);
+				
+				// remove from DOM 
+				var element = document.getElementById(scoreName);
+				element.parentNode.removeChild(element);
+			}
+		}
+	});
+	
+	
+	}
+</script>
+	
+	
+</body>
+
+</html>
