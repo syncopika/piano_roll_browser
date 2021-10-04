@@ -7,6 +7,7 @@ setting up the mongodb db
     - show collections
     - use <database-name>
     - db.<collection-name>.find() to show all documents in a collection
+    - "C:\Program Files\MongoDB\Server\5.0\bin\mongod.exe" --dbpath="c:\data\db" to start up the DB
 
 - Since MongoDB creates a new database only when we add new documents/records, we don't have to do anything beforehand
   (see https://docs.mongodb.com/manual/core/databases-and-collections/)

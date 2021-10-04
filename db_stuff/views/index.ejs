@@ -2,7 +2,7 @@
 
 <head>
 	<meta charset='utf-8'>
-	<title> <%= user.local.username %>'s Piano Roll - Piano Roll Online </title>
+	<title> "<%= user.local.username %>'s" Piano Roll - Piano Roll Online </title>
 	<script src="3rd-party-libs/jquery.min.js"></script>
 	<script src='src/classes.js'></script>
 	<script src='src/contextMenus.js'></script>
@@ -28,7 +28,7 @@
 
 <div id='toolbar'>
 
-	<h2 id='title'> piano roll fun! &#127929;</h2>
+	<h2 id='title'> piano roll fun &#127929;</h2>
 
 	<ul id='metadata'>
 		<li id='titleLabel'><h2> title:  </h2></li>
@@ -79,7 +79,7 @@
 		<li>|</li>
 		<li><h2><a href='https://github.com/syncopika/piano_roll_browser'>help!</a></h2></li>
 		<li>|</li>
-		<li><h2 id='namespace'> back to <a href='/profile'> profile </a> </h2></li>		
+		<li><h2 id='namespace'> <a href='/profile'> profile </a> </h2></li>		
 		<li>|</li>
 		<li><h2><a href="/logout">logout</a></h2></li>
 	</ul>
@@ -161,7 +161,11 @@
 			</button>
 		</li>
 		
-		<li><button class='btn' title='save project' onclick='saveProjectToDB()'> save project </button></li>
+		<li>
+			<button class='btn' title='save project to db' onclick='saveProjectToDB()'>
+				<img src='./icons/saveProjectToDB.svg'>
+			</button>
+		</li>
 	</ul>
 	
 	<div id='demo'>

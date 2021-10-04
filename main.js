@@ -213,16 +213,7 @@ one key-value pair indicating how many measures there are.
 http://stackoverflow.com/questions/728360/how-do-i-correctly-clone-a-javascript-object
 
 ****/
-function generateJSON(){
-	var nameOfFile = prompt("please enter name: ");
-	if(nameOfFile === null){
-		return;
-	}
-
-	var jsonData;
-
-	pianoRoll.currentInstrument.notes = readInNotes(pianoRoll.currentInstrument, pianoRoll);
-	
+function getJSONData(pianoRoll){
 	var data = {};
 	
 	// add metadata first 
@@ -267,6 +258,22 @@ function generateJSON(){
 		}
 		data["instruments"].push(instrumentData);
 	}
+	
+	return data;
+}
+
+// TODO: rename this function to maybe downloadProject?
+function generateJSON(){
+	var nameOfFile = prompt("please enter name: ");
+	if(nameOfFile === null){
+		return;
+	}
+
+	var jsonData;
+
+	pianoRoll.currentInstrument.notes = readInNotes(pianoRoll.currentInstrument, pianoRoll);
+	
+	var data = getJSONData(pianoRoll);
 
 	jsonData = JSON.stringify(data, null, 4);
 	
@@ -557,25 +564,9 @@ function getDemo(selectedDemo){
 function saveProjectToDB(){
 	var jsonData;
 	
-	pianoRoll.currentInstrument.notes = readInNotes(pianoRoll);
+	pianoRoll.currentInstrument.notes = readInNotes(pianoRoll.currentInstrument, pianoRoll);
 	
-	var data = {};
-	
-	// add metadata first 
-	data["measures"] = parseInt( document.getElementById('measures').textContent.match(/[0-9]{1,}/g)[0] );
-	data["tempo"] = parseInt( document.getElementById("tempo").textContent );
-	
-	// put in composer info, name of piece 
-	data["composer"] = document.getElementById("composer").textContent;
-	data["title"] = document.getElementById("pieceTitle").textContent;
-	
-	// now collect instruments
-	// each instrument's data will be in an array mapped to the "instruments" key 
-	data["instruments"] = [];
-	for(var i = 0; i < pianoRoll.instruments.length; i++){
-		data["instruments"].push(  pianoRoll.instruments[i]  );
-	}
-	jsonData = JSON.stringify(data);
+	var jsonData = JSON.stringify(getJSONData(pianoRoll), null, 4);
 	
 	$.ajax({
 		type: 'POST',

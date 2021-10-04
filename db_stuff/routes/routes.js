@@ -41,9 +41,13 @@ module.exports = function(app, passport){
 	
 	// direct to piano roll, with pianoRoll in the url
 	app.get('/pianoRoll', function(req, res){
-		res.render('index.ejs', {
-			user: req.user 	// get user name from session and pass to template
-		});
+		if(req.user){
+			res.render('index.ejs', {
+				user: req.user 	// get user name from session and pass to template
+			});
+		}else{
+			res.render('forbidden.ejs');
+		}
 	});
 	
 	app.get('/profile', function(req, res){
@@ -98,25 +102,24 @@ module.exports = function(app, passport){
 		// get the score (the body attribute is holding the json data)
 		// careful - the req.body is actually an object where the data is mapped to "score", the name you gave 
 		// for the query attribute when making the post request 
-		var score = req.body;
-		var scorejson = JSON.parse(score.score);
+		var body = req.body;
+		var scorejson = JSON.parse(body.score);
 		
 		// if score exists, update the note data (via the instruments field). otherwise, add it.
-		User.update(
+		User.updateOne(
 			{'local.username': user, 'local.scores.title': scorejson.title}, // conditions to find 
 			{$set: {'local.scores.$.instruments': scorejson.instruments}},	// what to do when found 
-			{new: true},
+			{},
 			function(err, result){
 				if(err){
 					throw err;
 				}
-				if(result.nModified === 0){
+				if(result.modifiedCount === 0){
 					// nothing was modified, so score is new. push it to the scores array
 					//console.log("need to add new score!");
-					
-					User.update({'local.username': user},
+					User.updateOne({'local.username': user},
 						{$push: {"local.scores": [scorejson]}}, 
-						{new: true},
+						{upsert: true},
 						function(err, result){
 							if(err){
 								throw err;
@@ -126,6 +129,7 @@ module.exports = function(app, passport){
 					);
 					
 				}else{
+					//console.log(result);
 					res.send(result);
 				}
 			}	
