@@ -65,24 +65,25 @@ module.exports = function(app, passport){
 		// update the database 
 		var user = req.user.local.username;
 	
-		User.findOneAndUpdate({'local.username': user},
-							{
-							 $set: {
-								 'local.location': locationInfo, 
-								 'local.about': aboutInfo
-							  },
-							},
-							{
-								new: true, 
-								upsert: true
-							},
-							function(err, user){
-								if(err){
-									throw err;
-								}
-								res.send(user);
-							}
-		);	
+		User.findOneAndUpdate(
+			{'local.username': user},
+			{
+			 $set: {
+				 'local.location': locationInfo, 
+				 'local.about': aboutInfo
+			  },
+			},
+			{
+				new: true, 
+				upsert: true
+			},
+			function(err, user){
+				if(err){
+					throw err;
+				}
+				res.send(user);
+			}
+		);
 	});
 	
 	// if user wants to save current score to db 
@@ -94,8 +95,8 @@ module.exports = function(app, passport){
 		}
 		return false;
 	}
+	
 	app.post('/save_score', function(req, res){
-		
 		// get the user 
 		var user = req.user.local.username;
 		
@@ -160,15 +161,14 @@ module.exports = function(app, passport){
 	
 	// delete a score (this option is selected from the user's profile page)
 	app.delete('/delete_score', function(req, res){
-		
 		var user = req.user.local.username;
 		var scoreToDelete = req.query.name;
 		
 		// delete the score 
-		User.update(
+		User.updateOne(
 			{'local.username': user, 'local.scores.title': scoreToDelete},
-			{$pull: {'local.scores': {'title': scoreToDelete} } }, 
-			false,
+			{$pull: {'local.scores': {'title': scoreToDelete}} }, 
+			{},
 			function(err, user){
 				if(err){
 					throw err;
