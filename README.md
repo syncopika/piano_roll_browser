@@ -76,6 +76,8 @@ You don't need to install anything to use the piano roll itself (limited to just
     
 To run the tests, make sure the dependencies have been downloaded via `npm install`. Then run `npm run test`.    
     
+I also have some code to accommodate a MongoDB backend with a basic login feature in case you might want to create an application that needs a login/auth feature and a MongoDB backend ;). To get that set up locally, check out the `db_stuff` folder. You'll also need to make sure to install the devDependencies in `package.json`.    
+    
 ### demos:    
 Intrada - Johann Pezel (1639 - 1694). One of my favorite brass quintet pieces!    
     

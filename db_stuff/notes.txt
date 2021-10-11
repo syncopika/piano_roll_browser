@@ -1,0 +1,19 @@
+setting up the mongodb db
+
+- I'm using windows so after installing MongoDB community, follow "Run MongoDB Community Edition from the Command Interpreter"
+  from https://docs.mongodb.com/manual/tutorial/install-mongodb-on-windows/
+  - some helpful commands:
+    - show dbs
+    - show collections
+    - use <database-name>
+    - db.<collection-name>.find() to show all documents in a collection
+    - "C:\Program Files\MongoDB\Server\5.0\bin\mongod.exe" --dbpath="c:\data\db" to start up the DB
+
+- Since MongoDB creates a new database only when we add new documents/records, we don't have to do anything beforehand
+  (see https://docs.mongodb.com/manual/core/databases-and-collections/)
+  We can run the piano roll app now! :D
+
+
+// misc
+you'll need >= node v14 to be able to run the server (b/c of mongoose)
+https://stackoverflow.com/questions/55692084/what-is-the-difference-between-nodes-bodyparser-and-expresss-urlencoded-middle

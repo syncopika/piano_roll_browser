@@ -213,16 +213,7 @@ one key-value pair indicating how many measures there are.
 http://stackoverflow.com/questions/728360/how-do-i-correctly-clone-a-javascript-object
 
 ****/
-function generateJSON(){
-	var nameOfFile = prompt("please enter name: ");
-	if(nameOfFile === null){
-		return;
-	}
-
-	var jsonData;
-
-	pianoRoll.currentInstrument.notes = readInNotes(pianoRoll.currentInstrument, pianoRoll);
-	
+function getJSONData(pianoRoll){
 	var data = {};
 	
 	// add metadata first 
@@ -267,6 +258,22 @@ function generateJSON(){
 		}
 		data["instruments"].push(instrumentData);
 	}
+	
+	return data;
+}
+
+// TODO: rename this function to maybe downloadProject?
+function generateJSON(){
+	var nameOfFile = prompt("please enter name: ");
+	if(nameOfFile === null){
+		return;
+	}
+
+	var jsonData;
+
+	pianoRoll.currentInstrument.notes = readInNotes(pianoRoll.currentInstrument, pianoRoll);
+	
+	var data = getJSONData(pianoRoll);
 
 	jsonData = JSON.stringify(data, null, 4);
 	
@@ -508,10 +515,6 @@ function loadExamplePresets(pElement){
 loadExamplePresets(document.getElementById('loadingMsg'));
 
 /****
-
-separate file reader function 
-for my local JSON file demos 
-
 if testing locally, remember that Chrome
 doesn't allow cross-origin resource sharing
 
@@ -519,7 +522,6 @@ use python -m http.server to launch
 a local server. then access index.html through localhost:8000. 
 
 ****/
-
 function getDemo(selectedDemo){
 	// get the selected demo from the dropbox
 	// selectedDemo is the path to the demo to load 
@@ -552,3 +554,66 @@ function getDemo(selectedDemo){
 	httpRequest.send();
 }
 
+
+
+
+/////////////////////// database-specific (mongodb) stuff
+/****
+	save current project to database!
+****/
+function saveProjectToDB(){
+	var jsonData;
+	
+	pianoRoll.currentInstrument.notes = readInNotes(pianoRoll.currentInstrument, pianoRoll);
+	
+	var jsonData = JSON.stringify(getJSONData(pianoRoll), null, 4);
+	
+	$.ajax({
+		type: 'POST',
+		url: '/save_score',
+		dataType: "JSON",
+		data: {
+			score: jsonData // the query attribute is "score"!
+		},
+		success: function(response){				
+			// TODO: add to the 'choose score' dropdown and make it the currently selected score?
+			console.log("posted score to database");
+		}
+	});
+}
+
+
+/****
+	select a score of this user in the db
+****/
+function selectProject(selectedPrj){
+	// get the selected demo from the dropbox
+	// selectedDemo is the path to the demo to load 
+	if(selectedPrj.options[selectedPrj.selectedIndex].text === ""){
+		return;
+	}
+	
+	// need to make a request for the score!
+	var data;
+	var selectedScore = selectedPrj.options[selectedPrj.selectedIndex].text;
+	$.ajax({
+		type: 'GET',
+		url: '/get_score/?name=' + selectedScore,
+		success: function(response){				
+			console.log("got score");
+			
+			var userScores = response[0].local.scores;
+			for(var i = 0; i < userScores.length; i++){
+				if(userScores[i].title.trim() === selectedScore){
+					data = userScores[i];
+				}
+			}
+			
+			// request was successful. process json data now.
+			pianoRoll.playMarker = null;
+			stopPlay(pianoRoll);
+			clearGridAll(pianoRoll);
+			processData(data);
+		}
+	});
+}

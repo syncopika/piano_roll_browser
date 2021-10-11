@@ -24,7 +24,18 @@
     "mocha": "^6.2.0"
   },
   "devDependencies": {
-    "nyc": "^14.1.1",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "connect-flash": "^0.1.1",
+    "connect-mongo": "^4.6.0",
+    "cookie-parser": "^1.4.5",
+	"ejs": "^3.1.6",
+    "express-session": "^1.17.2",
+	"nyc": "^14.1.1",
+	"mongodb": "^4.1.2",
+    "mongoose": "^6.0.8",
+    "passport": "^0.5.0",
+    "passport-local": "^1.0.0",
     "pre-commit": "^1.2.2"
   }
 }
