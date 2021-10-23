@@ -198,7 +198,7 @@ function getNotePosition(noteElement){
 //                                and at each index is a number representing the index of the instrument's note to start playing at
 // @return: a map where key: instrument index, value: total number of nodes needed for that instrument
 function getNumGainNodesPerInstrument(instruments, instrumentNotePointers){
-	// figure out for each instrument the minumum number of gain nodes (which is also the num of oscillator nodes) we need 
+	// figure out for each instrument the minimum number of gain nodes (which is also the num of oscillator nodes) we need 
 	// in order to minimize the number of nodes we need to create since that adds performance overhead
 	var numGainNodePerInst = {};
 	
@@ -208,8 +208,8 @@ function getNumGainNodesPerInstrument(instruments, instrumentNotePointers){
 		var start = instrumentNotePointers[instIndex];
 
 		for(var index = start; index < instrument.notes.length; index++){
-			var group = instrument.notes[index];			
-
+			var group = instrument.notes[index];
+			
 			if(index > start){
 				// find the longest note in the prev group
 				if(!prevNote){
@@ -253,7 +253,6 @@ function getNumGainNodesPerInstrument(instruments, instrumentNotePointers){
 			if(!numGainNodePerInst[instIndex]){
 				numGainNodePerInst[instIndex] = group.length;
 			}else{
-				// ??? do we really need this?
 				numGainNodePerInst[instIndex] = Math.max(
 					numGainNodePerInst[instIndex],
 					group.length
@@ -923,6 +922,8 @@ try {
 		playAll: playAll,
 		stopPlay: stopPlay,
 		getCorrectLength: getCorrectLength,
+		getNumGainNodesPerInstrument: getNumGainNodesPerInstrument,
+		getNotePosition: getNotePosition,
 		createNewInstrument: createNewInstrument,
 	}
 }catch(e){

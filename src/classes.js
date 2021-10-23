@@ -223,7 +223,7 @@ function PianoRoll(){
 function Instrument(name, gain, notesArray){
 	this.name = name;
 	this.gain = gain; 				// assign a gain node object
-	this.notes = notesArray;		// array of Note objects
+	this.notes = notesArray;		// array of arrays of Note objects (notes that occur at the same time get grouped in the same array)
 	this.activeNotes = {};			// 
 	this.waveType = "sine"; 		// sine wave by default 
 	this.volume = 0.2;
