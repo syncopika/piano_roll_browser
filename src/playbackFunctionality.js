@@ -189,7 +189,81 @@ function getNotePosition(noteElement){
 	return noteElement.getBoundingClientRect().left + window.pageXOffset;
 }
 
-// scheduler helper functions
+/*** 
+	scheduler helper functions
+***/
+
+// @param instruments: an array of instruments
+// @param instrumentNotePointers: an array where each index corresponds to an instrument 
+//                                and at each index is a number representing the index of the instrument's note to start playing at
+// @return: a map where key: instrument index, value: total number of nodes needed for that instrument
+function getNumGainNodesPerInstrument(instruments, instrumentNotePointers){
+	// figure out for each instrument the minumum number of gain nodes (which is also the num of oscillator nodes) we need 
+	// in order to minimize the number of nodes we need to create since that adds performance overhead
+	var numGainNodePerInst = {};
+	
+	instruments.forEach((instrument, instIndex) => {
+		var prevNote = null;
+		var currNote = null;
+		var start = instrumentNotePointers[instIndex];
+
+		for(var index = start; index < instrument.notes.length; index++){
+			var group = instrument.notes[index];			
+
+			if(index > start){
+				// find the longest note in the prev group
+				if(!prevNote){
+					prevNote = document.getElementById(instrument.notes[index-1][0].block.id);
+					instrument.notes[index-1].forEach((note) => {
+						var n = document.getElementById(note.block.id);
+						if(parseInt(n.style.width) > parseInt(prevNote.style.width)){
+							prevNote = n;
+						}
+					});
+				}
+				
+				// get the longest note in curr group 
+				var longestCurrNote = document.getElementById(group[0].block.id);
+				group.forEach((note) => {
+					var htmlNote = document.getElementById(note.block.id);
+					if(parseInt(htmlNote.style.width) > parseInt(longestCurrNote.style.width)){
+						longestCurrNote = htmlNote;
+					}
+				});
+
+				currNote = longestCurrNote;
+				
+				var prevNotePos = getNotePosition(prevNote);
+				var prevNoteLen = parseInt(prevNote.style.width);
+				var currNotePos = getNotePosition(currNote);
+				
+				if(currNotePos < (prevNotePos + prevNoteLen)){
+					// if the curr note starts before the curr note ends,
+					// we know that we need an additional gain node to be able 
+					// to play both notes simultaneously
+					if(!numGainNodePerInst[instIndex]){
+						numGainNodePerInst[instIndex] = 2;
+					}else{
+						numGainNodePerInst[instIndex]++;
+					}
+				}
+				prevNote = currNote;
+			}
+			
+			if(!numGainNodePerInst[instIndex]){
+				numGainNodePerInst[instIndex] = group.length;
+			}else{
+				// ??? do we really need this?
+				numGainNodePerInst[instIndex] = Math.max(
+					numGainNodePerInst[instIndex],
+					group.length
+				);
+			}
+		}
+	});
+	
+	return numGainNodePerInst;
+}
 
 // @param routes: an object where each key is an instrument index mapped to a map of gain nodes mapped to the notes those gain nodes are responsible for playing. 
 // @param pianoRollObject: instance of PianoRoll
@@ -365,20 +439,19 @@ function scheduler(pianoRoll, allInstruments){
 	// keep a counter that counts the number of instruments that have finished playing all their notes  
 	var stillNotesToPlay = 0;
 	
-	// get the index of the current instrument in case allInstruments is false (just playing one instrument in this case) 
-	var currentInstrumentIndex; 
-	for(var j = 0; j < pianoRoll.instruments.length; j++){
-		if(pianoRoll.instruments[j] === pianoRoll.currentInstrument){
-			currentInstrumentIndex = j;
-		}
-	}
-	
-	// i.e. when an instrument is done, I can set the index of that instrument in the array to null as a flag
-	// also, for each instrument set their index in instrumentNotePointers to 0, which means that playing should 
+	// for each instrument initialize their index in instrumentNotePointers to 0, which means that playing should 
 	// start at the beginning (0 being the index of the first note of that instrument)
 	var instruments;
 	if(!allInstruments){
 		// if only playing the current instrument 
+		// get the index of the current instrument in case allInstruments is false (just playing one instrument in this case) 
+		var currentInstrumentIndex; 
+		for(var j = 0; j < pianoRoll.instruments.length; j++){
+			if(pianoRoll.instruments[j] === pianoRoll.currentInstrument){
+				currentInstrumentIndex = j;
+			}
+		}
+		
 		instruments = [pianoRoll.instruments[currentInstrumentIndex]];
 		instrumentNotePointers.push(0);
 		nextTime.push(0);
@@ -406,7 +479,7 @@ function scheduler(pianoRoll, allInstruments){
 	
 	var highlightNextTime = ctx.currentTime; // keep track of when to start and stop oscillators responsible for highlighting the current approx. playback location
 	
-	// in the case where the user specified a measure to start playing at
+	// in the case where the user specified a measure to start playing at, we need to update instrumentNotePointers
 	if(startMarker){
 		startPos = getNotePosition(document.getElementById(startMarker));
 	
@@ -453,68 +526,8 @@ function scheduler(pianoRoll, allInstruments){
 		pianoRoll.timers.push(highlightOsc);
 	});
 	
-	// figure out for each instrument the minumum number of gain nodes and oscillator nodes we need 
-	// in order to minimize the number of nodes we need to create since that adds performance overhead
-	var numGainNodePerInst = {}; // key: instrument index, value: total number of nodes needed for that instrument
-	instruments.forEach((instrument, instIndex) => {
-		var prevNote = null;
-		var currNote = null;
-		var start = instrumentNotePointers[instIndex];
-
-		for(var index = start; index < instrument.notes.length; index++){
-			var group = instrument.notes[index];			
-
-			if(index > start){
-				// find the longest note in the prev group
-				if(!prevNote){
-					prevNote = document.getElementById(instrument.notes[index-1][0].block.id);
-					instrument.notes[index-1].forEach((note) => {
-						var n = document.getElementById(note.block.id);
-						if(parseInt(n.style.width) > parseInt(prevNote.style.width)){
-							prevNote = n;
-						}
-					});
-				}
-				
-				// get the longest note in curr group 
-				var longestCurrNote = document.getElementById(group[0].block.id);
-				group.forEach((note) => {
-					var htmlNote = document.getElementById(note.block.id);
-					if(parseInt(htmlNote.style.width) > parseInt(longestCurrNote.style.width)){
-						longestCurrNote = htmlNote;
-					}
-				});
-
-				currNote = longestCurrNote;
-				
-				var prevNotePos = getNotePosition(prevNote);
-				var prevNoteLen = parseInt(prevNote.style.width);
-				var currNotePos = getNotePosition(currNote);
-				
-				if(currNotePos < (prevNotePos + prevNoteLen)){
-					// if the curr note starts before the curr note ends,
-					// we know that we need an additional gain node to be able 
-					// to play both notes simultaneously
-					if(!numGainNodePerInst[instIndex]){
-						numGainNodePerInst[instIndex] = 2;
-					}else{
-						numGainNodePerInst[instIndex]++;
-					}
-				}
-				prevNote = currNote;
-			}
-			
-			if(!numGainNodePerInst[instIndex]){
-				numGainNodePerInst[instIndex] = group.length;
-			}else{
-				// ??? do we really need this?
-				numGainNodePerInst[instIndex] = Math.max(
-					numGainNodePerInst[instIndex],
-					group.length
-				);
-			}
-		}
-	});
+	// figure out for each instrument the minumum number of gain nodes
+	var numGainNodePerInst = getNumGainNodesPerInstrument(instruments, instrumentNotePointers);
 	
 	// add the appropriate number of gain nodes and oscillator nodes for each instrument.
 	// we can then reuse these nodes instead of making new ones for every single note, which is unnecessary 
@@ -528,21 +541,21 @@ function scheduler(pianoRoll, allInstruments){
 	var gainCount = 0;
 	var oscCount = 0;
 
-	for(var index in numGainNodePerInst){
-		instrumentGainNodes[index] = [];
-		instrumentOscNodes[index] = [];
+	for(var instIndex in numGainNodePerInst){
+		instrumentGainNodes[instIndex] = [];
+		instrumentOscNodes[instIndex] = [];
 
 		// this is the somewhat tricky part. if we have a custom instrument preset,
 		// instead of just making 1 gain and 1 osc, we need to create an instance of that preset 
 		// and take its gain nodes and osc nodes and add them as lists to the above lists. 
 		// so in the end we should have a list of lists for gain and osc nodes 
-		for(var i = 0; i < numGainNodePerInst[index]; i++){
+		for(var i = 0; i < numGainNodePerInst[instIndex]; i++){
 			var newGainNodes;
 			var newOscNodes;
 			
-			if(pianoRoll.instrumentPresets[instruments[index].waveType]){
+			if(pianoRoll.instrumentPresets[instruments[instIndex].waveType]){
 				// handle custom instrument presets
-				var presetData = pianoRoll.instrumentPresets[instruments[index].waveType];
+				var presetData = pianoRoll.instrumentPresets[instruments[instIndex].waveType];
 				var currPreset = createPresetInstrument(presetData, pianoRoll.audioContext);
 				var nodes = getNodesCustomPreset(currPreset);
 				
@@ -568,8 +581,8 @@ function scheduler(pianoRoll, allInstruments){
 				newOscNodes[0].connect(newGainNodes[0]);
 			}
 			
-			instrumentGainNodes[index].push(newGainNodes); // push a list of lists (we want to maintain the node groups here) - a node group is responsible for playing a note as if it were one node 
-			instrumentOscNodes[index].push(newOscNodes);
+			instrumentGainNodes[instIndex].push(newGainNodes); // push a list of lists (we want to maintain the node groups here) - a node group is responsible for playing a note as if it were one node 
+			instrumentOscNodes[instIndex].push(newOscNodes);
 			pianoRoll.timers = pianoRoll.timers.concat(newOscNodes);
 		}
 	}
@@ -882,6 +895,7 @@ function stopPlay(pianoRollObject){
 		document.getElementById('record').style.border = "";
 	}
 	
+	// global vars
 	lastNote = null;
 	currNote = null;
 }
@@ -909,7 +923,7 @@ try {
 		playAll: playAll,
 		stopPlay: stopPlay,
 		getCorrectLength: getCorrectLength,
-		createNewInstrument: createNewInstrument
+		createNewInstrument: createNewInstrument,
 	}
 }catch(e){
 	// ignore errors (i.e. if adding the script to an html page)

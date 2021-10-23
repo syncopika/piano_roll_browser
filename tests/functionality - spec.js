@@ -1,14 +1,12 @@
 var assert = require('assert');
 var expect = require('chai').expect;
 var { PianoRoll } = require('../src/classes.js');
-var {	initGain,
-		readInNotes,
-		scheduler,
-		play,
-		playAll,
-		stopPlay,
-		getCorrectLength,
-		createNewInstrument 
+var {	
+	initGain,
+	readInNotes,
+	stopPlay,
+	getCorrectLength,
+	createNewInstrument,
 } = require('../src/playbackFunctionality.js');
 
 describe('testing playbackFunctionality.js', function(){
@@ -41,5 +39,5 @@ describe('testing playbackFunctionality.js', function(){
 		assert(pianoRoll.isPlaying === false);
 		assert(pianoRoll.timers.length === 0);
 	});
-
+	
 });
