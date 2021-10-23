@@ -189,6 +189,148 @@ function getNotePosition(noteElement){
 	return noteElement.getBoundingClientRect().left + window.pageXOffset;
 }
 
+// scheduler helper functions
+
+// @param routes: an object where each key is an instrument index mapped to a map of gain nodes mapped to the notes those gain nodes are responsible for playing. 
+// @param pianoRollObject: instance of PianoRoll
+// @param instrumentGainNodes: a map of instrument to gain nodes
+// @param instrumentOscNodes: a map of instrument to osc nodes
+// @return: an object with each key being an isntrument index and each value being a list of note configurations (which is an object)
+function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, instrumentOscNodes){
+	// preprocess the nodes further by figuring out how long each note should be and its start/stop times
+	// note that we should NOT actually stop any oscillators; they should just be set to 0 freq and 0 gain when they should not be playing
+	// combine all notes of each instrument into an array. each element will be a map of note properties and the osc node for that note.
+	var allNotesPerInstrument = {};
+	var index = 0; // index corresponds to the index of an instrument in pianoRollObject.instruments
+	
+	for(var instrument in routes){
+		allNotesPerInstrument[instrument] = [];
+		
+		var instrumentRoutes = routes[instrument];
+		var currInstGainNodes = instrumentGainNodes[index]; // this is a list of lists!
+		var currInstOscNodes = instrumentOscNodes[index];   // this is a list of lists!
+		var gainIndex = 0;
+		
+		for(var route in instrumentRoutes){
+			var notes = instrumentRoutes[route];
+			var gainsToUse = currInstGainNodes[gainIndex];
+			var oscsToUse = currInstOscNodes[gainIndex];
+			
+			// hook up gain to the correct destination
+			gainsToUse.forEach((gain) => {
+				// take into account the current instrument's panning
+				var panNode = pianoRollObject.audioContext.createStereoPanner();
+				var panVal = pianoRollObject.instruments[instrument].pan;
+				gain.connect(panNode);
+				
+				if(pianoRollObject.recording){
+					panNode.connect(pianoRollObject.audioContextDestMediaStream);
+				}else{
+					panNode.connect(pianoRollObject.audioContextDestOriginal);
+				}
+				
+				// set pan node value
+				panNode.pan.setValueAtTime(panVal, 0.0);
+				
+				// silence gains initially
+				// yes, this part is necessary (don't know the exact details but it makes sure the audio can start normally, otherwise
+				// you get an awful blast of sound without it). but - for custom presets, we wipe out their gain values (i.e. a preset may
+				// have multiple gain nodes, each mapping to a specific wave sound and so they need to keep those values). we need to keep
+				// these values somewhere to refer to when scaling the volume.
+				gain.gain.setValueAtTime(0.0, 0.0);
+			});
+			
+			var timeOffsetAcc = 0; // time offset accumulator so we know when notes need to start relative to the beginning of the start of playing
+			for(var i = 0; i < notes.length; i++){
+				var thisNote = notes[i]; 
+				var volume = thisNote.freq > 0.0 ? parseFloat(thisNote.block.volume) : 0.0;
+				
+				// by default, 70% of the note duration should be played 
+				// the rest of the time can be devoted to the spacer 
+				var realDuration;
+				if(thisNote.block.style === "staccato"){
+					realDuration = (0.50 * thisNote.duration) / 1000;
+				}else if(thisNote.block.style === "legato"){
+					realDuration = (0.95 * thisNote.duration) / 1000;
+				}else{
+					realDuration = (0.70 * thisNote.duration) / 1000;
+				}
+				
+				var startTimeOffset = 0;
+				var thisNotePos;
+				if(i === 0){
+					// the first note on the piano roll might not start at the beginning (i.e. there might be an initial rest)
+					// so let's account for that here 
+					// if startMarker is specified, we can use its position to figure out the initial rest
+					var startPos = 60; // 60 is the x-position of the very first note of the piano roll
+					if(pianoRollObject.playMarker){
+						startPos = getNotePosition(document.getElementById(pianoRollObject.playMarker));
+					}
+					var firstNoteStart = getNotePosition(document.getElementById(notes[i].block.id));
+					thisNotePos = firstNoteStart;
+					if(firstNoteStart !== startPos){
+						startTimeOffset = getCorrectLength(firstNoteStart - startPos, pianoRoll) / 1000;
+					}
+				}else{
+					// find out how much space there is between curr note and prev note to figure out when curr note should start
+					var prevNotePos = getNotePosition(document.getElementById(notes[i-1].block.id));
+					var thisNotePos = getNotePosition(document.getElementById(thisNote.block.id));
+					var timeDiff = getCorrectLength(thisNotePos - prevNotePos, pianoRollObject) / 1000;
+					startTimeOffset = timeOffsetAcc + timeDiff;
+					thisNotePos = thisNotePos;
+				}
+
+				timeOffsetAcc = startTimeOffset;
+				
+				var noteSetup = {
+					"note": thisNote,
+					"osc": oscsToUse,
+					"gain": gainsToUse,
+					"duration": realDuration,
+					"volume": volume,
+					"startTimeOffset": startTimeOffset,
+					"position": thisNotePos
+				};
+				
+				allNotesPerInstrument[instrument].push(noteSetup);
+			}
+			gainIndex++;
+		}
+		
+		// so calculating startTimeOffset seems to be a bit tricky and yields different values 
+		// for notes that should be started at the same time (i.e. in a chord). 
+		// to remedy this, go through all the notes again real quick and if we find notes that 
+		// should start at the same time, decide on an offset and fix the values as needed.
+		// use the positions of each note to figure out which start together
+		// TODO: correct time scheduling precision errors? or look into gradual scheduling, if possible?
+		var positionMap = {}; // group notes by positions
+		var instrumentNotes = allNotesPerInstrument[instrument];
+		instrumentNotes.forEach((note) => {
+			if(positionMap[note.position]){
+				// record the pitches present at this column number
+				positionMap[note.position].push(note);
+			}else{
+				positionMap[note.position] = [note];
+			}
+		});
+		
+		// now only adjust the offset for notes in the same chord
+		for(var position in positionMap){
+			var chord = positionMap[position];
+			if(chord.length > 1){
+				// assign everyone the same startTimeOffset value
+				chord.forEach((note) => {
+					note.startTimeOffset = chord[0].startTimeOffset;
+				});
+			}
+		}
+		
+		index++;
+	}
+	
+	return allNotesPerInstrument;
+}
+
 
 /****
 
@@ -213,8 +355,8 @@ function scheduler(pianoRoll, allInstruments){
 	var startPos = 0;
 	
 	// each instrument may have a different number of notes.
-	// keep an array of numbers, where each array index corresponds to an instrument 
-	// each number will be the current note index of each instrument 
+	// keep an array of numbers, where each array index corresponds to an instrument.
+	// each number will be the current note index of each instrument.
 	var instrumentNotePointers = [];
 	
 	// keep another array holding the next time the next note should play for each instrument
@@ -307,12 +449,13 @@ function scheduler(pianoRoll, allInstruments){
 			columnHeadersToHighlight[columnHeadersToHighlight.length-1].id, 
 			pianoRoll
 		);
-		pianoRoll.timers.push(highlightOsc); // maybe should use a separate timers array?
+		// TODO: maybe use a separate timers array just for these highlight oscillators? don't mix with the notes
+		pianoRoll.timers.push(highlightOsc);
 	});
 	
 	// figure out for each instrument the minumum number of gain nodes and oscillator nodes we need 
 	// in order to minimize the number of nodes we need to create since that adds performance overhead
-	var numGainNodePerInst = {};
+	var numGainNodePerInst = {}; // key: instrument index, value: total number of nodes needed for that instrument
 	instruments.forEach((instrument, instIndex) => {
 		var prevNote = null;
 		var currNote = null;
@@ -432,7 +575,7 @@ function scheduler(pianoRoll, allInstruments){
 	}
 	
 	// 'route' the notes i.e. assign them to the gain/osc nodes such that they all get played properly
-	var routes = {}; // map instrument to another map of gain nodes to the notes that should be played by those nodes
+	var routes = {}; // map instrument to another map of gain nodes mapped to the notes that should be played by those nodes
 	var posTracker = {};
 	
 	for(var instrumentIndex = 0; instrumentIndex < instruments.length; instrumentIndex++){
@@ -478,135 +621,8 @@ function scheduler(pianoRoll, allInstruments){
 			});
 		}
 	}
-		
-	// preprocess the nodes further by figuring out how long each note should be and its start/stop times
-	// note that we should NOT actually stop any oscillators; they should just be set to 0 freq and 0 gain when they should not be playing
-	// combine all notes of each instrument into an array. each element will be a map of note properties and the osc node for that note.
-	var allNotesPerInstrument = {};
-	var index = 0;
-	for(var instrument in routes){
-		allNotesPerInstrument[instrument] = [];
-		
-		var instrumentRoutes = routes[instrument];
-		var currInstGainNodes = instrumentGainNodes[index]; // this is a list of lists!
-		var currInstOscNodes = instrumentOscNodes[index];   // this is a list of lists!
-		var gainIndex = 0;
-		
-		for(var route in instrumentRoutes){
-			var notes = instrumentRoutes[route];
-			var gainsToUse = currInstGainNodes[gainIndex];
-			var oscsToUse = currInstOscNodes[gainIndex];
-			
-			// hook up gain to the correct destination
-			gainsToUse.forEach((gain) => {
-				// take into account current instrument's panning
-				var panNode = pianoRoll.audioContext.createStereoPanner();
-				var panVal = allInstruments ? pianoRoll.instruments[instrument].pan : instruments[0].pan;
-				gain.connect(panNode);
-				
-				if(pianoRoll.recording){
-					panNode.connect(pianoRoll.audioContextDestMediaStream);
-				}else{
-					panNode.connect(pianoRoll.audioContextDestOriginal);
-				}
-				
-				// set pan node value
-				panNode.pan.setValueAtTime(panVal, 0.0);
-				
-				// silence gains initially
-				// yes, this part is necessary (don't know the exact details but it makes sure the audio can start normally, otherwise
-				// you get an awful blast of sound without it). but - for custom presets, we wipe out their gain values (i.e. a preset may
-				// have multiple gain nodes, each mapping to a specific wave sound and so they need to keep those values). we need to keep
-				// these values somewhere to refer to when scaling the volume.
-				gain.gain.setValueAtTime(0.0, 0.0);
-			});
-			
-			var timeOffsetAcc = 0; // time offset accumulator so we know when notes need to start relative to the beginning of the start of playing
-			for(var i = 0; i < notes.length; i++){
-				var thisNote = notes[i]; 
-				var volume = thisNote.freq > 0.0 ? parseFloat(thisNote.block.volume) : 0.0;
-				
-				// by default, 70% of the note duration should be played 
-				// the rest of the time can be devoted to the spacer 
-				var realDuration;
-				if(thisNote.block.style === "staccato"){
-					realDuration = (0.50 * thisNote.duration)/1000;
-				}else if(thisNote.block.style === "legato"){
-					realDuration = (0.95 * thisNote.duration)/1000;
-				}else{
-					realDuration = (0.70 * thisNote.duration)/1000;
-				}
-				
-				var startTimeOffset = 0;
-				var thisNotePos;
-				if(i === 0){
-					// the first note on the piano roll might not start at the beginning (i.e. there might be an initial rest)
-					// so let's account for that here 
-					// if startMarker is specified, we can use its position to figure out the initial rest
-					var startPos = 60; // 60 is the x-position of the very first note of the piano roll
-					if(startMarker){
-						startPos = getNotePosition(document.getElementById(startMarker));
-					}
-					var firstNoteStart = getNotePosition(document.getElementById(notes[i].block.id));
-					thisNotePos = firstNoteStart;
-					if(firstNoteStart !== startPos){
-						startTimeOffset = getCorrectLength(firstNoteStart - startPos, pianoRoll) / 1000;
-					}
-				}else{
-					// find out how much space there is between curr note and prev note to figure out when curr note should start
-					var prevNotePos = getNotePosition(document.getElementById(notes[i-1].block.id));
-					var thisNotePos = getNotePosition(document.getElementById(thisNote.block.id));
-					var timeDiff = getCorrectLength(thisNotePos - prevNotePos, pianoRoll) / 1000;
-					startTimeOffset = timeOffsetAcc + timeDiff;
-					thisNotePos = thisNotePos;
-				}
-
-				timeOffsetAcc = startTimeOffset;
-				
-				var noteSetup = {
-					"note": thisNote,
-					"osc": oscsToUse,
-					"gain": gainsToUse,
-					"duration": realDuration,
-					"volume": volume,
-					"startTimeOffset": startTimeOffset,
-					"position": thisNotePos
-				};
-				allNotesPerInstrument[instrument].push(noteSetup);
-			}
-			gainIndex++;
-		}
-		
-		// so calculating startTimeOffset seems to be a bit tricky and yields different values 
-		// for notes that should be started at the same time (i.e. in a chord). 
-		// to remedy this, go through all the notes again real quick and if we find notes that 
-		// should start at the same time, decide on an offset and fix the values as needed.
-		// use the positions of each note to figure out which start together
-		// TODO: correct time scheduling precision errors? or look into gradual scheduling, if possible?
-		var positionMap = {}; // group notes by positions
-		var instrumentNotes = allNotesPerInstrument[instrument];
-		instrumentNotes.forEach((note) => {
-			if(positionMap[note.position]){
-				// record the pitches present at this column number
-				positionMap[note.position].push(note);
-			}else{
-				positionMap[note.position] = [note];
-			}
-		});
-		
-		// now only adjust the offset for notes in the same chord
-		for(var position in positionMap){
-			var chord = positionMap[position];
-			if(chord.length > 1){
-				// assign everyone the same startTimeOffset value
-				chord.forEach((note) => {
-					note.startTimeOffset = chord[0].startTimeOffset;
-				});
-			}
-		}
-		
-		index++;
-	}
+	
+	var allNotesPerInstrument = configureInstrumentNotes(routes, pianoRoll, instrumentGainNodes, instrumentOscNodes);
 
 	var thisTime = ctx.currentTime;
 	
@@ -639,6 +655,8 @@ function scheduler(pianoRoll, allInstruments){
 			
 			// useful for debugging time drift of notes' start times. I found out that I was getting non-uniform start offset values for chords.
 			//console.log(`instrument: ${instruments[i].name}; note: ${document.getElementById(otherParams.block.id).parentNode.id}; starting@ ${startTime} and ending@ ${endTime}; duration: ${duration}; start offset: ${startTimeOffset}`);
+			// TODO: note start time drift is still a problem I need to solve and am currently using a cheap solution where 
+			// I just make sure all notes in a chord start at the same time based on the first note in the chord.
 			
 			// log the time the last note will play
 			pianoRoll.lastTime = Math.max(pianoRoll.lastTime, (thisTime + startTimeOffset));

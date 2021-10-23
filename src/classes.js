@@ -1,145 +1,3 @@
-/******
-	map for note sizes
-******/
-const noteSizeMap = {
-	"8th": 40,
-	"16th": 20,
-	"32nd": 10,
-};
-
-
-/******
-	map for note frequencies
-	A @ 440Hz
-******/
-const noteFrequencies = {
-	"C8": 4186.01,
-	"B7": 3951.07,
-	"Bb7": 3729.31,
-	"A#7": 3729.31,
-	"A7": 3520.00,
-	"Ab7": 3322.44,
-	"G#7": 3322.44,
-	"G7": 3135.96,
-	"F#7": 2959.96,
-	"F7": 2793.83,
-	"E7": 2637.02,
-	"Eb7": 2489.02,
-	"D#7": 2489.02,
-	"D7": 2349.32,
-	"C#7": 2217.46,
-
-	"C7": 2093.00,
-	"B6": 1975.53,
-	"Bb6": 1864.66,
-	"A#6": 1864.66,
-	"A6": 1760.00,
-	"Ab6": 1661.22,
-	"G#6": 1661.22,
-	"G6": 1567.98,
-	"F#6": 1479.98,
-	"F6": 1396.91,
-	"E6": 1318.51,
-	"Eb6": 1244.51,
-	"D#6": 1244.51,
-	"D6": 1174.66,
-	"C#6": 1108.73,
-	"C6": 1046.50,
-
-	"B5": 987.77,
-	"Bb5": 932.33,
-	"A#5": 932.33,
-	"A5": 880.00,
-	"Ab5": 830.61,
-	"G#5": 830.61,
-	"G5": 783.99,
-	"F#5": 739.99,
-	"F5": 698.46,
-	"E5": 659.25,
-	"Eb5": 622.25,
-	"D#5": 622.25,
-	"D5": 587.33,
-	"C#5": 554.37,
-	"C5": 523.25,
-
-	"B4": 493.88,
-	"Bb4": 466.16,
-	"A#4": 466.16,
-	"A4": 440.00,
-	"Ab4": 415.30,
-	"G#4": 415.30,
-	"G4": 392.00,
-	"F#4": 369.99,
-	"F4": 349.23,
-	"E4": 329.63,
-	"Eb4": 311.13,
-	"D#4": 311.13,
-	"D4": 293.66,
-	"C#4": 277.18,
-	"C4": 261.63,
-	
-	"B3": 246.94,
-	"Bb3": 233.08,
-	"A#3": 233.08,
-	"A3": 220.00,
-	"Ab3": 207.63,
-	"G#3": 207.63,
-	"G3": 196.00,
-	"F#3": 185.00,
-	"F3": 174.61,
-	"E3": 164.81,
-	"Eb3": 155.56,
-	"D#3": 155.56,
-	"D3": 146.83,
-	"C#3": 138.59,
-	"C3": 130.81,
-	
-	"B2": 123.47,
-	"Bb2": 116.54,
-	"A#2": 116.54,
-	"A2": 110.00,
-	"Ab2": 103.83,
-	"G#2": 103.83,
-	"G2": 98.00,
-	"F#2": 92.50,
-	"F2": 87.31,
-	"E2": 82.41,
-	"Eb2": 77.78,
-	"D#2": 77.78,
-	"D2": 73.42,
-	"C#2": 69.30,
-	"C2": 65.41
-};
-
-/******
-	default instrument sound choices
-******/
-const defaultInstruments = {
-	1: "square",
-	2: "sine",
-	3: "sawtooth",
-	4: "triangle",
-	5: "percussion",
-	6: "piano"
-};
-
-
-/******
-	default note styles
-	TODO: can we reorganize this so that we can map
-	a style to a function so that we don't we have do that in 
-	the scheduler function?
-	but we also need to note that default, legato and staccato
-	affect duration, whereas glide affects oscillator freq.
-	or maybe make this its own class?
-******/
-const defaultNoteStyles = {
-	1: "default", 
-	2: "legato",
-	3: "staccato",
-	4: "glide",
-};
-
 /****** 
 	
 	PIANO ROLL CLASS 
@@ -165,18 +23,6 @@ function PianoRoll(){
 	this.recorder;				// a MediaRecorder instance
 	this.playMarker;		    // the id of a column header indicating where to start playing
 	
-	// default instrument sounds and note styles
-	this.defaultInstrumentSounds = defaultInstruments;
-	this.defaultNoteStyles = defaultNoteStyles;
-	
-	// colors
-	this.playMarkerColor = "rgb(50, 205, 50)";
-	this.highlightColor = "#FFFF99";
-	this.measureNumberColor = "#2980B9";
-	this.instrumentTableColor = 'rgb(188, 223, 70)';
-	this.currNotePlayingColor = 'rgb(112, 155, 224)';
-	
-	this.noteSizeMap = noteSizeMap;
 	this.lockNoteSize = "16th"; // the note-size increment to be used when moving/placing notes
 	this.addNoteSize = "last selected"; // note-size to use when adding notes (changes based on last selected/resize by default)
 	this.lastNoteSize = 40; // last clicked-on note size in px as integer 
@@ -185,10 +31,145 @@ function PianoRoll(){
 	this.instrumentPresets = {};// a dictionary to keep track of imported instrument presets
 	this.noiseBuffer; // for percussion 
 	
-	this.noteFrequencies = noteFrequencies;
+	// colors
+	this.playMarkerColor = "rgb(50, 205, 50)";
+	this.highlightColor = "#FFFF99";
+	this.measureNumberColor = "#2980B9";
+	this.instrumentTableColor = 'rgb(188, 223, 70)';
+	this.currNotePlayingColor = 'rgb(112, 155, 224)';
 	
-	this.init = function(){
+	// default instrument sounds and note styles
+	this.defaultInstrumentSounds = {
+		1: "square",
+		2: "sine",
+		3: "sawtooth",
+		4: "triangle",
+		5: "percussion",
+		6: "piano"
+	};
+
+	/******
+		default note styles
+		TODO: can we reorganize this so that we can map
+		a style to a function so that we don't we have do that in 
+		the scheduler function?
+		but we also need to note that default, legato and staccato
+		affect duration, whereas glide affects oscillator freq.
+		or maybe make this its own class?
+	******/
+	this.defaultNoteStyles = {
+		1: "default", 
+		2: "legato",
+		3: "staccato",
+		4: "glide",
+	};
+	
+	this.noteSizeMap = {
+		"8th": 40,
+		"16th": 20,
+		"32nd": 10,
+	};
+	
+	this.noteFrequencies = {
+		"C8": 4186.01,
+		"B7": 3951.07,
+		"Bb7": 3729.31,
+		"A#7": 3729.31,
+		"A7": 3520.00,
+		"Ab7": 3322.44,
+		"G#7": 3322.44,
+		"G7": 3135.96,
+		"F#7": 2959.96,
+		"F7": 2793.83,
+		"E7": 2637.02,
+		"Eb7": 2489.02,
+		"D#7": 2489.02,
+		"D7": 2349.32,
+		"C#7": 2217.46,
+
+		"C7": 2093.00,
+		"B6": 1975.53,
+		"Bb6": 1864.66,
+		"A#6": 1864.66,
+		"A6": 1760.00,
+		"Ab6": 1661.22,
+		"G#6": 1661.22,
+		"G6": 1567.98,
+		"F#6": 1479.98,
+		"F6": 1396.91,
+		"E6": 1318.51,
+		"Eb6": 1244.51,
+		"D#6": 1244.51,
+		"D6": 1174.66,
+		"C#6": 1108.73,
+		"C6": 1046.50,
+
+		"B5": 987.77,
+		"Bb5": 932.33,
+		"A#5": 932.33,
+		"A5": 880.00,
+		"Ab5": 830.61,
+		"G#5": 830.61,
+		"G5": 783.99,
+		"F#5": 739.99,
+		"F5": 698.46,
+		"E5": 659.25,
+		"Eb5": 622.25,
+		"D#5": 622.25,
+		"D5": 587.33,
+		"C#5": 554.37,
+		"C5": 523.25,
+
+		"B4": 493.88,
+		"Bb4": 466.16,
+		"A#4": 466.16,
+		"A4": 440.00,
+		"Ab4": 415.30,
+		"G#4": 415.30,
+		"G4": 392.00,
+		"F#4": 369.99,
+		"F4": 349.23,
+		"E4": 329.63,
+		"Eb4": 311.13,
+		"D#4": 311.13,
+		"D4": 293.66,
+		"C#4": 277.18,
+		"C4": 261.63,
 		
+		"B3": 246.94,
+		"Bb3": 233.08,
+		"A#3": 233.08,
+		"A3": 220.00,
+		"Ab3": 207.63,
+		"G#3": 207.63,
+		"G3": 196.00,
+		"F#3": 185.00,
+		"F3": 174.61,
+		"E3": 164.81,
+		"Eb3": 155.56,
+		"D#3": 155.56,
+		"D3": 146.83,
+		"C#3": 138.59,
+		"C3": 130.81,
+		
+		"B2": 123.47,
+		"Bb2": 116.54,
+		"A#2": 116.54,
+		"A2": 110.00,
+		"Ab2": 103.83,
+		"G#2": 103.83,
+		"G2": 98.00,
+		"F#2": 92.50,
+		"F2": 87.31,
+		"E2": 82.41,
+		"Eb2": 77.78,
+		"D#2": 77.78,
+		"D2": 73.42,
+		"C#2": 69.30,
+		"C2": 65.41
+	};
+		
+	this.init = function(){
 		var context = new AudioContext();
 		this.audioContext = context;
 		
@@ -198,7 +179,7 @@ function PianoRoll(){
 		// save a reference to the original audio destination
 		this.audioContextDestOriginal = context.destination;
 		
-		// make a recorder
+		// make a recorder and set it up for recording
 		var audioStream = context.createMediaStreamDestination();
 		this.audioContextDestMediaStream = audioStream;
 		this.recorder = new MediaRecorder(audioStream.stream);
@@ -211,7 +192,6 @@ function PianoRoll(){
 		
 		this.recorder.onstop = (function(pianoRoll){
 			return function(evt){
-				
 				var blob = new Blob(pianoRoll.audioDataChunks, {'type': 'audio/ogg; codecs=opus'});
 				console.log(blob);
 				var url = URL.createObjectURL(blob);
@@ -233,7 +213,7 @@ function PianoRoll(){
 		})(this);
 		
 		this.PercussionManager = new PercussionManager(this);		
-		this.PianoManager = new PianoManager(this.audioContext);
+		this.PianoManager = new PianoManager(this);
 	}
 
 }
@@ -246,7 +226,6 @@ function Instrument(name, gain, notesArray){
 	this.notes = notesArray;		// array of Note objects
 	this.activeNotes = {};			// 
 	this.waveType = "sine"; 		// sine wave by default 
-	
 	this.volume = 0.2;
 	this.pan = 0.0;
 	this.onionSkinOn = true;
@@ -404,11 +383,11 @@ function PercussionManager(pianoRollObject){
 
 // until I think or learn of a better way to do this, let's try getting realistic piano sounds
 // via loading in .ogg files of each note on the piano roll and using AudioBufferSourceNodes :D
-function PianoManager(audioCtx) {
-	this.audioCtx = audioCtx;
+function PianoManager(pianoRollObject) {
+	this.audioCtx = pianoRollObject.audioContext;
 	
 	this.noteMap = {};
-	for(let note in noteFrequencies){
+	for(let note in pianoRollObject.noteFrequencies){
 		this.noteMap[note.replace('#', 's')] = "";
 	}
 	
