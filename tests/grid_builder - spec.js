@@ -37,7 +37,6 @@ describe('testing gridBuilder.js', function(){
 		document.body.appendChild(el);
 		buildGridHeader(el.id, pianoRoll);
 		// expect 33 elements in the header: 8 cells * 4 measures = 32 + 1 for the piano keys
-
 		expect(document.getElementById(el.id).children.length).to.equal(33);
 		document.body.removeChild(el);
 	});

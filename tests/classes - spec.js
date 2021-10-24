@@ -1,9 +1,10 @@
 var assert = require('assert');
 var expect = require('chai').expect;
-var { 	PianoRoll,
-		Instrument,
-		Note,
-		ElementNode
+var { 	
+	PianoRoll,
+	Instrument,
+	Note,
+	ElementNode
 } = require('../src/classes.js');
 
 describe('testing classes.js', function(){

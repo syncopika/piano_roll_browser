@@ -189,138 +189,27 @@ function getNotePosition(noteElement){
 	return noteElement.getBoundingClientRect().left + window.pageXOffset;
 }
 
+/*** 
+	scheduler helper functions
+***/
 
-/****
-
-	need a scheduler to schedule when a note should be played given a time based on the AudioContext's timer 
-	pass the schedule function a pianoRollObject, which holds the context, and an instrument, which has a notes array 
-	startTime will be set when play is clicked on in the play function 
-	
-	take the stuff from readAndPlayNote 
-	- figure out the realDuration and spacer 
-	- create a new oscillator for every note?? (lots of garbage?)
-	
-	@param pianoRoll: an instance of PianoRoll
-	
-	@param allInstruments: boolean
-	- true for all instruments 
-	- false for just the current instrument 
-	
-****/
-function scheduler(pianoRoll, allInstruments){
-	var ctx = pianoRoll.audioContext;
-	var startMarker = pianoRoll.playMarker; // if user specified a certain column to start playing at 
-	var startPos = 0;
-	
-	// each instrument may have a different number of notes.
-	// keep an array of numbers, where each array index corresponds to an instrument 
-	// each number will be the current note index of each instrument 
-	var instrumentNotePointers = [];
-	
-	// keep another array holding the next time the next note should play for each instrument
-	var nextTime = [];
-	
-	// keep a counter that counts the number of instruments that have finished playing all their notes  
-	var stillNotesToPlay = 0;
-	
-	// get the index of the current instrument in case allInstruments is false (just playing one instrument in this case) 
-	var currentInstrumentIndex; 
-	for(var j = 0; j < pianoRoll.instruments.length; j++){
-		if(pianoRoll.instruments[j] === pianoRoll.currentInstrument){
-			currentInstrumentIndex = j;
-		}
-	}
-	
-	// i.e. when an instrument is done, I can set the index of that instrument in the array to null as a flag
-	// also, for each instrument set their index in instrumentNotePointers to 0, which means that playing should 
-	// start at the beginning (0 being the index of the first note of that instrument)
-	var instruments;
-	if(!allInstruments){
-		// if only playing the current instrument 
-		instruments = [pianoRoll.instruments[currentInstrumentIndex]];
-		instrumentNotePointers.push(0);
-		nextTime.push(0);
-	}else{
-		instruments = pianoRoll.instruments.slice(0);
-		for(var i = 0; i < pianoRoll.instruments.length; i++){
-			instrumentNotePointers.push(0);
-			nextTime.push(0);
-		}
-	}
-	
-	// gather the column headers so we can process them to indicate the approx. current location for playback
-	// filter columnHeadersToHighlight a bit more - we only want to include up to the last column that has notes.
-	// any column past that we don't want 
-	var columnHeadersToHighlight = Array.from(document.getElementById("columnHeaderRow").children).splice(1); // remove first col header since it's for cosmetic purposes
-	var lastColWithNotes;
-	columnHeadersToHighlight.forEach((col, index) => {
-		if(col.getAttribute("numNotes") > 0){
-			lastColWithNotes = index;
-		}
-	});
-	if(lastColWithNotes){
-		columnHeadersToHighlight = columnHeadersToHighlight.slice(0, lastColWithNotes+1);
-	}
-	
-	var highlightNextTime = ctx.currentTime; // keep track of when to start and stop oscillators responsible for highlighting the current approx. playback location
-	
-	// in the case where the user specified a measure to start playing at
-	if(startMarker){
-		startPos = getNotePosition(document.getElementById(startMarker));
-	
-		for(var i = 0; i < instruments.length; i++){
-			// have each instrument start with the note at index given by startMarker
-			for(var j = 0; j < instruments[i].notes.length; j++){
-				try{
-					// the elements of the notes array are arrays of Note objects, hence the [0]
-					var columnCell = document.getElementById(instruments[i].notes[j][0].block.id).parentNode;
-					var cellId = columnCell.id;
-					var cellPos = getNotePosition(columnCell);
-
-					if(cellId.indexOf(startMarker) > -1){
-						instrumentNotePointers[i] = j;
-						break;
-					}else if(cellPos > startPos){
-						// this is the first note that appears after the selected column to start playing from 
-						instrumentNotePointers[i] = j;
-						break;
-					}
-				}catch(error){
-					console.error(error);
-					console.error(instruments[i].notes[j].block.id);
-				}
-			}
-		}
-		columnHeadersToHighlight = columnHeadersToHighlight.splice(parseInt(startMarker.match(/[0-9]+/g)[0]));
-	}
-	
-	// set up oscillator just for highlighting approx. the current column header
-	// note each column header is 40 px in length (that's 1 eighth note)
-	// so they should all be the same length in duration
-	columnHeadersToHighlight.forEach((header) => {
-		var highlightOsc = ctx.createOscillator();
-		highlightOsc.start(highlightNextTime);
-		highlightNextTime += (getCorrectLength(40, pianoRoll) / 1000);
-		highlightOsc.stop(highlightNextTime);
-		highlightOsc.onended = onendFunc(
-			header.id, 
-			columnHeadersToHighlight[columnHeadersToHighlight.length-1].id, 
-			pianoRoll
-		);
-		pianoRoll.timers.push(highlightOsc); // maybe should use a separate timers array?
-	});
-	
-	// figure out for each instrument the minumum number of gain nodes and oscillator nodes we need 
-	// in order to minimize the number of nodes we need to create since that adds performance overhead
+// figure out for each instrument the minimum number of gain nodes (which is also the num of oscillator nodes) we need 
+// in order to minimize the number of nodes we need to create since that adds performance overhead
+// @param instruments: an array of instruments
+// @param instrumentNotePointers: an array where each index corresponds to an instrument 
+//                                and at each index is a number representing the index of the instrument's note to start playing at
+// @return: a map where key: instrument index, value: total number of nodes needed for that instrument
+function getNumGainNodesPerInstrument(instruments, instrumentNotePointers){
 	var numGainNodePerInst = {};
+	
 	instruments.forEach((instrument, instIndex) => {
 		var prevNote = null;
 		var currNote = null;
 		var start = instrumentNotePointers[instIndex];
 
 		for(var index = start; index < instrument.notes.length; index++){
-			var group = instrument.notes[index];			
-
+			var group = instrument.notes[index];
+			
 			if(index > start){
 				// find the longest note in the prev group
 				if(!prevNote){
@@ -364,7 +253,6 @@ function scheduler(pianoRoll, allInstruments){
 			if(!numGainNodePerInst[instIndex]){
 				numGainNodePerInst[instIndex] = group.length;
 			}else{
-				// ??? do we really need this?
 				numGainNodePerInst[instIndex] = Math.max(
 					numGainNodePerInst[instIndex],
 					group.length
@@ -373,34 +261,40 @@ function scheduler(pianoRoll, allInstruments){
 		}
 	});
 	
-	// add the appropriate number of gain nodes and oscillator nodes for each instrument.
-	// we can then reuse these nodes instead of making new ones for every single note, which is unnecessary 
-	// especially if we have a lot of notes that aren't part of chords and can be used with just one gain node and oscillator
-	
-	// need to be careful here! if we import a custom preset, we may be importing a network of nodes (that can be reused).
-	// we can still maintain a 1:1 gain to route relationship but instead of the usual case where we have 1 gain for a route, we 
-	// have one network of nodes (so maybe 2 gain nodes) for a route.
-	var instrumentGainNodes = {};
-	var instrumentOscNodes = {};
+	return numGainNodePerInst;
+}
+
+// add the appropriate number of gain nodes and oscillator nodes for each instrument.
+// we can then reuse these nodes instead of making new ones for every single note, which is unnecessary.
+// especially if we have a lot of notes that aren't part of chords and can be used with just one gain node and oscillator.
+// but need to be careful here! if we import a custom preset, we may be importing a network of nodes (that can be reused).
+// we can still maintain a 1:1 gain to route relationship but instead of the usual case where we have 1 gain for a route, we 
+// have one network of nodes (so maybe 2 gain nodes) for a route.
+// @param pianoRollObject: an instance of PianoRoll
+// @param numGainNodePerInst: a map of instrument index to the number of nodes needed for that instrument
+// @param instrumentGainNodes: a map where each key is the index of an instrument and each value will be an array of gain nodes
+// @param instrumentOscNodes: a map where each key is the index of an instrument and each value will be an array of oscillator nodes
+function addNodesPerInstrument(pianoRollObject, numGainNodePerInst, instrumentGainNodes, instrumentOscNodes){
 	var gainCount = 0;
 	var oscCount = 0;
 
-	for(var index in numGainNodePerInst){
-		instrumentGainNodes[index] = [];
-		instrumentOscNodes[index] = [];
+	for(var instIndex in numGainNodePerInst){
+		instrumentGainNodes[instIndex] = [];
+		instrumentOscNodes[instIndex] = [];
 
 		// this is the somewhat tricky part. if we have a custom instrument preset,
 		// instead of just making 1 gain and 1 osc, we need to create an instance of that preset 
 		// and take its gain nodes and osc nodes and add them as lists to the above lists. 
 		// so in the end we should have a list of lists for gain and osc nodes 
-		for(var i = 0; i < numGainNodePerInst[index]; i++){
+		for(var i = 0; i < numGainNodePerInst[instIndex]; i++){
 			var newGainNodes;
 			var newOscNodes;
+			var currInst = pianoRollObject.instruments[instIndex];
 			
-			if(pianoRoll.instrumentPresets[instruments[index].waveType]){
+			if(pianoRollObject.instrumentPresets[currInst.waveType]){
 				// handle custom instrument presets
-				var presetData = pianoRoll.instrumentPresets[instruments[index].waveType];
-				var currPreset = createPresetInstrument(presetData, pianoRoll.audioContext);
+				var presetData = pianoRollObject.instrumentPresets[currInst.waveType];
+				var currPreset = createPresetInstrument(presetData, pianoRollObject.audioContext);
 				var nodes = getNodesCustomPreset(currPreset);
 				
 				// note that these nodes are already connected
@@ -416,25 +310,31 @@ function scheduler(pianoRoll, allInstruments){
 				});
 			}else{
 				// only need 1 gain and 1 osc (with standard wave 'instruments')
-				newGainNodes = [initGain(ctx)];
+				newGainNodes = [initGain(pianoRoll.audioContext)];
 				newGainNodes[0].id = ("gain" + (gainCount++));
 				
-				newOscNodes = [ctx.createOscillator()];
+				newOscNodes = [pianoRoll.audioContext.createOscillator()];
 				newOscNodes[0].id = ("osc" + (oscCount++));
 				
 				newOscNodes[0].connect(newGainNodes[0]);
 			}
 			
-			instrumentGainNodes[index].push(newGainNodes); // push a list of lists (we want to maintain the node groups here) - a node group is responsible for playing a note as if it were one node 
-			instrumentOscNodes[index].push(newOscNodes);
-			pianoRoll.timers = pianoRoll.timers.concat(newOscNodes);
+			instrumentGainNodes[instIndex].push(newGainNodes); // push an array of arrays (we want to maintain the node groups here) - a node group is responsible for playing a note as if it were one node 
+			instrumentOscNodes[instIndex].push(newOscNodes);
+			pianoRollObject.timers = pianoRollObject.timers.concat(newOscNodes);
 		}
 	}
-	
-	// 'route' the notes i.e. assign them to the gain/osc nodes such that they all get played properly
-	var routes = {}; // map instrument to another map of gain nodes to the notes that should be played by those nodes
-	var posTracker = {};
-	
+}
+
+// 'route' the notes i.e. assign them to the gain/osc nodes
+// @param instruments: array of instruments
+// @param instrumentNotePointers: an array where each index corresponds to an instrument 
+//                                and at each index is a number representing the index of the instrument's note to start playing at
+// @param instrumentGainNodes: a map of instrument index to an array of gain nodes for that instrument
+// @param routes: a map of instrument index to another map of gain nodes (the routes) to the notes they need to play
+// @param posTracker: a map of instrument index to another map where each key represents a gain node (a route)
+//                    and each value is the end position of the last note assigned
+function routeNotesToNodes(instruments, instrumentNotePointers, instrumentGainNodes, routes, posTracker){
 	for(var instrumentIndex = 0; instrumentIndex < instruments.length; instrumentIndex++){
 		var instrument = instruments[instrumentIndex];
 		
@@ -478,12 +378,20 @@ function scheduler(pianoRoll, allInstruments){
 			});
 		}
 	}
-		
-	// preprocess the nodes further by figuring out how long each note should be and its start/stop times
-	// note that we should NOT actually stop any oscillators; they should just be set to 0 freq and 0 gain when they should not be playing
-	// combine all notes of each instrument into an array. each element will be a map of note properties and the osc node for that note.
+}
+
+// preprocess the nodes further by figuring out how long each note should be and its start/stop times
+// note that we should NOT actually stop any oscillators; they should just be set to 0 freq and 0 gain when they should not be playing
+// combine all notes of each instrument into an array. each element will be a map of note properties and the osc node for that note.
+// @param routes: an object where each key is an instrument index mapped to a map of gain nodes mapped to the notes those gain nodes are responsible for playing. 
+// @param pianoRollObject: instance of PianoRoll
+// @param instrumentGainNodes: a map of instrument to gain nodes
+// @param instrumentOscNodes: a map of instrument to osc nodes
+// @return: an object with each key being an isntrument index and each value being a list of note configurations (which are objects)
+function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, instrumentOscNodes){
 	var allNotesPerInstrument = {};
-	var index = 0;
+	var index = 0; // index corresponds to the index of an instrument in pianoRollObject.instruments
+	
 	for(var instrument in routes){
 		allNotesPerInstrument[instrument] = [];
 		
@@ -499,15 +407,15 @@ function scheduler(pianoRoll, allInstruments){
 			
 			// hook up gain to the correct destination
 			gainsToUse.forEach((gain) => {
-				// take into account current instrument's panning
-				var panNode = pianoRoll.audioContext.createStereoPanner();
-				var panVal = allInstruments ? pianoRoll.instruments[instrument].pan : instruments[0].pan;
+				// take into account the current instrument's panning
+				var panNode = pianoRollObject.audioContext.createStereoPanner();
+				var panVal = pianoRollObject.instruments[instrument].pan;
 				gain.connect(panNode);
 				
-				if(pianoRoll.recording){
-					panNode.connect(pianoRoll.audioContextDestMediaStream);
+				if(pianoRollObject.recording){
+					panNode.connect(pianoRollObject.audioContextDestMediaStream);
 				}else{
-					panNode.connect(pianoRoll.audioContextDestOriginal);
+					panNode.connect(pianoRollObject.audioContextDestOriginal);
 				}
 				
 				// set pan node value
@@ -530,11 +438,11 @@ function scheduler(pianoRoll, allInstruments){
 				// the rest of the time can be devoted to the spacer 
 				var realDuration;
 				if(thisNote.block.style === "staccato"){
-					realDuration = (0.50 * thisNote.duration)/1000;
+					realDuration = (0.50 * thisNote.duration) / 1000;
 				}else if(thisNote.block.style === "legato"){
-					realDuration = (0.95 * thisNote.duration)/1000;
+					realDuration = (0.95 * thisNote.duration) / 1000;
 				}else{
-					realDuration = (0.70 * thisNote.duration)/1000;
+					realDuration = (0.70 * thisNote.duration) / 1000;
 				}
 				
 				var startTimeOffset = 0;
@@ -544,8 +452,8 @@ function scheduler(pianoRoll, allInstruments){
 					// so let's account for that here 
 					// if startMarker is specified, we can use its position to figure out the initial rest
 					var startPos = 60; // 60 is the x-position of the very first note of the piano roll
-					if(startMarker){
-						startPos = getNotePosition(document.getElementById(startMarker));
+					if(pianoRollObject.playMarker){
+						startPos = getNotePosition(document.getElementById(pianoRollObject.playMarker));
 					}
 					var firstNoteStart = getNotePosition(document.getElementById(notes[i].block.id));
 					thisNotePos = firstNoteStart;
@@ -556,7 +464,7 @@ function scheduler(pianoRoll, allInstruments){
 					// find out how much space there is between curr note and prev note to figure out when curr note should start
 					var prevNotePos = getNotePosition(document.getElementById(notes[i-1].block.id));
 					var thisNotePos = getNotePosition(document.getElementById(thisNote.block.id));
-					var timeDiff = getCorrectLength(thisNotePos - prevNotePos, pianoRoll) / 1000;
+					var timeDiff = getCorrectLength(thisNotePos - prevNotePos, pianoRollObject) / 1000;
 					startTimeOffset = timeOffsetAcc + timeDiff;
 					thisNotePos = thisNotePos;
 				}
@@ -572,6 +480,7 @@ function scheduler(pianoRoll, allInstruments){
 					"startTimeOffset": startTimeOffset,
 					"position": thisNotePos
 				};
+				
 				allNotesPerInstrument[instrument].push(noteSetup);
 			}
 			gainIndex++;
@@ -607,6 +516,146 @@ function scheduler(pianoRoll, allInstruments){
 		
 		index++;
 	}
+	
+	return allNotesPerInstrument;
+}
+
+
+/****
+
+	need a scheduler to schedule when a note should be played given a time based on the AudioContext's timer 
+	pass the schedule function a pianoRollObject, which holds the context, and an instrument, which has a notes array 
+	startTime will be set when play is clicked on in the play function 
+	
+	take the stuff from readAndPlayNote 
+	- figure out the realDuration and spacer 
+	- create a new oscillator for every note?? (lots of garbage?)
+	
+	@param pianoRoll: an instance of PianoRoll
+	
+	@param allInstruments: boolean
+	- true for all instruments 
+	- false for just the current instrument 
+	
+****/
+function scheduler(pianoRoll, allInstruments){
+	var ctx = pianoRoll.audioContext;
+	var startMarker = pianoRoll.playMarker; // if user specified a certain column to start playing at 
+	var startPos = 0;
+	
+	// each instrument may have a different number of notes.
+	// keep an array of numbers, where each array index corresponds to an instrument.
+	// each number will be the current note index of each instrument.
+	var instrumentNotePointers = [];
+	
+	// keep another array holding the next time the next note should play for each instrument
+	var nextTime = [];
+	
+	// keep a counter that counts the number of instruments that have finished playing all their notes  
+	var stillNotesToPlay = 0;
+	
+	// for each instrument initialize their index in instrumentNotePointers to 0, which means that playing should 
+	// start at the beginning (0 being the index of the first note of that instrument)
+	var instruments;
+	if(!allInstruments){
+		// if only playing the current instrument 
+		// get the index of the current instrument in case allInstruments is false (just playing one instrument in this case) 
+		var currentInstrumentIndex; 
+		for(var j = 0; j < pianoRoll.instruments.length; j++){
+			if(pianoRoll.instruments[j] === pianoRoll.currentInstrument){
+				currentInstrumentIndex = j;
+			}
+		}
+		
+		instruments = [pianoRoll.instruments[currentInstrumentIndex]];
+		instrumentNotePointers.push(0);
+		nextTime.push(0);
+	}else{
+		instruments = pianoRoll.instruments.slice(0);
+		for(var i = 0; i < pianoRoll.instruments.length; i++){
+			instrumentNotePointers.push(0);
+			nextTime.push(0);
+		}
+	}
+	
+	// gather the column headers so we can process them to indicate the approx. current location for playback
+	// filter columnHeadersToHighlight a bit more - we only want to include up to the last column that has notes.
+	// any column past that we don't want 
+	var columnHeadersToHighlight = Array.from(document.getElementById("columnHeaderRow").children).splice(1); // remove first col header since it's for cosmetic purposes
+	var lastColWithNotes;
+	columnHeadersToHighlight.forEach((col, index) => {
+		if(col.getAttribute("numNotes") > 0){
+			lastColWithNotes = index;
+		}
+	});
+	if(lastColWithNotes){
+		columnHeadersToHighlight = columnHeadersToHighlight.slice(0, lastColWithNotes+1);
+	}
+	
+	var highlightNextTime = ctx.currentTime; // keep track of when to start and stop oscillators responsible for highlighting the current approx. playback location
+	
+	// in the case where the user specified a measure to start playing at, we need to update instrumentNotePointers
+	if(startMarker){
+		startPos = getNotePosition(document.getElementById(startMarker));
+	
+		for(var i = 0; i < instruments.length; i++){
+			// have each instrument start with the note at index given by startMarker
+			for(var j = 0; j < instruments[i].notes.length; j++){
+				try{
+					// the elements of the notes array are arrays of Note objects, hence the [0]
+					var columnCell = document.getElementById(instruments[i].notes[j][0].block.id).parentNode;
+					var cellId = columnCell.id;
+					var cellPos = getNotePosition(columnCell);
+
+					if(cellId.indexOf(startMarker) > -1){
+						instrumentNotePointers[i] = j;
+						break;
+					}else if(cellPos > startPos){
+						// this is the first note that appears after the selected column to start playing from 
+						instrumentNotePointers[i] = j;
+						break;
+					}
+				}catch(error){
+					console.error(error);
+					console.error(instruments[i].notes[j].block.id);
+				}
+			}
+		}
+		columnHeadersToHighlight = columnHeadersToHighlight.splice(parseInt(startMarker.match(/[0-9]+/g)[0]));
+	}
+	
+	// set up oscillator just for highlighting approx. the current column header
+	// note each column header is 40 px in length (that's 1 eighth note)
+	// so they should all be the same length in duration
+	columnHeadersToHighlight.forEach((header) => {
+		var highlightOsc = ctx.createOscillator();
+		highlightOsc.start(highlightNextTime);
+		highlightNextTime += (getCorrectLength(40, pianoRoll) / 1000);
+		highlightOsc.stop(highlightNextTime);
+		highlightOsc.onended = onendFunc(
+			header.id, 
+			columnHeadersToHighlight[columnHeadersToHighlight.length-1].id, 
+			pianoRoll
+		);
+		// TODO: maybe use a separate timers array just for these highlight oscillators? don't mix with the notes
+		pianoRoll.timers.push(highlightOsc);
+	});
+	
+	// figure out for each instrument the minumum number of gain nodes
+	var numGainNodePerInst = getNumGainNodesPerInstrument(instruments, instrumentNotePointers);
+	
+	// add the appropriate number of gain nodes and oscillator nodes for each instrument.
+	var instrumentGainNodes = {};
+	var instrumentOscNodes = {};
+	addNodesPerInstrument(pianoRoll, numGainNodePerInst, instrumentGainNodes, instrumentOscNodes);
+	
+	// assign the notes to the right nodes for each instrument
+	var routes = {}; // map instrument to another map of gain nodes mapped to the notes that should be played by those nodes
+	var posTracker = {};
+	routeNotesToNodes(instruments, instrumentNotePointers, instrumentGainNodes, routes, posTracker);
+	
+	// determine duration, start time, volume, etc. of each note to be played
+	var allNotesPerInstrument = configureInstrumentNotes(routes, pianoRoll, instrumentGainNodes, instrumentOscNodes);
 
 	var thisTime = ctx.currentTime;
 	
@@ -639,6 +688,8 @@ function scheduler(pianoRoll, allInstruments){
 			
 			// useful for debugging time drift of notes' start times. I found out that I was getting non-uniform start offset values for chords.
 			//console.log(`instrument: ${instruments[i].name}; note: ${document.getElementById(otherParams.block.id).parentNode.id}; starting@ ${startTime} and ending@ ${endTime}; duration: ${duration}; start offset: ${startTimeOffset}`);
+			// TODO: note start time drift is still a problem I need to solve and am currently using a cheap solution where 
+			// I just make sure all notes in a chord start at the same time based on the first note in the chord.
 			
 			// log the time the last note will play
 			pianoRoll.lastTime = Math.max(pianoRoll.lastTime, (thisTime + startTimeOffset));
@@ -775,7 +826,6 @@ function scheduler(pianoRoll, allInstruments){
 		// seems to work well most, if not all the time though so far.
 		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){loopSignal(pianoRoll, allInstruments)};
 	}*/
-	
 }
 
 // implements looping play functionality
@@ -864,6 +914,7 @@ function stopPlay(pianoRollObject){
 		document.getElementById('record').style.border = "";
 	}
 	
+	// global vars
 	lastNote = null;
 	currNote = null;
 }
@@ -891,7 +942,9 @@ try {
 		playAll: playAll,
 		stopPlay: stopPlay,
 		getCorrectLength: getCorrectLength,
-		createNewInstrument: createNewInstrument
+		getNumGainNodesPerInstrument: getNumGainNodesPerInstrument,
+		getNotePosition: getNotePosition,
+		createNewInstrument: createNewInstrument,
 	}
 }catch(e){
 	// ignore errors (i.e. if adding the script to an html page)
