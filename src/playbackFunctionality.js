@@ -193,13 +193,13 @@ function getNotePosition(noteElement){
 	scheduler helper functions
 ***/
 
+// figure out for each instrument the minimum number of gain nodes (which is also the num of oscillator nodes) we need 
+// in order to minimize the number of nodes we need to create since that adds performance overhead
 // @param instruments: an array of instruments
 // @param instrumentNotePointers: an array where each index corresponds to an instrument 
 //                                and at each index is a number representing the index of the instrument's note to start playing at
 // @return: a map where key: instrument index, value: total number of nodes needed for that instrument
 function getNumGainNodesPerInstrument(instruments, instrumentNotePointers){
-	// figure out for each instrument the minimum number of gain nodes (which is also the num of oscillator nodes) we need 
-	// in order to minimize the number of nodes we need to create since that adds performance overhead
 	var numGainNodePerInst = {};
 	
 	instruments.forEach((instrument, instIndex) => {
@@ -264,15 +264,131 @@ function getNumGainNodesPerInstrument(instruments, instrumentNotePointers){
 	return numGainNodePerInst;
 }
 
+// add the appropriate number of gain nodes and oscillator nodes for each instrument.
+// we can then reuse these nodes instead of making new ones for every single note, which is unnecessary.
+// especially if we have a lot of notes that aren't part of chords and can be used with just one gain node and oscillator.
+// but need to be careful here! if we import a custom preset, we may be importing a network of nodes (that can be reused).
+// we can still maintain a 1:1 gain to route relationship but instead of the usual case where we have 1 gain for a route, we 
+// have one network of nodes (so maybe 2 gain nodes) for a route.
+// @param pianoRollObject: an instance of PianoRoll
+// @param numGainNodePerInst: a map of instrument index to the number of nodes needed for that instrument
+// @param instrumentGainNodes: a map where each key is the index of an instrument and each value will be an array of gain nodes
+// @param instrumentOscNodes: a map where each key is the index of an instrument and each value will be an array of oscillator nodes
+function addNodesPerInstrument(pianoRollObject, numGainNodePerInst, instrumentGainNodes, instrumentOscNodes){
+	var gainCount = 0;
+	var oscCount = 0;
+
+	for(var instIndex in numGainNodePerInst){
+		instrumentGainNodes[instIndex] = [];
+		instrumentOscNodes[instIndex] = [];
+
+		// this is the somewhat tricky part. if we have a custom instrument preset,
+		// instead of just making 1 gain and 1 osc, we need to create an instance of that preset 
+		// and take its gain nodes and osc nodes and add them as lists to the above lists. 
+		// so in the end we should have a list of lists for gain and osc nodes 
+		for(var i = 0; i < numGainNodePerInst[instIndex]; i++){
+			var newGainNodes;
+			var newOscNodes;
+			var currInst = pianoRollObject.instruments[instIndex];
+			
+			if(pianoRollObject.instrumentPresets[currInst.waveType]){
+				// handle custom instrument presets
+				var presetData = pianoRollObject.instrumentPresets[currInst.waveType];
+				var currPreset = createPresetInstrument(presetData, pianoRollObject.audioContext);
+				var nodes = getNodesCustomPreset(currPreset);
+				
+				// note that these nodes are already connected
+				newGainNodes = nodes.gainNodes;
+				newOscNodes = nodes.oscNodes;
+
+				newGainNodes.forEach((gain) => {
+					gain.id = ("gain" + (gainCount++));
+				});
+				
+				newOscNodes.forEach((osc) => {
+					osc.id = ("osc" + (oscCount++));
+				});
+			}else{
+				// only need 1 gain and 1 osc (with standard wave 'instruments')
+				newGainNodes = [initGain(pianoRoll.audioContext)];
+				newGainNodes[0].id = ("gain" + (gainCount++));
+				
+				newOscNodes = [pianoRoll.audioContext.createOscillator()];
+				newOscNodes[0].id = ("osc" + (oscCount++));
+				
+				newOscNodes[0].connect(newGainNodes[0]);
+			}
+			
+			instrumentGainNodes[instIndex].push(newGainNodes); // push an array of arrays (we want to maintain the node groups here) - a node group is responsible for playing a note as if it were one node 
+			instrumentOscNodes[instIndex].push(newOscNodes);
+			pianoRollObject.timers = pianoRollObject.timers.concat(newOscNodes);
+		}
+	}
+}
+
+// 'route' the notes i.e. assign them to the gain/osc nodes
+// @param instruments: array of instruments
+// @param instrumentNotePointers: an array where each index corresponds to an instrument 
+//                                and at each index is a number representing the index of the instrument's note to start playing at
+// @param instrumentGainNodes: a map of instrument index to an array of gain nodes for that instrument
+// @param routes: a map of instrument index to another map of gain nodes (the routes) to the notes they need to play
+// @param posTracker: a map of instrument index to another map where each key represents a gain node (a route)
+//                    and each value is the end position of the last note assigned
+function routeNotesToNodes(instruments, instrumentNotePointers, instrumentGainNodes, routes, posTracker){
+	for(var instrumentIndex = 0; instrumentIndex < instruments.length; instrumentIndex++){
+		var instrument = instruments[instrumentIndex];
+		
+		if(instrumentGainNodes[instrumentIndex] === undefined){
+			// this instrument doesn't have any notes. skip it.
+			continue;
+		}
+		
+		routes[instrumentIndex] = {};
+		posTracker[instrumentIndex] = {}; // stores the end position (i.e. start + note width) of the last note assigned to a gain node for an instrument
+		
+		for(var j = 0; j < instrumentGainNodes[instrumentIndex].length; j++){
+			routes[instrumentIndex][j] = [];
+			posTracker[instrumentIndex][j] = 0;
+		}
+		
+		// use instrumentNotePointers to take into account the startMarker 
+		var start = instrumentNotePointers[instrumentIndex];
+		for(var index = start; index < instrument.notes.length; index++){
+			var group = instrument.notes[index];
+			
+			group.forEach((note, noteIndex) => {
+				var lastEndPositions = posTracker[instrumentIndex]; // this is a map!
+				var htmlNote = document.getElementById(note.block.id);
+				var notePos = getNotePosition(htmlNote);
+				var startPosCurrNote = notePos;
+				var endPosCurrNote = notePos + parseInt(htmlNote.style.width);
+				var gainNodeRoutes = instrumentGainNodes[instrumentIndex];
+				
+				// try each gain node in the map to see if they can handle this note. i.e. if another note should be playing for this gain 
+				// while this current note is supposed to start, then this gain node cannot support this current note.
+				// there should always be a possible gain node route option available
+				for(var j = 0; j < gainNodeRoutes.length; j++){
+					if(lastEndPositions[j] <= startPosCurrNote){
+						// we can use this gain node!
+						routes[instrumentIndex][j].push(note); // assign this note to the gain node
+						lastEndPositions[j] = endPosCurrNote;  // log its ending position 
+						break;
+					}
+				}
+			});
+		}
+	}
+}
+
+// preprocess the nodes further by figuring out how long each note should be and its start/stop times
+// note that we should NOT actually stop any oscillators; they should just be set to 0 freq and 0 gain when they should not be playing
+// combine all notes of each instrument into an array. each element will be a map of note properties and the osc node for that note.
 // @param routes: an object where each key is an instrument index mapped to a map of gain nodes mapped to the notes those gain nodes are responsible for playing. 
 // @param pianoRollObject: instance of PianoRoll
 // @param instrumentGainNodes: a map of instrument to gain nodes
 // @param instrumentOscNodes: a map of instrument to osc nodes
-// @return: an object with each key being an isntrument index and each value being a list of note configurations (which is an object)
+// @return: an object with each key being an isntrument index and each value being a list of note configurations (which are objects)
 function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, instrumentOscNodes){
-	// preprocess the nodes further by figuring out how long each note should be and its start/stop times
-	// note that we should NOT actually stop any oscillators; they should just be set to 0 freq and 0 gain when they should not be playing
-	// combine all notes of each instrument into an array. each element will be a map of note properties and the osc node for that note.
 	var allNotesPerInstrument = {};
 	var index = 0; // index corresponds to the index of an instrument in pianoRollObject.instruments
 	
@@ -529,111 +645,16 @@ function scheduler(pianoRoll, allInstruments){
 	var numGainNodePerInst = getNumGainNodesPerInstrument(instruments, instrumentNotePointers);
 	
 	// add the appropriate number of gain nodes and oscillator nodes for each instrument.
-	// we can then reuse these nodes instead of making new ones for every single note, which is unnecessary 
-	// especially if we have a lot of notes that aren't part of chords and can be used with just one gain node and oscillator
-	
-	// need to be careful here! if we import a custom preset, we may be importing a network of nodes (that can be reused).
-	// we can still maintain a 1:1 gain to route relationship but instead of the usual case where we have 1 gain for a route, we 
-	// have one network of nodes (so maybe 2 gain nodes) for a route.
 	var instrumentGainNodes = {};
 	var instrumentOscNodes = {};
-	var gainCount = 0;
-	var oscCount = 0;
-
-	for(var instIndex in numGainNodePerInst){
-		instrumentGainNodes[instIndex] = [];
-		instrumentOscNodes[instIndex] = [];
-
-		// this is the somewhat tricky part. if we have a custom instrument preset,
-		// instead of just making 1 gain and 1 osc, we need to create an instance of that preset 
-		// and take its gain nodes and osc nodes and add them as lists to the above lists. 
-		// so in the end we should have a list of lists for gain and osc nodes 
-		for(var i = 0; i < numGainNodePerInst[instIndex]; i++){
-			var newGainNodes;
-			var newOscNodes;
-			
-			if(pianoRoll.instrumentPresets[instruments[instIndex].waveType]){
-				// handle custom instrument presets
-				var presetData = pianoRoll.instrumentPresets[instruments[instIndex].waveType];
-				var currPreset = createPresetInstrument(presetData, pianoRoll.audioContext);
-				var nodes = getNodesCustomPreset(currPreset);
-				
-				// note that these nodes are already connected
-				newGainNodes = nodes.gainNodes;
-				newOscNodes = nodes.oscNodes;
-
-				newGainNodes.forEach((gain) => {
-					gain.id = ("gain" + (gainCount++));
-				});
-				
-				newOscNodes.forEach((osc) => {
-					osc.id = ("osc" + (oscCount++));
-				});
-			}else{
-				// only need 1 gain and 1 osc (with standard wave 'instruments')
-				newGainNodes = [initGain(ctx)];
-				newGainNodes[0].id = ("gain" + (gainCount++));
-				
-				newOscNodes = [ctx.createOscillator()];
-				newOscNodes[0].id = ("osc" + (oscCount++));
-				
-				newOscNodes[0].connect(newGainNodes[0]);
-			}
-			
-			instrumentGainNodes[instIndex].push(newGainNodes); // push a list of lists (we want to maintain the node groups here) - a node group is responsible for playing a note as if it were one node 
-			instrumentOscNodes[instIndex].push(newOscNodes);
-			pianoRoll.timers = pianoRoll.timers.concat(newOscNodes);
-		}
-	}
+	addNodesPerInstrument(pianoRoll, numGainNodePerInst, instrumentGainNodes, instrumentOscNodes);
 	
-	// 'route' the notes i.e. assign them to the gain/osc nodes such that they all get played properly
+	// assign the notes to the right nodes for each instrument
 	var routes = {}; // map instrument to another map of gain nodes mapped to the notes that should be played by those nodes
 	var posTracker = {};
+	routeNotesToNodes(instruments, instrumentNotePointers, instrumentGainNodes, routes, posTracker);
 	
-	for(var instrumentIndex = 0; instrumentIndex < instruments.length; instrumentIndex++){
-		var instrument = instruments[instrumentIndex];
-		
-		if(instrumentGainNodes[instrumentIndex] === undefined){
-			// this instrument doesn't have any notes. skip it.
-			continue;
-		}
-		
-		routes[instrumentIndex] = {};
-		posTracker[instrumentIndex] = {}; // stores the end position (i.e. start + note width) of the last note assigned to a gain node for an instrument
-		
-		for(var j = 0; j < instrumentGainNodes[instrumentIndex].length; j++){
-			routes[instrumentIndex][j] = [];
-			posTracker[instrumentIndex][j] = 0;
-		}
-		
-		// use instrumentNotePointers to take into account the startMarker 
-		var start = instrumentNotePointers[instrumentIndex];
-		for(var index = start; index < instrument.notes.length; index++){
-			var group = instrument.notes[index];
-			
-			group.forEach((note, noteIndex) => {
-				var lastEndPositions = posTracker[instrumentIndex]; // this is a map!
-				var htmlNote = document.getElementById(note.block.id);
-				var notePos = getNotePosition(htmlNote);
-				var startPosCurrNote = notePos;
-				var endPosCurrNote = notePos + parseInt(htmlNote.style.width);
-				var gainNodeRoutes = instrumentGainNodes[instrumentIndex];
-				
-				// try each gain node in the map to see if they can handle this note. i.e. if another note should be playing for this gain 
-				// while this current note is supposed to start, then this gain node cannot support this current note.
-				// there should always be a possible gain node route option available
-				for(var j = 0; j < gainNodeRoutes.length; j++){
-					if(lastEndPositions[j] <= startPosCurrNote){
-						// we can use this gain node!
-						routes[instrumentIndex][j].push(note); // assign this note to the gain node
-						lastEndPositions[j] = endPosCurrNote;  // log its ending position 
-						break;
-					}
-				}
-			});
-		}
-	}
-	
+	// determine duration, start time, volume, etc. of each note to be played
 	var allNotesPerInstrument = configureInstrumentNotes(routes, pianoRoll, instrumentGainNodes, instrumentOscNodes);
 
 	var thisTime = ctx.currentTime;
@@ -805,7 +826,6 @@ function scheduler(pianoRoll, allInstruments){
 		// seems to work well most, if not all the time though so far.
 		pianoRoll.timers[pianoRoll.timers.length-1].onended = function(){loopSignal(pianoRoll, allInstruments)};
 	}*/
-	
 }
 
 // implements looping play functionality
