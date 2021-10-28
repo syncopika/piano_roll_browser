@@ -36,12 +36,12 @@ also influenced a bit by PxTone Collage, another great application!
 **Changing note lock size:**    
 ![changing note lock size](screenshots/note_lock.gif "changing note lock size")    
     
+**setting play marker:**    
+![setting play marker](screenshots/playmarker.gif "setting playback at a certain column with the play marker")    
+    
 **toggling sticky toolbar:**    
 ![toggle sticky toolbar](screenshots/sticky_toolbar.gif "toggling the toolbar to be sticky")    
     
-**setting play marker:**    
-![setting play marker](screenshots/playmarker.gif "setting playback at a certain column with the play marker")    
-	
 I've also implemented a rudimentary custom instrument preset import ability (use this to create a custom instrument preset: https://github.com/syncopika/soundmaker). You can see some basic example presets in /example_presets, which are imported automatically in my demo.    
     
 Disclaimer: the custom instrument functionality is currently pretty limited; there are lots of possible custom preset configurations that will break under my current implementation. So this feature is definitely a work-in-progress but you can maybe at least see its future potential! :)    
@@ -54,16 +54,16 @@ Disclaimer: the custom instrument functionality is currently pretty limited; the
 ### features I would like to implement:    
 - ability to change color of highlight and color of note blocks, i.e. different for each instrument    
 - be able to repeat a section    
-- looping?
+- looping
     
 ### implementation / design:    
 The objective of my piano roll is to arrange a number of notes with varying lengths and pitches with the help of a grid, put these notes in an array and then create audio nodes for each note so that a musical phrase can be played back.    
     
 An important point about audio nodes: one limitation is that the performance of what the Web Audio API has to offer is based on the user's computer CPU. Depending on the computer, the creation of new, separate audio nodes per musical note can cause considerable lag and render an application useless (this number can get very large especially because some instruments involve multiple nodes per note).    
     
-To optimize things a bit, instead of allowing new nodes to be created for each note, I calculate the minimum number of nodes needed for each instrument based on the maximum number of notes playing at the same time for that instrument. This technique appears to work pretty well and improved performance considerably on my laptop (HP Notebook 15-ay011nr). Another potential thing to fix might be the way I'm scheduling notes. Instead of scheduling them all upfront and creating all the necessary nodes at once, maybe I can create them gradually?
+To optimize things a bit, instead of allowing new nodes to be created for each note, I calculate the minimum number of nodes needed for each instrument based on the maximum number of notes playing at the same time for that instrument. This strategy appears to work pretty well and improved performance considerably on my laptop (HP Notebook 15-ay011nr). Check out some of my hand-drawn diagrams in `/notes` for visual representations of my idea. Another possible performance enhancement might be the way I'm scheduling notes. Instead of scheduling them all upfront and creating all the necessary nodes at once, maybe I can create them gradually?
     
-My implementation also does not use the canvas element like some other piano roll implementations and instead relies on just DOM manipulation of a grid to manipulate notes.    
+My implementation also does not use the canvas element like some other piano roll implementations and instead relies on just DOM manipulation of a grid to manipulate notes. This might also be a source of concern with regards to performance (but so far I haven't had any issues yet with this approach).    
     
 Users can place and move notes freely on the piano roll. In order to do that, my program looks at a couple of factors: the location of the cursor and the note lock size, which can be an 8th note (1 block on the piano roll), 16th note (half a block), or 32nd note. The note lock size determines the incremental distance a note block can be moved. The smaller the note, the more possible locations within a piano roll block it could be placed. For note movement, the cursor's location is taken into account and if it is over a piano roll block, my program determines, based on the cursor's x-position, what position within the piano roll block the cursor is closest to and places the note at that position.    
     

@@ -343,8 +343,9 @@ function clearGridAll(pianoRollObject){
 }
 
 // @param pianoRollObject: instance of PianoRoll
-function addNewMeasure(pianoRollObject){
-    var columnHeaderParent = document.getElementById('columnHeaderRow');
+// @param container: an HTML element representing the container of the column header elements
+function addNewMeasure(pianoRollObject, container){
+    var columnHeaderParent = container;
     
     var lastColNum = pianoRollObject.numberOfMeasures * pianoRollObject.subdivision + 1;
     for(var i = lastColNum; i < lastColNum + pianoRollObject.subdivision; i++){
@@ -367,59 +368,42 @@ function addNewMeasure(pianoRollObject){
         noteRows[j].style.width = parseInt(noteRows[j].style.width)+20+"%";
     }
     pianoRollObject.numberOfMeasures++;
-    
-    // updating the measure count - notice specific id of element!
-    var measureCounterElement = document.getElementById("measures");
-    measureCounterElement.textContent = "measure count: " + pianoRollObject.numberOfMeasures;
 }
 
 // deletes the last measure
 // @param pianoRollObject: an instance of PianoRoll
 function deleteMeasure(pianoRollObject){
+    var lastMeasureStartColNum = (pianoRollObject.numberOfMeasures-1) * pianoRollObject.subdivision;
     
-    // check how many measures exist first. if none, don't do anything. 
-    if(pianoRollObject.numberOfMeasures === 0){
-        return;
-    }else{
-        var okToDelete = confirm("Are you sure you want to delete the last measure?");
-        if(okToDelete){
-            var lastMeasureStartColNum = (pianoRollObject.numberOfMeasures-1) * pianoRollObject.subdivision;
-            
-            // go through each instrument's activenotes and delete
-            for(var instrument of pianoRollObject.instruments){
-                var instNotes = instrument.activeNotes;
-                for(var note in instNotes){
-                    if(parseInt(instNotes[note].parentNode.id.split("_")[1]) >= lastMeasureStartColNum){
-                        //console.log("need to delete column note: " + parseInt(instNotes[note].parentNode.id.split("_")[1]));
-                        var noteElement = instNotes[note];
-                        noteElement.parentNode.removeChild(noteElement);
-                        delete instNotes[note];
-                    }
-                }
+    // go through each instrument's activenotes and delete
+    for(var instrument of pianoRollObject.instruments){
+        var instNotes = instrument.activeNotes;
+        for(var note in instNotes){
+            if(parseInt(instNotes[note].parentNode.id.split("_")[1]) >= lastMeasureStartColNum){
+                //console.log("need to delete column note: " + parseInt(instNotes[note].parentNode.id.split("_")[1]));
+                var noteElement = instNotes[note];
+                noteElement.parentNode.removeChild(noteElement);
+                delete instNotes[note];
             }
-            
-            // remove the columns from the ui
-            for(var i = lastMeasureStartColNum; i < lastMeasureStartColNum + pianoRollObject.subdivision; i++){
-                var colHeader = document.getElementById("col_" + i);
-                colHeader.parentNode.removeChild(colHeader);
-                
-                for(var note in pianoRollObject.noteFrequencies){
-                    var noteName = note.replace('#', 's');
-                    var col = document.getElementById(noteName + "col_" + i);
-                    if(col){
-                        col.parentNode.removeChild(col);
-                    }
-                }
-            }
-            
-            // update num measure in pianoRollObject
-            pianoRollObject.numberOfMeasures--;
-            
-            // update ui with correct num measures
-            var measureCounterElement = document.getElementById("measures");
-            measureCounterElement.textContent = "measure count: " + pianoRollObject.numberOfMeasures;
         }
     }
+    
+    // remove the columns from the ui
+    for(var i = lastMeasureStartColNum; i < lastMeasureStartColNum + pianoRollObject.subdivision; i++){
+        var colHeader = document.getElementById("col_" + i);
+        colHeader.parentNode.removeChild(colHeader);
+        
+        for(var note in pianoRollObject.noteFrequencies){
+            var noteName = note.replace('#', 's');
+            var col = document.getElementById(noteName + "col_" + i);
+            if(col){
+                col.parentNode.removeChild(col);
+            }
+        }
+    }
+    
+    // update num measure in pianoRollObject
+    pianoRollObject.numberOfMeasures--;
 }
 
 // @param thisElement: the id of an html element representing an instrument
@@ -524,9 +508,7 @@ function changeTimeSignature(pianoRollObject, newTimeSig){
 var lastNote = null;
 var onendFunc = function(colHeaderId, lastColId, pianoRoll){ 
     return function(){
-        
         if(pianoRoll.recording && colHeaderId === lastColId){
-            
             // add some extra silence so it doesn't end so abruptly
             
             // stop the recorder when the last column has been reached

@@ -390,14 +390,14 @@ function routeNotesToNodes(instruments, instrumentNotePointers, instrumentGainNo
 // @return: an object with each key being an isntrument index and each value being a list of note configurations (which are objects)
 function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, instrumentOscNodes){
     var allNotesPerInstrument = {};
-    var index = 0; // index corresponds to the index of an instrument in pianoRollObject.instruments
     
+    // instrument corresponds to the index of an instrument in pianoRollObject.instruments
     for(var instrument in routes){
         allNotesPerInstrument[instrument] = [];
         
         var instrumentRoutes = routes[instrument];
-        var currInstGainNodes = instrumentGainNodes[index]; // this is a list of lists!
-        var currInstOscNodes = instrumentOscNodes[index];   // this is a list of lists!
+        var currInstGainNodes = instrumentGainNodes[instrument]; // this is a list of lists!
+        var currInstOscNodes = instrumentOscNodes[instrument];   // this is a list of lists!
         var gainIndex = 0;
         
         for(var route in instrumentRoutes){
@@ -485,7 +485,7 @@ function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, 
             }
             gainIndex++;
         }
-        
+    
         // so calculating startTimeOffset seems to be a bit tricky and yields different values 
         // for notes that should be started at the same time (i.e. in a chord). 
         // to remedy this, go through all the notes again real quick and if we find notes that 
@@ -513,8 +513,6 @@ function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, 
                 });
             }
         }
-        
-        index++;
     }
     
     return allNotesPerInstrument;
@@ -621,6 +619,7 @@ function scheduler(pianoRoll, allInstruments){
                 }
             }
         }
+        
         columnHeadersToHighlight = columnHeadersToHighlight.splice(parseInt(startMarker.match(/[0-9]+/g)[0]));
     }
     
@@ -643,6 +642,7 @@ function scheduler(pianoRoll, allInstruments){
     
     // figure out for each instrument the minumum number of gain nodes
     var numGainNodePerInst = getNumGainNodesPerInstrument(instruments, instrumentNotePointers);
+    //console.log(numGainNodePerInst);
     
     // add the appropriate number of gain nodes and oscillator nodes for each instrument.
     var instrumentGainNodes = {};
@@ -889,7 +889,7 @@ function stopPlay(pianoRollObject){
     
     for(var j = 0; j < pianoRollObject.instruments.length; j++){
         // I don't think this actually helps since we might have multiple gains per instrument :<
-        pianoRollObject.instruments[j].gain.disconnect();
+        //pianoRollObject.instruments[j].gain.disconnect();
         
         // create a new gain for each instrument (this really is only needed when clicking notes, not playback)
         var newGain = initGain(pianoRollObject.audioContext);

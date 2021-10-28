@@ -92,13 +92,24 @@ $(window).scroll(function(){
 
 // add event listeners to buttons (and other clickable elements)
 function bindButtons(pianoRollObject){
-
     document.getElementById('delMeasure').addEventListener('click', function(){
-        deleteMeasure(pianoRollObject);
+        if(pianoRollObject.numberOfMeasures > 1){
+            var okToDelete = confirm("Are you sure you want to delete the last measure?");
+            if(okToDelete){
+                deleteMeasure(pianoRollObject);
+                
+                // update ui with correct num measures
+                var measureCounterElement = document.getElementById("measures");
+                measureCounterElement.textContent = "measure count: " + pianoRollObject.numberOfMeasures;
+            }
+        }
     });
 
     document.getElementById('addMeasure').addEventListener('click', function(){
-        addNewMeasure(pianoRollObject);
+        addNewMeasure(pianoRollObject, document.getElementById('columnHeaderRow'));
+        
+        var measureCounterElement = document.getElementById("measures");
+        measureCounterElement.textContent = "measure count: " + pianoRollObject.numberOfMeasures;
     });
     
     document.getElementById('clearGrid').addEventListener('click', function(){
@@ -316,11 +327,17 @@ function processData(data){
     // now put the data on the grid 
     var measures = data.measures;
     
-    // add new measures first - todo: delete measures if too many!
+    // adjust measures
     var measuresToAdd = measures - pianoRoll.numberOfMeasures;
     if(measures > pianoRoll.numberOfMeasures){
+        // add more measures
         for(var i = 0; i < measuresToAdd; i++){
-            addNewMeasure(pianoRoll); // add new measures as needed 
+            document.getElementById('addMeasure').click();
+        }
+    }else if(measures < pianoRoll.numberOfMeasures){
+        // delete extra measures
+        while(measures < pianoRoll.numberOfMeasures){
+            deleteMeasure(pianoRoll);
         }
     }
     
