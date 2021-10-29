@@ -414,9 +414,8 @@ function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, 
                 
                 if(pianoRollObject.recording){
                     panNode.connect(pianoRollObject.audioContextDestMediaStream);
-                }else{
-                    panNode.connect(pianoRollObject.audioContextDestOriginal);
                 }
+                panNode.connect(pianoRollObject.audioContextDestOriginal);
                 
                 // set pan node value
                 panNode.pan.setValueAtTime(panVal, 0.0);
