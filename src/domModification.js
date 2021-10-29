@@ -437,6 +437,8 @@ function chooseInstrument(thisElement, pianoRollObject){
     // get index of clicked-on instrument in instrumentTable and subtract 1 to
     // account for 0-index when we use it to look in pianoRoll object 'instruments' 
     // array for the corresponding instrument object
+    // we are assuming that when an instrument gets deleted, all of these instrument tab elements
+    // will get corrected so that this will not fail (i.e. we should always have sequentially id'd elements)
     var index = parseInt(thisElement) - 1;
     
     // then change current instrument to the one clicked on 
@@ -506,7 +508,7 @@ function changeTimeSignature(pianoRollObject, newTimeSig){
     // highlight where the current note playing is.
 ***/
 var lastNote = null;
-var onendFunc = function(colHeaderId, lastColId, pianoRoll){ 
+var onendFunc = function(colHeaderId, lastColId, pianoRoll){
     return function(){
         if(pianoRoll.recording && colHeaderId === lastColId){
             // add some extra silence so it doesn't end so abruptly
@@ -563,7 +565,6 @@ function showOnionSkin(pianoRollObject){
 // @param pianoRollObject: an instance of PianoRoll
 // @param headerId: the id of the element that holds all the column header elements
 function redrawCellBorders(pianoRollObject, headerId){
-
     var subdivision = pianoRollObject.subdivision; 
     var headers = Array.from(document.getElementById(headerId).children);
     
@@ -653,7 +654,8 @@ function addNewInstrument(name, createBool, pianoRollObject){
     var newInstrument = document.createElement('td');
     
     // we want to be able to access the instruments in sequential order
-    newInstrument.id = "" + (pianoRollObject.instruments.length + 1); 
+    newInstrument.id = (pianoRollObject.instruments.length + 1);
+    newInstrument.className = "instrument";
     newInstrument.setAttribute("selected", "0");
     newInstrument.style.backgroundColor = "transparent";
     

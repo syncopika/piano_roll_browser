@@ -358,8 +358,11 @@ function processData(data){
         addNewInstrument(data.instruments[i].name, false, pianoRoll);
         
         var newInstrument = data.instruments[i];
+        // TODO: this is not ideal if we need to add more instrument attributes
         if(newInstrument.pan === undefined){
             newInstrument.pan = 0.0;
+        }else if(newInstrument.isMute === undefined){
+            newInstrument.isMute = false;
         }
         
         // set up a fresh new gain node for each instrument 

@@ -109,6 +109,17 @@ function makeInstrumentContextMenu(pianoRollObject){
                             }
                         },
                         sep5: "-------------",
+                        "Mute instrument": {
+                            name: "Toggle mute",
+                            type: "checkbox",
+                            selected: pianoRollObject.currentInstrument.isMute,
+                            events: {
+                                click: function(e){
+                                    pianoRollObject.currentInstrument.isMute = !pianoRollObject.currentInstrument.isMute;
+                                }
+                            }
+                        },
+                        sep6: "-------------",
                         "Delete": {
                             name: "Delete", 
                             icon: "delete",
@@ -135,6 +146,12 @@ function makeInstrumentContextMenu(pianoRollObject){
                                     
                                     // set current instrument to the first instrument
                                     pianoRollObject.currentInstrument = pianoRollObject.instruments[0];
+                                    
+                                    // update the ids of each instrument so they are in sequential order again
+                                    var count = 1;
+                                    document.querySelectorAll(".instrument").forEach((element) => {
+                                        element.id = count++;
+                                    });
                                     
                                     // click the first instrument to show its notes
                                     $('#1').click();
