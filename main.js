@@ -1,10 +1,3 @@
-
-//TODO:
-/*
-- allow color customizations for highlight, note blocks
-- allow repeats (add some new attributes to column headers)?
-*/
-
 // prevent flash of unstylized content 
 $(document).ready(function(){
     $("body").css("display", "block");
@@ -12,15 +5,23 @@ $(document).ready(function(){
     
     /*  
         special block for just piano notes 
-        this is supposed to move right when scroll right 
+        this is supposed to move right when scrolling right
     */
     var position = $('#C8').position();
     $('#pianoNotes').css('left', position.left);
     $('#pianoNotes').css('top', position.top);
+    
+    // guard against inadvertently closing the page
+    $(window).on('beforeunload', function(evt){
+        // this should trigger the generic popup asking to confirm if you want to leave
+        evt.returnValue = "are you sure you want to leave?";
+        return "are you sure you want to leave?";
+    });
 });
 
+
 /****
-    make new Piano Roll object (has some necessary information about the piano roll)
+    make new Piano Roll object
 ****/
 var pianoRoll = new PianoRoll();
 pianoRoll.init();
@@ -33,7 +34,6 @@ bindButtons(pianoRoll);
     INFORMATION ABOUT THE CURRENT SETUP 
 ****/
 $('#measures').html("measure count: " + pianoRoll.numberOfMeasures);
-//$('#timeSig').html("time signature: " + pianoRoll.timeSignature);
 $('#subdiv').html("subdivision: " + pianoRoll.subdivision);
 
 // flag for toggling the toolbar to be static or sticky
@@ -87,7 +87,6 @@ $(window).scroll(function(){
     
     // and the footer 
     $('.footer').css('left', $(window).scrollLeft());
-    
 });
 
 // add event listeners to buttons (and other clickable elements)
