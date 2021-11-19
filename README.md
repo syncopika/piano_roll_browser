@@ -2,7 +2,7 @@
 a music sequencer inspired by LMMS, one of the best software applications ever!    
 also influenced a bit by PxTone Collage, another great application!    
     
-**it is highly recommended that Chrome be used for optimal functionality (except for recording) at the moment.**    
+**It is highly recommended that Chrome be used for optimal functionality (except for recording) at the moment.**    
     
 ![screenshot of the piano roll](screenshots/current.png "current look")    
     
@@ -47,7 +47,8 @@ I've also implemented a rudimentary custom instrument preset import ability (use
 Disclaimer: the custom instrument functionality is currently pretty limited; there are lots of possible custom preset configurations that will break under my current implementation. So this feature is definitely a work-in-progress but you can maybe at least see its future potential! :)    
     
 ### current issues:        
-- downloading the audio isn't great on Chrome - the audio comes out fine but the duration is messed up (see: https://stackoverflow.com/questions/38443084/how-can-i-add-predefined-length-to-audio-recorded-from-mediarecorder-in-chrome).    
+- (Chrome) downloading the audio isn't great - the audio comes out fine but the duration is messed up (see: https://stackoverflow.com/questions/38443084/how-can-i-add-predefined-length-to-audio-recorded-from-mediarecorder-in-chrome).    
+    
 ### current next steps?:    
 - refactoring + tests    
     

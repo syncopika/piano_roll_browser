@@ -1,18 +1,17 @@
-- need to spend some time checking the math for calculating start times? - watch out for drift
-
-- on Firefox: when playing my demos (except for the 3/4 example), the first note always seems to be skipped.
-  otherwise, performance on Firefox seems to have improved considerably from at least a year ago for my application.
+- need to spend some time checking the math for calculating start times (precision)? - watch out for drift
   
 - looping implementation was questionable and removed for now
 
+- https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/cancelAndHoldAtTime is not supported in Firefox and 
+  I'm using it :/
+
 current things to do now:
-	- be able to mute instruments
-	- some kind of visual signal for note volume?
-	- use sliders for changing value of volume, pan instead of dropdown
-	- improve percussion
-	  - no panning currently
-	- the pianoNotes div (i.e. mobile piano bar) implementation could be cleaned up a bit maybe?
-	- add metronome? is scheduler scheduling on time?
-	- accessibility?
-	- maybe make it at least a little mobile friendly, i.e. support also touch events?
-	- refactor? things like play and stopPlay - should those be piano roll methods instead of standalone functions?
+  - some kind of visual signal for note volume?
+  - use sliders for changing value of volume, pan instead of dropdown
+  - improve percussion
+    - no panning currently
+  - the pianoNotes div (i.e. mobile piano bar) implementation could be cleaned up a bit maybe?
+  - add metronome? is scheduler scheduling on time?
+  - accessibility?
+  - maybe make it at least a little mobile friendly, i.e. support also touch events?
+  - refactor? things like play and stopPlay - should those be piano roll methods instead of standalone functions?

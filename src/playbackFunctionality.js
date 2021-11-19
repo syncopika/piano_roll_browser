@@ -775,12 +775,6 @@ function scheduler(pianoRoll, allInstruments){
                 
                 oscs.forEach((osc) => {
                     osc.type = instrumentsToPlay[i].waveType;
-                
-                    if(otherParams.freq < 440){
-                        // need to set initial freq to 0 for low notes (C3 and below)
-                        // otherwise gliding will be messed up for notes on one end of the spectrum
-                        osc.frequency.setValueAtTime(0.0, 0.0);
-                    }
 
                     if(otherParams.block.style === "glide"){
                         osc.frequency.setTargetAtTime(otherParams.freq, startTime, 0.025);
