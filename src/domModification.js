@@ -223,7 +223,7 @@ function createNewNoteElement(pianoRollObject){
         newNote.style.width = pianoRollObject.noteSizeMap[pianoRollObject.addNoteSize] + "px";
     }
     
-    newNote.addEventListener("mousemove", function(e){
+    newNote.addEventListener("pointermove", function(e){
         // allow resize cursor to show when the mouse moves over the right edge of the note
         if(e.offsetX >= (parseInt(newNote.style.width) - 3)){
             newNote.style.cursor = "w-resize";
@@ -233,7 +233,7 @@ function createNewNoteElement(pianoRollObject){
     });
     
     var pianoRollInterface = document.getElementById("piano");
-    newNote.addEventListener("mousedown", function(e){
+    newNote.addEventListener("pointerdown", function(e){
         if(newNote.style.opacity != 1){
             return;
         }
@@ -263,11 +263,11 @@ function createNewNoteElement(pianoRollObject){
                 resizeHelper(newNote, pianoRollObject, evt);
             }
             
-            pianoRollInterface.addEventListener("mousemove", resizeNote);
-            pianoRollInterface.addEventListener("mouseup", function mouseupResize(e){
+            pianoRollInterface.addEventListener("pointermove", resizeNote);
+            pianoRollInterface.addEventListener("pointerup", function mouseupResize(e){
                 pianoRollObject.lastNoteSize = parseInt(newNote.style.width);
-                pianoRollInterface.removeEventListener("mousemove", resizeNote);
-                pianoRollInterface.removeEventListener("mouseup", mouseupResize);
+                pianoRollInterface.removeEventListener("pointermove", resizeNote);
+                pianoRollInterface.removeEventListener("pointerup", mouseupResize);
             });
         }else{
             function moveNote(evt){
@@ -275,16 +275,16 @@ function createNewNoteElement(pianoRollObject){
             }
             
             var evtsToRemove = {
-                    "mousemove": moveNote,
-                    "mouseup": mouseupMove
+                    "pointermove": moveNote,
+                    "pointerup": mouseupMove
             };
             
             function mouseupMove(evt){
                 mouseupHelper(newNote, pianoRollObject, pianoRollInterface, evtsToRemove);
             }
             
-            pianoRollInterface.addEventListener("mousemove", moveNote);
-            pianoRollInterface.addEventListener("mouseup", mouseupMove);
+            pianoRollInterface.addEventListener("pointermove", moveNote);
+            pianoRollInterface.addEventListener("pointerup", mouseupMove);
         }
     });
     
