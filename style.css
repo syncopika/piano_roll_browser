@@ -8,10 +8,8 @@ html body {
 
 #piano {
   display: inline-block;
-  /* this is important for letting the grid expand horizontally */
   white-space: nowrap;
-  /* important for preventing horizontal scroll when moving notes via touch events (e.g. mobile, although mobile really shouldn't be used for this program :/) */
-  touch-action: none;
+  touch-action: pinch-zoom;
 }
 
 #pianoNotes {

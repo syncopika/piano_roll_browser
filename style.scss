@@ -15,25 +15,25 @@ html {
     }
 }
 
-#piano{
+#piano {
 	display: inline-block;
 	
-	/* this is important for letting the grid expand horizontally */
+	// this is important for letting the grid expand horizontally
 	white-space: nowrap;
     
-    /* important for preventing horizontal scroll when moving notes via touch events (e.g. mobile, although mobile really shouldn't be used for this program :/) */
-    touch-action: none;
+    // important for preventing horizontal scroll when moving notes via touch events (e.g. mobile, although mobile really shouldn't be used for this program :/)
+    touch-action: pinch-zoom; // we only want to allow zoom
 }
 
-#pianoNotes{
+#pianoNotes {
 	display: none;
 }
 
-#changeTempo{
+#changeTempo {
 	width: 40px;
 }
 
-#title{
+#title {
 	margin: 0 auto;
 	text-align: center;
 }
@@ -63,27 +63,27 @@ html {
     }
 }
 
-#instrumentGrid{
+#instrumentGrid {
 	position: relative;
 }
 
-#demo{
+#demo {
 	margin-top: 10px;
 }
 
-table, tr, td{
+table, tr, td {
 	border: $border-regular;
 }
 
-.thinBorder{
+.thinBorder {
 	background: linear-gradient(to right, rgba(255,255,255,0) 97%, rgba(0,0,0,1) 3%);
 }
 
-.thickBorder{
+.thickBorder {
 	background: linear-gradient(to right, rgba(255,255,255,0) 93%, rgba(0,0,0,1) 7%);
 }
 
-.footer{
+.footer {
 	position: relative;
 	text-align: center;
 	margin-top: 3%;
@@ -92,22 +92,22 @@ table, tr, td{
 	border-top: $border-regular;
 }
 
-.btn{
+.btn {
 	border: $border-regular;
 	border-radius: 2px;
 	padding: 2px;
 	box-shadow: .1em .1em #d3d3d3;
 }
 
-.btn:hover{
+.btn:hover {
 	background-color: #d0d0d0;
 }
 
-select, option{
+select, option {
 	height: 24px;
 }
 
-img{
+img {
 	width: 3vw;
 	height: auto; 
 }
