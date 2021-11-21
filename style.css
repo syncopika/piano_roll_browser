@@ -9,7 +9,6 @@ html body {
 #piano {
   display: inline-block;
   white-space: nowrap;
-  touch-action: pinch-zoom;
 }
 
 #pianoNotes {

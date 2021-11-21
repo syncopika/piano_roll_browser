@@ -233,6 +233,7 @@ function createNewNoteElement(pianoRollObject){
     });
     
     var pianoRollInterface = document.getElementById("piano");
+    
     newNote.addEventListener("pointerdown", function(e){
         if(newNote.style.opacity != 1){
             return;
@@ -258,16 +259,18 @@ function createNewNoteElement(pianoRollObject){
             return;
         }
 
+        pianoRollInterface.style.touchAction = "none"; // prevent horizontal scroll when moving note
+
         if(newNote.style.cursor === "w-resize"){
             function resizeNote(evt){
                 resizeHelper(newNote, pianoRollObject, evt);
             }
-            
             pianoRollInterface.addEventListener("pointermove", resizeNote);
             pianoRollInterface.addEventListener("pointerup", function mouseupResize(e){
                 pianoRollObject.lastNoteSize = parseInt(newNote.style.width);
                 pianoRollInterface.removeEventListener("pointermove", resizeNote);
                 pianoRollInterface.removeEventListener("pointerup", mouseupResize);
+                pianoRollInterface.style.touchAction = "auto"; // allow horizontal scroll again
             });
         }else{
             function moveNote(evt){
@@ -281,6 +284,7 @@ function createNewNoteElement(pianoRollObject){
             
             function mouseupMove(evt){
                 mouseupHelper(newNote, pianoRollObject, pianoRollInterface, evtsToRemove);
+                pianoRollInterface.style.touchAction = "auto"; // allow horizontal scroll again
             }
             
             pianoRollInterface.addEventListener("pointermove", moveNote);
