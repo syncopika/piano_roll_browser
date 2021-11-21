@@ -12,7 +12,10 @@ html body {
 }
 
 #pianoNotes {
-  display: none;
+  position: absolute;
+  width: 50px;
+  z-index: 100;
+  background-color: #fff;
 }
 
 #changeTempo {
@@ -71,7 +74,7 @@ table, tr, td {
   text-align: center;
   margin-top: 3%;
   font-size: 12px;
-  font-family: "arial";
+  font-family: Arial;
   border-top: 1px solid #000;
 }
 
