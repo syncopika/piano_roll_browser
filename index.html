@@ -84,38 +84,80 @@
 	<ul id='buttons'>
 		<li>
 			<button id='play' title='play current instrument' class='btn'>
-				<img src='./icons/playButton.svg'>
+                <svg viewBox="0 0 24 24" width="48" height="48">
+                  <polygon points="2 4, 2 20, 20 12" fill="green" stroke="black" stroke-width="3%" stroke-linejoin="round" />
+                </svg>
 			</button>
 		</li>
 		
 		<li>
 			<button id='playAll' title='play all instruments' class='btn'>
-				<img src='./icons/playAllButton.svg'>
+                <svg viewBox="0 0 24 24" width="48" height="48">
+                  <polygon points="2 4, 2 20, 20 12" fill="green" stroke="black" stroke-width="4%" stroke-linejoin="round" />
+                  <polygon points="6 4, 6 20, 23 12" fill="green" stroke="black" stroke-width="4%" stroke-linejoin="round" />
+                </svg>
 			</button>
 		</li>
 		
 		<li>
 			<button id='stopPlay' title='stop' class='btn'>
-				<img src='./icons/stopButton.svg'>
+                <svg viewBox="0 0 24 24" width="48" height="48">
+                  <rect x="4" y="6" width="17" height="15" stroke="black" fill="red" stroke-width="2%" stroke-linejoin="round" />
+                </svg>
 			</button>
 		</li>
 		
 		<!--<li><button id='loop' class='btn'>loop</button></li>-->
 		<li>
 			<button id='record' title='record' class='btn'>
-				<img src='./icons/recordButton.svg'>
+                <svg viewBox="0 0 24 24" width="48" height="48">
+                  <circle cx="12" cy="13" r="8" fill="red" stroke-linejoin="round" />
+                </svg>
 			</button>
 		</li>
 		
 		<li>
 			<button id='addMeasure' title='add new measure' class='btn'>
-				<img src='./icons/addMeasure.svg'>
+				<svg width="48" height="48" viewBox="0 0 24 24">
+                    <!-- by default, the fill is black -->
+                    <rect x="3" y="5" width="18" height="16" stroke="black" fill="white" />
+                    <line x1="4" y1="9" x2="20" y2="9" stroke="black" />
+                    <line x1="4" y1="13" x2="20" y2="13" stroke="black" />
+                    <line x1="10" y1="14" x2="13" y2="14" stroke="black" /> <!-- show rest -->    
+                    <line x1="4" y1="17" x2="20" y2="17" stroke="black" />
+                    
+                    <line x1="0" y1="5" x2="24" y2="5" stroke="black" />
+                    <line x1="0" y1="9" x2="24" y2="9" stroke="black" />
+                    <line x1="0" y1="13" x2="24" y2="13" stroke="black" />
+                    <line x1="0" y1="17" x2="24" y2="17" stroke="black" />
+                    <line x1="0" y1="21" x2="24" y2="21" stroke="black" />
+                    
+                    <circle cx="18" cy="18" r="6" fill="green" />
+                    <line x1="18" y1="15" x2="18" y2="21" stroke="white" />
+                    <line x1="15" y1="18" x2="21" y2="18" stroke="white" />   
+                </svg>
 			</button>
 		</li>
 		
 		<li>
 			<button id='delMeasure' title='remove last measure' class='btn'>
-				<img src='./icons/removeMeasure.svg'>
+				<svg width="48" height="48" viewBox="0 0 24 24">
+                    <rect x="3" y="5" width="18" height="16" stroke="black" fill="white" />
+                    <line x1="4" y1="9" x2="20" y2="9" stroke="black" />
+                    <line x1="4" y1="13" x2="20" y2="13" stroke="black" />
+                    <line x1="10" y1="14" x2="13" y2="14" stroke="black" /> <!-- show rest -->    
+                    <line x1="4" y1="17" x2="20" y2="17" stroke="black" />
+                    
+                    <line x1="0" y1="5" x2="24" y2="5" stroke="black" />
+                    <line x1="0" y1="9" x2="24" y2="9" stroke="black" />
+                    <line x1="0" y1="13" x2="24" y2="13" stroke="black" />
+                    <line x1="0" y1="17" x2="24" y2="17" stroke="black" />
+                    <line x1="0" y1="21" x2="24" y2="21" stroke="black" />
+                    <line x1="24" y1="5" x2="24" y2="21" stroke="black" stroke-width="8%"/> <!-- indicate last measure by adding another vertical line -->
+                    
+                    <circle cx="18" cy="18" r="6" fill="red" />
+                    <line x1="15" y1="18" x2="21" y2="18" stroke="white" />
+                </svg>
 			</button>
 		</li>
 
@@ -145,7 +187,7 @@
 		<input type='file' id='importFile' style='display: none'>
 
 		<li>
-			<button id='importInstrumentPreset' title='import instrument preset' class='btn'>
+			<button id='importInstrumentPreset' title='import new sound' class='btn'>
 				<img src='./icons/importInstrument.svg'>
 			</button>
 		</li>

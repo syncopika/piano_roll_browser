@@ -53,6 +53,7 @@ http://sriku.org/blog/2013/01/30/taming-the-scriptprocessornode/#replacing-oscil
 
 // svg icons
 https://stackoverflow.com/questions/53699098/responsive-svg-viewbox/53699141
+https://www.aleksandrhovhannisyan.com/blog/svg-tutorial-how-to-code-svg-icons-by-hand/ -> amazing tutorial
 
 // circular dependency found when writing tests I think?
 https://stackoverflow.com/questions/23875233/require-returns-an-empty-object/23875299
