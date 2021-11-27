@@ -6,7 +6,7 @@ many functions here rely on an instance of
 the PianoRoll class in classes.js 
 and playbackFunctionality.js
 
-these functions affect what's being displayed on the DOM 
+these functions affect what's being displayed in the DOM
 
 ***************/
 
@@ -17,14 +17,14 @@ function inRange(num, leftLim, rightLim){
     return num >= leftLim && num <= rightLim;
 }
 
-// add newNote to the hashmap currNotes 
-// @param currNotes: a hashmap mapping HTML element ids to HTML elements 
+// add newNote to the object currNotes 
+// @param currNotes: an object mapping HTML element ids to HTML elements 
 // @param newNote: a HTML element representing a note
 function addNoteToCurrInstrument(currNotes, newNote){
     currNotes[newNote.id] = newNote;
 }
 
-// gets a list of possible positions that a note could be placed within a grid cell / note container 
+// gets a list of possible positions that a note could be placed within a grid cell based on the current note size lock set
 // @param containerElement: an HTML element representing a grid cell, where notes can be placed
 // @param pianoRollObject: an instance of PianoRoll
 // @return: a list of integers, with each integer representing a possible style.left value (in px) of a note of the container
@@ -201,7 +201,7 @@ function mouseupHelper(newNote, pianoRollObject, pianoRollInterface, eventsToRem
     }
 }
 
-// TODO: pass in a hashmap for defined values?
+// TODO: pass in a map for defined values?
 // creates a new html element representing a note 
 // @param pianoRollObject: an instance of PianoRoll
 function createNewNoteElement(pianoRollObject){
@@ -261,7 +261,7 @@ function createNewNoteElement(pianoRollObject){
 
         pianoRollInterface.style.touchAction = "none"; // prevent horizontal scroll when moving note
 
-        if(newNote.style.cursor === "w-resize"){
+        if(newNote.style.cursor === "w-resize" || e.offsetX >= (parseInt(newNote.style.width) - 3)){
             function resizeNote(evt){
                 resizeHelper(newNote, pianoRollObject, evt);
             }
@@ -571,7 +571,6 @@ function showOnionSkin(pianoRollObject){
 function redrawCellBorders(pianoRollObject, headerId){
     var subdivision = pianoRollObject.subdivision; 
     var headers = Array.from(document.getElementById(headerId).children);
-    
     var measureCounter = 1;
     
     for(var i = 1; i < headers.length; i++){
@@ -697,6 +696,7 @@ try{
         onendFunc: onendFunc,
         changeTempo: changeTempo,
         addNewInstrument: addNewInstrument,
+        getSubdivisionPositions: getSubdivisionPositions,
     };
 }catch(e){
     // ignore 
