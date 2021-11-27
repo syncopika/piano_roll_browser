@@ -49,8 +49,8 @@
         fill="grey"
     />                    
 
-    <circle cx="18" cy="18" r="6" fill="green" />
-    <line x1="18" y1="15" x2="18" y2="21" stroke="white" />
-    <line x1="15" y1="18" x2="21" y2="18" stroke="white" />
+    <circle cx="13" cy="19" r="5" fill="#4CBB17" />
+    <line x1="13" y1="16" x2="13" y2="22" stroke="white" />
+    <line x1="10" y1="19" x2="16" y2="19" stroke="white" />
 </svg>
 

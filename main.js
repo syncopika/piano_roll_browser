@@ -5,7 +5,7 @@ $(document).ready(function(){
     
     /*  
         special block for just piano notes 
-        this is supposed to move right when scrolling right
+        this div is supposed to move right when scrolling right
     */
     var position = $('#C8').position();
     $('#pianoNotes').css('left', position.left);

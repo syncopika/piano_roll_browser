@@ -41,8 +41,8 @@ function getSubdivisionPositions(containerElement, pianoRollObject){
     return possibleNotePos;
 }
 
-// checks to see if a note can be placed within a row cell / note container 
-// @param posToPlace: an integer 
+// checks to see if a note can be placed within a grid cell
+// @param posToPlace: an integer representing the x coordinate of a position to place
 // @param currContainerChildren: an HTMLCollection of child nodes of an html element
 // @return: true if posToPlace can hold a new note, else false
 function canPlaceNote(posToPlace, currContainerChildren){
@@ -97,7 +97,7 @@ function placeNoteAtPosition(note, pianoRollObject, evt){
         }
     }
     
-    // create a new note if no note was passed in (i.e. when addNote() instead of moveHelper())
+    // create a new note if null was passed in for note (i.e. when using addNote() instead of moveHelper())
     if(!note){
         note = createNewNoteElement(pianoRollObject);
     }
@@ -164,7 +164,6 @@ function resizeHelper(newNote, pianoRollObject, evt){
             newNote.style.width = (currNoteWidth - noteSize) + "px";
         }
     }
-
 }
 
 // helper function to utilize a couple other arguments besides evt on mouse move 
@@ -697,6 +696,7 @@ try{
         changeTempo: changeTempo,
         addNewInstrument: addNewInstrument,
         getSubdivisionPositions: getSubdivisionPositions,
+        canPlaceNote: canPlaceNote,
     };
 }catch(e){
     // ignore 

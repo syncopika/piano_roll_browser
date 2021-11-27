@@ -2,12 +2,12 @@
 a music sequencer inspired by LMMS, one of the best software applications ever!    
 also influenced a bit by PxTone Collage, another great application!    
     
-**It is highly recommended that Chrome be used for optimal functionality (except for recording) at the moment.**    
+**It is highly recommended that Chrome be used for optimal functionality (except for recording) at the moment. Additionally, please note that this application is not intended to be used on mobile devices.**    
     
 ![screenshot of the piano roll](screenshots/current.png "current look")    
     
 ### cool features:    
-- saveable projects (as .json)    
+- savable projects (as .json)    
 - can click-and-drag to move and resize notes (down to as small as 32nd notes)   
 - each note is customizable    
 - togglable onion skin    
@@ -70,7 +70,7 @@ Users can place and move notes freely on the piano roll. In order to do that, my
     
 Additionally, I wanted to keep it light, simple and easily portable so I minimized the number of dependencies (just jQuery!).    
     
-For the terrible svg icons, I used Inkscape :) I will hopefully improve these at some point.    
+For the svg icons, I crafted them manually (with help from [this wonderful tutorial](https://www.aleksandrhovhannisyan.com/blog/svg-tutorial-how-to-code-svg-icons-by-hand/) by Aleksandr Hovhannisyan). Hopefully they're not too awful!    
     
 For the piano instrument sounds I used the Steinway D from the Equinox Grand Pianos soundfont.    
     
