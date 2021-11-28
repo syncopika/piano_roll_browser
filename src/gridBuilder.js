@@ -48,12 +48,10 @@ function createColumnHeader(num, pianoRollObject){
 // @param columnHeaderRowId: a dom element ID 
 // @param pianoRollObject: an isntance of PianoRoll
 function buildGridHeader(columnHeaderRowId, pianoRollObject){
-    
     var columnHeaderRow = document.getElementById(columnHeaderRowId);
 
     // this will provide the headers for each column in the grid (i.e. number for each beat/subbeat) 
     for(var i = 0; i < pianoRollObject.numberOfMeasures * pianoRollObject.subdivision + 1; i++){
-        
         var columnHeader = createColumnHeader(i, pianoRollObject);
 
         // the very first column header is special :)
@@ -91,7 +89,6 @@ function highlightHeader(headerId, pianoRollObject){
 // @param gridDivId: a string representing an HTML element id of the grid
 // @param pianoRollObject: an instance of PianoRoll 
 function buildGrid(gridDivId, pianoRollObject){
-
     var thePiano = document.getElementById(gridDivId);
     
     // this special div is the bar that shows the available notes 
@@ -99,7 +96,6 @@ function buildGrid(gridDivId, pianoRollObject){
     var pianoNotes = document.getElementById('pianoNotes');
     
     for(var note in pianoRollObject.noteFrequencies){
-        
         // ignore enharmonics 
         if(note.substring(0, 2) === "Gb" || note.substring(0, 2) === "Db" ||
            note.substring(0, 2) === "D#" || note.substring(0, 2) === "G#" ||

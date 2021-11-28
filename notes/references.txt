@@ -23,6 +23,7 @@ http://swisnl.github.io/jQuery-contextMenu/demo/dynamic-create.html
 https://stackoverflow.com/questions/26233180/resize-a-div-on-border-drag-and-drop-without-adding-extra-markup
 https://stackoverflow.com/questions/45534302/jquery-how-to-disable-not-allowed-cursor-while-dragging
 https://stackoverflow.com/questions/18094134/fixed-gradient-background-with-css
+https://stackoverflow.com/questions/16348031/disable-scrolling-when-touch-moving-certain-element
 
 // super, super important!
 https://github.com/WebAudio/web-audio-api/issues/76#issuecomment-107679878
@@ -52,6 +53,7 @@ http://sriku.org/blog/2013/01/30/taming-the-scriptprocessornode/#replacing-oscil
 
 // svg icons
 https://stackoverflow.com/questions/53699098/responsive-svg-viewbox/53699141
+https://www.aleksandrhovhannisyan.com/blog/svg-tutorial-how-to-code-svg-icons-by-hand/ -> amazing tutorial
 
 // circular dependency found when writing tests I think?
 https://stackoverflow.com/questions/23875233/require-returns-an-empty-object/23875299

@@ -42,7 +42,7 @@ function makeInstrumentContextMenu(pianoRollObject){
                         },
                         sep1: "-------------",
                         select: {
-                            name: "Select wave type",
+                            name: "Select sound",
                             type: "select",
                             options: instrumentOptions, //{1: 'square', 2: 'sine', 3: 'sawtooth', 4: 'triangle', 5: 'percussion'},
                             selected: function() {

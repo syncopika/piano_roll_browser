@@ -6,7 +6,7 @@ many functions here rely on an instance of
 the PianoRoll class in classes.js 
 and playbackFunctionality.js
 
-these functions affect what's being displayed on the DOM 
+these functions affect what's being displayed in the DOM
 
 ***************/
 
@@ -17,14 +17,14 @@ function inRange(num, leftLim, rightLim){
     return num >= leftLim && num <= rightLim;
 }
 
-// add newNote to the hashmap currNotes 
-// @param currNotes: a hashmap mapping HTML element ids to HTML elements 
+// add newNote to the object currNotes 
+// @param currNotes: an object mapping HTML element ids to HTML elements 
 // @param newNote: a HTML element representing a note
 function addNoteToCurrInstrument(currNotes, newNote){
     currNotes[newNote.id] = newNote;
 }
 
-// gets a list of possible positions that a note could be placed within a grid cell / note container 
+// gets a list of possible positions that a note could be placed within a grid cell based on the current note size lock set
 // @param containerElement: an HTML element representing a grid cell, where notes can be placed
 // @param pianoRollObject: an instance of PianoRoll
 // @return: a list of integers, with each integer representing a possible style.left value (in px) of a note of the container
@@ -41,8 +41,8 @@ function getSubdivisionPositions(containerElement, pianoRollObject){
     return possibleNotePos;
 }
 
-// checks to see if a note can be placed within a row cell / note container 
-// @param posToPlace: an integer 
+// checks to see if a note can be placed within a grid cell
+// @param posToPlace: an integer representing the x coordinate of a position to place
 // @param currContainerChildren: an HTMLCollection of child nodes of an html element
 // @return: true if posToPlace can hold a new note, else false
 function canPlaceNote(posToPlace, currContainerChildren){
@@ -97,7 +97,7 @@ function placeNoteAtPosition(note, pianoRollObject, evt){
         }
     }
     
-    // create a new note if no note was passed in (i.e. when addNote() instead of moveHelper())
+    // create a new note if null was passed in for note (i.e. when using addNote() instead of moveHelper())
     if(!note){
         note = createNewNoteElement(pianoRollObject);
     }
@@ -164,7 +164,6 @@ function resizeHelper(newNote, pianoRollObject, evt){
             newNote.style.width = (currNoteWidth - noteSize) + "px";
         }
     }
-
 }
 
 // helper function to utilize a couple other arguments besides evt on mouse move 
@@ -201,7 +200,7 @@ function mouseupHelper(newNote, pianoRollObject, pianoRollInterface, eventsToRem
     }
 }
 
-// TODO: pass in a hashmap for defined values?
+// TODO: pass in a map for defined values?
 // creates a new html element representing a note 
 // @param pianoRollObject: an instance of PianoRoll
 function createNewNoteElement(pianoRollObject){
@@ -223,7 +222,7 @@ function createNewNoteElement(pianoRollObject){
         newNote.style.width = pianoRollObject.noteSizeMap[pianoRollObject.addNoteSize] + "px";
     }
     
-    newNote.addEventListener("mousemove", function(e){
+    newNote.addEventListener("pointermove", function(e){
         // allow resize cursor to show when the mouse moves over the right edge of the note
         if(e.offsetX >= (parseInt(newNote.style.width) - 3)){
             newNote.style.cursor = "w-resize";
@@ -233,7 +232,8 @@ function createNewNoteElement(pianoRollObject){
     });
     
     var pianoRollInterface = document.getElementById("piano");
-    newNote.addEventListener("mousedown", function(e){
+    
+    newNote.addEventListener("pointerdown", function(e){
         if(newNote.style.opacity != 1){
             return;
         }
@@ -258,16 +258,18 @@ function createNewNoteElement(pianoRollObject){
             return;
         }
 
-        if(newNote.style.cursor === "w-resize"){
+        pianoRollInterface.style.touchAction = "none"; // prevent horizontal scroll when moving note
+
+        if(newNote.style.cursor === "w-resize" || e.offsetX >= (parseInt(newNote.style.width) - 3)){
             function resizeNote(evt){
                 resizeHelper(newNote, pianoRollObject, evt);
             }
-            
-            pianoRollInterface.addEventListener("mousemove", resizeNote);
-            pianoRollInterface.addEventListener("mouseup", function mouseupResize(e){
+            pianoRollInterface.addEventListener("pointermove", resizeNote);
+            pianoRollInterface.addEventListener("pointerup", function mouseupResize(e){
                 pianoRollObject.lastNoteSize = parseInt(newNote.style.width);
-                pianoRollInterface.removeEventListener("mousemove", resizeNote);
-                pianoRollInterface.removeEventListener("mouseup", mouseupResize);
+                pianoRollInterface.removeEventListener("pointermove", resizeNote);
+                pianoRollInterface.removeEventListener("pointerup", mouseupResize);
+                pianoRollInterface.style.touchAction = "auto"; // allow horizontal scroll again
             });
         }else{
             function moveNote(evt){
@@ -275,16 +277,17 @@ function createNewNoteElement(pianoRollObject){
             }
             
             var evtsToRemove = {
-                    "mousemove": moveNote,
-                    "mouseup": mouseupMove
+                    "pointermove": moveNote,
+                    "pointerup": mouseupMove
             };
             
             function mouseupMove(evt){
                 mouseupHelper(newNote, pianoRollObject, pianoRollInterface, evtsToRemove);
+                pianoRollInterface.style.touchAction = "auto"; // allow horizontal scroll again
             }
             
-            pianoRollInterface.addEventListener("mousemove", moveNote);
-            pianoRollInterface.addEventListener("mouseup", mouseupMove);
+            pianoRollInterface.addEventListener("pointermove", moveNote);
+            pianoRollInterface.addEventListener("pointerup", mouseupMove);
         }
     });
     
@@ -567,7 +570,6 @@ function showOnionSkin(pianoRollObject){
 function redrawCellBorders(pianoRollObject, headerId){
     var subdivision = pianoRollObject.subdivision; 
     var headers = Array.from(document.getElementById(headerId).children);
-    
     var measureCounter = 1;
     
     for(var i = 1; i < headers.length; i++){
@@ -693,6 +695,8 @@ try{
         onendFunc: onendFunc,
         changeTempo: changeTempo,
         addNewInstrument: addNewInstrument,
+        getSubdivisionPositions: getSubdivisionPositions,
+        canPlaceNote: canPlaceNote,
     };
 }catch(e){
     // ignore 

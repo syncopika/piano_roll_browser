@@ -1,110 +1,101 @@
-html{
-	font-family: Arial;
+html {
+  font-family: Arial;
+}
+html body {
+  padding-bottom: 0;
+  display: none;
 }
 
-/* override padding-bottom from contextMenu/css/screen.css */
-html body{
-	padding-bottom: 0;
+#piano {
+  display: inline-block;
+  white-space: nowrap;
 }
 
-body, #pianoNotes{
-	display: none;
+#pianoNotes {
+  position: absolute;
+  width: 50px;
+  z-index: 100;
+  background-color: #fff;
 }
 
-table, tr, td{
-	border: 1px solid #000;
+#changeTempo {
+  width: 40px;
 }
 
-.thinBorder{
-	background: linear-gradient(to right, rgba(255,255,255,0) 97%, rgba(0,0,0,1) 3%);
+#title {
+  margin: 0 auto;
+  text-align: center;
 }
 
-.thickBorder{
-	background: linear-gradient(to right, rgba(255,255,255,0) 93%, rgba(0,0,0,1) 7%);
+#toolbar {
+  position: relative;
+  margin: 0 auto;
+  text-align: center;
+  background-color: #fff;
+  z-index: 101;
+}
+#toolbar ul {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+#toolbar li {
+  list-style-type: none;
+  display: inline-block;
+}
+#toolbar li h2, #toolbar label {
+  font-size: 12px;
+  font-weight: bold;
 }
 
-#piano{
-	display: inline-block;
-	
-	/* this is important for letting the grid expand horizontally */
-	white-space: nowrap;
+#instrumentGrid {
+  position: relative;
 }
 
-#changeTempo{
-	width: 40px;
+#demo {
+  margin-top: 10px;
 }
 
-#title{
-	margin: 0 auto;
-	text-align: center;
+table, tr, td {
+  border: 1px solid #000;
 }
 
-#toolbar{
-	position: relative;
-	margin: 0 auto;
-	text-align: center;
-	background-color: #fff;
-	z-index: 101;
+.thinBorder {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0) 97%, black 3%);
 }
 
-#toolbar ul{
-	text-align: center;
-	margin-top: 0;
-	margin-bottom: 0;
-	padding-bottom: 0;
+.thickBorder {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0) 93%, black 7%);
 }
 
-#toolbar li{
-	list-style-type: none;
-	display: inline-block; 
+.footer {
+  position: relative;
+  text-align: center;
+  margin-top: 3%;
+  font-size: 12px;
+  font-family: Arial;
+  border-top: 1px solid #000;
 }
 
-#toolbar li h2, label{
-	font-size: 12px;
-	font-weight: bold;
+.btn {
+  border: 1px solid #000;
+  border-radius: 2px;
+  padding: 2px;
+  box-shadow: 0.1em 0.1em #d3d3d3;
 }
 
-#pianoNotes{
-	position: absolute;
-	width: 50px;
-	z-index: 100;
-	background-color: #fff;
+.btn:hover {
+  background-color: #d0d0d0;
 }
 
-#instrumentGrid{
-	position: relative;
+select, option {
+  height: 24px;
 }
 
-#demo{
-	margin-top: 10px;
+img {
+  width: 3vw;
+  height: auto;
 }
 
-.footer{
-	position: relative;
-	text-align: center;
-	margin-top: 3%;
-	font-size: 12px;
-	font-family: 'arial';
-	border-top: 1px solid #000;
-}
-
-.btn{
-	border: 1px solid #000;
-	border-radius: 2px;
-	padding: 2px;
-	box-shadow: .1em .1em #d3d3d3;
-}
-
-.btn:hover{
-	background-color: #d0d0d0;
-}
-
-select, option{
-	height: 24px;
-}
-
-img{
-	width: 3vw;
-	height: auto; 
-}
-
+/*# sourceMappingURL=style.css.map */

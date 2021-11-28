@@ -1,0 +1,113 @@
+// style.scss
+
+$font-family: Arial;
+$border-regular: 1px solid #000;
+
+html {
+	font-family: $font-family;
+    
+    body {
+        // override padding-bottom from contextMenu/css/screen.css
+        padding-bottom: 0;
+        
+        // display none initially
+        display: none;
+    }
+}
+
+#piano {
+	display: inline-block;
+	
+	// this is important for letting the grid expand horizontally
+	white-space: nowrap;
+}
+
+#pianoNotes {
+	position: absolute;
+	width: 50px;
+	z-index: 100;
+	background-color: #fff;
+}
+
+#changeTempo {
+	width: 40px;
+}
+
+#title {
+	margin: 0 auto;
+	text-align: center;
+}
+
+#toolbar {
+	position: relative;
+	margin: 0 auto;
+	text-align: center;
+	background-color: #fff;
+	z-index: 101;
+    
+    ul {
+        text-align: center;
+        margin-top: 0;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    
+    li {
+        list-style-type: none;
+        display: inline-block; 
+    }
+    
+    li h2, label{
+        font-size: 12px;
+        font-weight: bold;
+    }
+}
+
+#instrumentGrid {
+	position: relative;
+}
+
+#demo {
+	margin-top: 10px;
+}
+
+table, tr, td {
+	border: $border-regular;
+}
+
+.thinBorder {
+	background: linear-gradient(to right, rgba(255,255,255,0) 97%, rgba(0,0,0,1) 3%);
+}
+
+.thickBorder {
+	background: linear-gradient(to right, rgba(255,255,255,0) 93%, rgba(0,0,0,1) 7%);
+}
+
+.footer {
+	position: relative;
+	text-align: center;
+	margin-top: 3%;
+	font-size: 12px;
+	font-family: $font-family;
+	border-top: $border-regular;
+}
+
+.btn {
+	border: $border-regular;
+	border-radius: 2px;
+	padding: 2px;
+	box-shadow: .1em .1em #d3d3d3;
+}
+
+.btn:hover {
+	background-color: #d0d0d0;
+}
+
+select, option {
+	height: 24px;
+}
+
+img {
+	width: 3vw;
+	height: auto; 
+}
