@@ -16,7 +16,7 @@ function createColumnHeader(num, pianoRollObject){
     newHeader.style.width = '40px';
     newHeader.style.height = '12px';
     newHeader.style.fontSize = '10px';
-    newHeader.setAttribute("numNotes", 0); // keep track of whether this column has notes or not
+    newHeader.setAttribute("data-num-notes", 0); // keep track of whether this column has notes or not
     
     var subdiv = (num % pianoRollObject.subdivision) === 0 ? pianoRollObject.subdivision : (num % pianoRollObject.subdivision);
     
@@ -146,8 +146,8 @@ function createColumnCell(pitch, colNum, pianoRollObject){
     column.style.zIndex = "5";
     column.style.verticalAlign = "middle";
     column.style.backgroundColor = "transparent";
-    column.setAttribute("type", "default"); 
-    column.setAttribute("volume", 0.2);
+    column.setAttribute("data-type", "default"); 
+    column.setAttribute("data-volume", 0.2);
     column.className = "noteContainer";
     
     if((colNum + 1) % pianoRollObject.subdivision == 0){

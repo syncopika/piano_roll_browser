@@ -6,7 +6,8 @@ many functions here rely on an instance of
 the PianoRoll class in classes.js 
 and playbackFunctionality.js
 
-these functions affect what's being displayed in the DOM
+these functions have to do with interacting
+with the piano roll grid, instruments grid
 
 ***************/
 
@@ -111,14 +112,14 @@ function placeNoteAtPosition(note, pianoRollObject, evt){
         var container = note.parentNode;
         if(container){
             var colHeader = document.getElementById(container.id.substring(container.id.indexOf("col")));
-            colHeader.setAttribute("numNotes", parseInt(colHeader.getAttribute("numNotes"))-1);
+            colHeader.setAttribute("data-num-notes", parseInt(colHeader.dataset.numNotes - 1));
         }
         
         note.style.left = possibleNotePos[i] + "px";
         targetContainer.appendChild(note);
         
         var colHeader = document.getElementById(targetContainer.id.substring(targetContainer.id.indexOf("col")));
-        colHeader.setAttribute("numNotes", parseInt(colHeader.getAttribute("numNotes"))+1);
+        colHeader.setAttribute("data-num-notes", parseInt(colHeader.dataset.numNotes + 1));
         
         return note;
     }
@@ -186,7 +187,7 @@ function mouseupHelper(newNote, pianoRollObject, pianoRollInterface, eventsToRem
     // but not when resizing
     if(newNote.style.cursor !== "w-resize"){
         var waveType = pianoRollObject.currentInstrument.waveType;
-        var vol = parseFloat(newNote.getAttribute('volume'));
+        var vol = parseFloat(newNote.dataset.volume);
         clickNote(newNote.parentNode.id, waveType, vol, pianoRollObject);
     }
 
@@ -205,8 +206,8 @@ function mouseupHelper(newNote, pianoRollObject, pianoRollInterface, eventsToRem
 // @param pianoRollObject: an instance of PianoRoll
 function createNewNoteElement(pianoRollObject){
     var newNote = document.createElement('div');
-    newNote.setAttribute("volume", pianoRollObject.currentInstrument.volume);
-    newNote.setAttribute("type", "default"); 
+    newNote.setAttribute("data-volume", pianoRollObject.currentInstrument.volume);
+    newNote.setAttribute("data-type", "default"); 
     newNote.style.background = "linear-gradient(90deg, rgba(0,158,52,1) 90%, rgba(52,208,0,1) 99%";
     newNote.style.height = "15px";
     newNote.style.position = "absolute";
@@ -245,7 +246,7 @@ function createNewNoteElement(pianoRollObject){
             // middle mouse button
             var container = newNote.parentNode;
             var colHeader = document.getElementById(container.id.substring(container.id.indexOf("col")));
-            colHeader.setAttribute("numNotes", colHeader.getAttribute("numNotes")-1);
+            colHeader.setAttribute("data-num-notes", colHeader.dataset.numNotes - 1);
             
             container.removeChild(newNote);
             delete pianoRollObject.currentInstrument.activeNotes[newNote.id];
@@ -658,7 +659,6 @@ function addNewInstrument(name, createBool, pianoRollObject){
     // we want to be able to access the instruments in sequential order
     newInstrument.id = (pianoRollObject.instruments.length + 1);
     newInstrument.className = "instrument";
-    newInstrument.setAttribute("selected", "0");
     newInstrument.style.backgroundColor = "transparent";
     
     if(name === undefined){

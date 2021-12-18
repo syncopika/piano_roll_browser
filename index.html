@@ -1,445 +1,431 @@
 <!DOCTYPE html>
 
 <head>
-	<meta charset='utf-8'>
-	<title> a piano roll in the browser </title>
-	<script src="external/jquery.min.js"></script>
-	<script src='src/classes.js'></script>
-	<script src='src/contextMenus.js'></script>
-	<script src='src/gridBuilder.js'></script>
-	<script src='src/playbackFunctionality.js'></script>
-	<script src='src/domModification.js'></script>
-	<script src='src/instrumentPreset.js'></script>
-	
-	<!-- my styling -->
-	<link rel="stylesheet" href="style.css" type="text/css"/>
-	
-	<!-- stuff needed for contextMenu -->
-	<link rel="stylesheet" href="external/jquery-contextmenu/dist/jquery.contextMenu.css" type="text/css"/>
-	<link rel="stylesheet" href="external/jquery-contextmenu/dist/jquery.contextMenu.min.css" type="text/css"/>
-	<script src='external/jquery-contextmenu/dist/jquery.ui.position.js'></script>
-	<script src='external/jquery-contextmenu/dist/jquery.ui.position.min.js'></script>
-	<script src='external/jquery-contextmenu/dist/jquery.contextMenu.min.js'></script>
-	<script src='external/jquery-contextmenu/dist/jquery.contextMenu.js'></script>
+    <meta charset='utf-8'>
+    <title> a piano roll in the browser </title>
+    <script src="external/jquery.min.js"></script>
+    <script src='src/classes.js'></script>
+    <script src='src/contextMenus.js'></script>
+    <script src='src/gridBuilder.js'></script>
+    <script src='src/playbackFunctionality.js'></script>
+    <script src='src/domModification.js'></script>
+    <script src='src/instrumentPreset.js'></script>
+    
+    <!-- my styling -->
+    <link rel="stylesheet" href="style.css" type="text/css"/>
+    
+    <!-- stuff needed for contextMenu -->
+    <link rel="stylesheet" href="external/jquery-contextmenu/dist/jquery.contextMenu.css" type="text/css"/>
+    <link rel="stylesheet" href="external/jquery-contextmenu/dist/jquery.contextMenu.min.css" type="text/css"/>
+    <script src='external/jquery-contextmenu/dist/jquery.ui.position.js'></script>
+    <script src='external/jquery-contextmenu/dist/jquery.ui.position.min.js'></script>
+    <script src='external/jquery-contextmenu/dist/jquery.contextMenu.min.js'></script>
+    <script src='external/jquery-contextmenu/dist/jquery.contextMenu.js'></script>
 </head>
 
-
 <body>
+    <div id='toolbar'>
+        <h2 id='title'> piano roll fun &#127929;</h2>
 
-<div id='toolbar'>
-
-	<h2 id='title'> piano roll fun &#127929;</h2>
-
-	<ul id='metadata'>
-		<li id='titleLabel'><h2> title:  </h2></li>
-		<li><h2 id='pieceTitle'> hi </h2></li>
-		<li>|</li>
-		<li id='composerLabel'><h2> composer:  </h2></li>
-		<li><h2 id='composer'> hi </h2></li>
-		<li>|</li>
-		<li><h2 id='measures'></h2></li>
-		<li>|</li>
-		<li>
-			<label for="lockType">
-				note lock type: 
-			</label>
-			<select name="lockType" id="lockType" onchange="updateLockNoteSize(this)">
-				<option>8th</option>
-				<option selected="selected">16th</option>
-				<option>32nd</option>
-			</select>
-		</li>
-		<li>|</li>
-		<li>
-			<label for="addNoteSize">
-				note size: 
-			</label>
-			<select name="addNoteSize" id="addNoteSize" onchange="updateAddNoteSize(this)">
-				<option selected="selected">last selected</option>
-				<option>8th</option>
-				<option>16th</option>
-				<option>32nd</option>
-			</select>
-		</li>
-		<li>|</li>
-		<li>
-			<label>
-				time signature:
-			</label>
-			<select id='timeSig'>
-				<option>4/4</option>
-				<option>3/4</option>
-			</select>
-		</li>
-		<li>|</li>
-		<li>
-			<label id='tempoLabel'> tempo: </label>
-			<input id='changeTempo' type='text' value='120'>
-		</li>
-		<li>|</li>
-		<li><h2><a href='https://github.com/syncopika/piano_roll_browser'>help!</a></h2></li>
-	</ul>
+        <ul id='metadata'>
+            <li id='titleLabel'><h2> title:  </h2></li>
+            <li><h2 id='pieceTitle'> hi </h2></li>
+            <li>|</li>
+            <li id='composerLabel'><h2> composer:  </h2></li>
+            <li><h2 id='composer'> hi </h2></li>
+            <li>|</li>
+            <li><h2 id='measures'></h2></li>
+            <li>|</li>
+            <li>
+                <label for="lockType">
+                    note lock type: 
+                </label>
+                <select name="lockType" id="lockType" onchange="updateLockNoteSize(this)">
+                    <option>8th</option>
+                    <option selected="selected">16th</option>
+                    <option>32nd</option>
+                </select>
+            </li>
+            <li>|</li>
+            <li>
+                <label for="addNoteSize">
+                    note size: 
+                </label>
+                <select name="addNoteSize" id="addNoteSize" onchange="updateAddNoteSize(this)">
+                    <option selected="selected">last selected</option>
+                    <option>8th</option>
+                    <option>16th</option>
+                    <option>32nd</option>
+                </select>
+            </li>
+            <li>|</li>
+            <li>
+                <label>
+                    time signature:
+                </label>
+                <select id='timeSig'>
+                    <option>4/4</option>
+                    <option>3/4</option>
+                </select>
+            </li>
+            <li>|</li>
+            <li>
+                <label id='tempoLabel'> tempo: </label>
+                <input id='changeTempo' type='text' value='120'>
+            </li>
+            <li>|</li>
+            <li><h2><a href='https://github.com/syncopika/piano_roll_browser'>help!</a></h2></li>
+        </ul>
 
 
-	<ul id='buttons'>
-		<li>
-			<button id='play' title='play current instrument' class='btn'>
-                <svg viewBox="0 0 24 24" width="48" height="48">
-                  <polygon points="4 4, 4 20, 22 12" fill="#4CBB17" stroke="black" stroke-width="3%" stroke-linejoin="round" />
-                </svg>
-			</button>
-		</li>
-		
-		<li>
-			<button id='playAll' title='play all instruments' class='btn'>
-                <svg viewBox="0 0 24 24" width="48" height="48">
-                  <polygon points="2 4, 2 20, 20 12" fill="#4CBB17" stroke="black" stroke-width="4%" stroke-linejoin="round" />
-                  <polygon points="6 4, 6 20, 23 12" fill="#4CBB17" stroke="black" stroke-width="4%" stroke-linejoin="round" />
-                </svg>
-			</button>
-		</li>
-		
-		<li>
-			<button id='stopPlay' title='stop' class='btn'>
-                <svg viewBox="0 0 24 24" width="48" height="48">
-                  <rect x="4" y="5" width="17" height="15" stroke="black" fill="red" stroke-width="2%" stroke-linejoin="round" />
-                </svg>
-			</button>
-		</li>
-		
-		<!--<li><button id='loop' class='btn'>loop</button></li>-->
-		<li>
-			<button id='record' title='record' class='btn'>
-                <svg viewBox="0 0 24 24" width="48" height="48">
-                  <circle cx="12" cy="13" r="8" fill="red" stroke-linejoin="round" />
-                </svg>
-			</button>
-		</li>
-		
-		<li>
-			<button id='addMeasure' title='add new measure' class='btn'>
-				<svg width="48" height="48" viewBox="0 0 24 24">
-                    <!-- by default, the fill is black -->
-                    <rect x="3" y="5" width="18" height="16" stroke="black" fill="white" />
-                    <line x1="4" y1="9" x2="20" y2="9" stroke="black" />
-                    <line x1="4" y1="13" x2="20" y2="13" stroke="black" />
-                    <line x1="10" y1="14" x2="13" y2="14" stroke="black" /> <!-- show rest -->    
-                    <line x1="4" y1="17" x2="20" y2="17" stroke="black" />
-                    
-                    <line x1="0" y1="5" x2="24" y2="5" stroke="black" />
-                    <line x1="0" y1="9" x2="24" y2="9" stroke="black" />
-                    <line x1="0" y1="13" x2="24" y2="13" stroke="black" />
-                    <line x1="0" y1="17" x2="24" y2="17" stroke="black" />
-                    <line x1="0" y1="21" x2="24" y2="21" stroke="black" />
-                    
-                    <circle cx="18" cy="18" r="6" fill="#4CBB17" />
-                    <line x1="18" y1="15" x2="18" y2="21" stroke="white" />
-                    <line x1="15" y1="18" x2="21" y2="18" stroke="white" />   
-                </svg>
-			</button>
-		</li>
-		
-		<li>
-			<button id='delMeasure' title='remove last measure' class='btn'>
-				<svg width="48" height="48" viewBox="0 0 24 24">
-                    <rect x="3" y="5" width="18" height="16" stroke="black" fill="white" />
-                    <line x1="4" y1="9" x2="20" y2="9" stroke="black" />
-                    <line x1="4" y1="13" x2="20" y2="13" stroke="black" />
-                    <line x1="10" y1="14" x2="13" y2="14" stroke="black" /> <!-- show rest -->    
-                    <line x1="4" y1="17" x2="20" y2="17" stroke="black" />
-                    
-                    <line x1="0" y1="5" x2="24" y2="5" stroke="black" />
-                    <line x1="0" y1="9" x2="24" y2="9" stroke="black" />
-                    <line x1="0" y1="13" x2="24" y2="13" stroke="black" />
-                    <line x1="0" y1="17" x2="24" y2="17" stroke="black" />
-                    <line x1="0" y1="21" x2="24" y2="21" stroke="black" />
-                    <line x1="24" y1="5" x2="24" y2="21" stroke="black" stroke-width="8%"/> <!-- indicate last measure by adding another vertical line -->
-                    
-                    <circle cx="18" cy="18" r="6" fill="red" />
-                    <line x1="15" y1="18" x2="21" y2="18" stroke="white" />
-                </svg>
-			</button>
-		</li>
+        <ul id='buttons'>
+            <li>
+                <button id='play' title='play current instrument' class='btn'>
+                    <svg viewBox="0 0 24 24" width="48" height="48">
+                      <polygon points="4 4, 4 20, 22 12" fill="#4CBB17" stroke="black" stroke-width="3%" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </li>
+            
+            <li>
+                <button id='playAll' title='play all instruments' class='btn'>
+                    <svg viewBox="0 0 24 24" width="48" height="48">
+                      <polygon points="2 4, 2 20, 20 12" fill="#4CBB17" stroke="black" stroke-width="4%" stroke-linejoin="round" />
+                      <polygon points="6 4, 6 20, 23 12" fill="#4CBB17" stroke="black" stroke-width="4%" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </li>
+            
+            <li>
+                <button id='stopPlay' title='stop' class='btn'>
+                    <svg viewBox="0 0 24 24" width="48" height="48">
+                      <rect x="4" y="5" width="17" height="15" stroke="black" fill="red" stroke-width="2%" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </li>
+            
+            <!--<li><button id='loop' class='btn'>loop</button></li>-->
+            <li>
+                <button id='record' title='record' class='btn'>
+                    <svg viewBox="0 0 24 24" width="48" height="48">
+                      <circle cx="12" cy="13" r="8" fill="red" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </li>
+            
+            <li>
+                <button id='addMeasure' title='add new measure' class='btn'>
+                    <svg width="48" height="48" viewBox="0 0 24 24">
+                        <!-- by default, the fill is black -->
+                        <rect x="3" y="5" width="18" height="16" stroke="black" fill="white" />
+                        <line x1="4" y1="9" x2="20" y2="9" stroke="black" />
+                        <line x1="4" y1="13" x2="20" y2="13" stroke="black" />
+                        <line x1="10" y1="14" x2="13" y2="14" stroke="black" /> <!-- show rest -->    
+                        <line x1="4" y1="17" x2="20" y2="17" stroke="black" />
+                        
+                        <line x1="0" y1="5" x2="24" y2="5" stroke="black" />
+                        <line x1="0" y1="9" x2="24" y2="9" stroke="black" />
+                        <line x1="0" y1="13" x2="24" y2="13" stroke="black" />
+                        <line x1="0" y1="17" x2="24" y2="17" stroke="black" />
+                        <line x1="0" y1="21" x2="24" y2="21" stroke="black" />
+                        
+                        <circle cx="18" cy="18" r="6" fill="#4CBB17" />
+                        <line x1="18" y1="15" x2="18" y2="21" stroke="white" />
+                        <line x1="15" y1="18" x2="21" y2="18" stroke="white" />   
+                    </svg>
+                </button>
+            </li>
+            
+            <li>
+                <button id='delMeasure' title='remove last measure' class='btn'>
+                    <svg width="48" height="48" viewBox="0 0 24 24">
+                        <rect x="3" y="5" width="18" height="16" stroke="black" fill="white" />
+                        <line x1="4" y1="9" x2="20" y2="9" stroke="black" />
+                        <line x1="4" y1="13" x2="20" y2="13" stroke="black" />
+                        <line x1="10" y1="14" x2="13" y2="14" stroke="black" /> <!-- show rest -->    
+                        <line x1="4" y1="17" x2="20" y2="17" stroke="black" />
+                        
+                        <line x1="0" y1="5" x2="24" y2="5" stroke="black" />
+                        <line x1="0" y1="9" x2="24" y2="9" stroke="black" />
+                        <line x1="0" y1="13" x2="24" y2="13" stroke="black" />
+                        <line x1="0" y1="17" x2="24" y2="17" stroke="black" />
+                        <line x1="0" y1="21" x2="24" y2="21" stroke="black" />
+                        <line x1="24" y1="5" x2="24" y2="21" stroke="black" stroke-width="8%"/> <!-- indicate last measure by adding another vertical line -->
+                        
+                        <circle cx="18" cy="18" r="6" fill="red" />
+                        <line x1="15" y1="18" x2="21" y2="18" stroke="white" />
+                    </svg>
+                </button>
+            </li>
 
-		<li>
-			<button id='addInstrument' title='add instrument' class='btn'>
-				<svg width="48" height="48" viewBox="0 0 24 24">
-                    <!-- create a trumpet -->
-                    <path 
-                        d="
-                            M 2 3
-                            l 6 3
-                            l -6 3
-                            M 2 4
-                            a 5 3 0 0 1 0 4
-                            M 10 6
-                            a 10 3 0 0 0 0 4
-                            M 17 6
-                            a 10 3 0 0 1 0 4
-                            "
-                        stroke="black"
-                        stroke-linejoin="round"
-                        fill="yellow"
-                    />
-                    
-                    <!-- valve block -->
-                    <line x1="9" y1="6" x2="18" y2="6" stroke="black" stroke-linejoin="round" />
-                    <line x1="9" y1="8" x2="18" y2="8" stroke="black" stroke-linejoin="round" />
-                    <line x1="12" y1="4" x2="11" y2="12" stroke="black" stroke-linejoin="round" />
-                    <line x1="14" y1="4" x2="13" y2="12" stroke="black" stroke-linejoin="round" />
-                    <line x1="16" y1="4" x2="15" y2="12" stroke="black" stroke-linejoin="round" />
-                    <line x1="11" y1="3" x2="17" y2="3" stroke="black" stroke-linejoin="round" /> <!-- valve caps -->
-                    
-                    <!-- mouthpiece -->
-                    <path 
-                        d="
-                            M 22 4
-                            l -3 2
-                            l 3 2
-                            M 23 4
-                            a 3 3 0 0 0 0 4
-                            "
-                        stroke="black"
-                        stroke-linejoin="round"
-                        fill="grey"
-                    />                    
+            <li>
+                <button id='addInstrument' title='add instrument' class='btn'>
+                    <svg width="48" height="48" viewBox="0 0 24 24">
+                        <!-- create a trumpet -->
+                        <path 
+                            d="
+                                M 2 3
+                                l 6 3
+                                l -6 3
+                                M 2 4
+                                a 5 3 0 0 1 0 4
+                                M 10 6
+                                a 10 3 0 0 0 0 4
+                                M 17 6
+                                a 10 3 0 0 1 0 4
+                                "
+                            stroke="black"
+                            stroke-linejoin="round"
+                            fill="yellow"
+                        />
+                        
+                        <!-- valve block -->
+                        <line x1="9" y1="6" x2="18" y2="6" stroke="black" stroke-linejoin="round" />
+                        <line x1="9" y1="8" x2="18" y2="8" stroke="black" stroke-linejoin="round" />
+                        <line x1="12" y1="4" x2="11" y2="12" stroke="black" stroke-linejoin="round" />
+                        <line x1="14" y1="4" x2="13" y2="12" stroke="black" stroke-linejoin="round" />
+                        <line x1="16" y1="4" x2="15" y2="12" stroke="black" stroke-linejoin="round" />
+                        <line x1="11" y1="3" x2="17" y2="3" stroke="black" stroke-linejoin="round" /> <!-- valve caps -->
+                        
+                        <!-- mouthpiece -->
+                        <path 
+                            d="
+                                M 22 4
+                                l -3 2
+                                l 3 2
+                                M 23 4
+                                a 3 3 0 0 0 0 4
+                                "
+                            stroke="black"
+                            stroke-linejoin="round"
+                            fill="grey"
+                        />                    
 
-                    <circle cx="13" cy="19" r="5" fill="#4CBB17" />
-                    <line x1="13" y1="16" x2="13" y2="22" stroke="white" />
-                    <line x1="10" y1="19" x2="16" y2="19" stroke="white" />
-                </svg>
-			</button>
-		</li>
-		
-		<li>
-			<button id='clearGrid' title='clear grid' class='btn'>
-				<svg width="48" height="48" viewBox="0 0 24 24">
-                    <!-- set up a grid -->
-                    <rect x="3" y="5" width="18" height="16" stroke="#bbb" fill="white" stroke-linejoin="round" />
-                    <line x1="3" y1="9" x2="21" y2="9" stroke="#bbb" />
-                    <line x1="3" y1="13" x2="21" y2="13" stroke="#bbb" />
-                    <line x1="3" y1="17" x2="21" y2="17" stroke="#bbb" />
-                    <line x1="6" y1="5" x2="6" y2="21" stroke="#bbb" />
-                    <line x1="9" y1="5" x2="9" y2="21" stroke="#bbb" />
-                    <line x1="12" y1="5" x2="12" y2="21" stroke="#bbb" />
-                    <line x1="15" y1="5" x2="15" y2="21" stroke="#bbb" />
-                    <line x1="18" y1="5" x2="18" y2="21" stroke="#bbb" />
-                </svg>
-			</button>
-		</li>
-		
-		<li>
-			<button class='btn' title='download project' onclick='generateJSON()'>
-				<svg width="48" height="48" viewBox="0 0 24 24">
-                    <rect x="3" y="0" width="18" height="16" stroke="#bbb" fill="white" stroke-linejoin="round" />
+                        <circle cx="13" cy="19" r="5" fill="#4CBB17" />
+                        <line x1="13" y1="16" x2="13" y2="22" stroke="white" />
+                        <line x1="10" y1="19" x2="16" y2="19" stroke="white" />
+                    </svg>
+                </button>
+            </li>
+            
+            <li>
+                <button id='clearGrid' title='clear grid' class='btn'>
+                    <svg width="48" height="48" viewBox="0 0 24 24">
+                        <!-- set up a grid -->
+                        <rect x="3" y="5" width="18" height="16" stroke="#bbb" fill="white" stroke-linejoin="round" />
+                        <line x1="3" y1="9" x2="21" y2="9" stroke="#bbb" />
+                        <line x1="3" y1="13" x2="21" y2="13" stroke="#bbb" />
+                        <line x1="3" y1="17" x2="21" y2="17" stroke="#bbb" />
+                        <line x1="6" y1="5" x2="6" y2="21" stroke="#bbb" />
+                        <line x1="9" y1="5" x2="9" y2="21" stroke="#bbb" />
+                        <line x1="12" y1="5" x2="12" y2="21" stroke="#bbb" />
+                        <line x1="15" y1="5" x2="15" y2="21" stroke="#bbb" />
+                        <line x1="18" y1="5" x2="18" y2="21" stroke="#bbb" />
+                    </svg>
+                </button>
+            </li>
+            
+            <li>
+                <button class='btn' title='download project' onclick='generateJSON()'>
+                    <svg width="48" height="48" viewBox="0 0 24 24">
+                        <rect x="3" y="0" width="18" height="16" stroke="#bbb" fill="white" stroke-linejoin="round" />
 
-                    <!-- draw in some notes -->
-                    <line x1="3" y1="2" x2="6" y2="2" stroke="green" stroke-width="3" />
-                    <line x1="6" y1="6" x2="9" y2="6" stroke="green" stroke-width="3" />
-                    <line x1="9" y1="10" x2="18" y2="10" stroke="green" stroke-width="3" />
-                    <line x1="18" y1="14" x2="21" y2="14" stroke="green" stroke-width="3" />
+                        <!-- draw in some notes -->
+                        <line x1="3" y1="2" x2="6" y2="2" stroke="green" stroke-width="3" />
+                        <line x1="6" y1="6" x2="9" y2="6" stroke="green" stroke-width="3" />
+                        <line x1="9" y1="10" x2="18" y2="10" stroke="green" stroke-width="3" />
+                        <line x1="18" y1="14" x2="21" y2="14" stroke="green" stroke-width="3" />
 
-                    <!-- set up a grid -->
-                    <line x1="3" y1="4" x2="21" y2="4" stroke="#bbb" />
-                    <line x1="3" y1="8" x2="21" y2="8" stroke="#bbb" />
-                    <line x1="3" y1="12" x2="21" y2="12" stroke="#bbb" />
-                    <line x1="6" y1="0" x2="6" y2="16" stroke="#bbb" />
-                    <line x1="9" y1="0" x2="9" y2="16" stroke="#bbb" />
-                    <line x1="12" y1="0" x2="12" y2="16" stroke="#bbb" />
-                    <line x1="15" y1="0" x2="15" y2="16" stroke="#bbb" />
-                    <line x1="18" y1="0" x2="18" y2="16" stroke="#bbb" />
+                        <!-- set up a grid -->
+                        <line x1="3" y1="4" x2="21" y2="4" stroke="#bbb" />
+                        <line x1="3" y1="8" x2="21" y2="8" stroke="#bbb" />
+                        <line x1="3" y1="12" x2="21" y2="12" stroke="#bbb" />
+                        <line x1="6" y1="0" x2="6" y2="16" stroke="#bbb" />
+                        <line x1="9" y1="0" x2="9" y2="16" stroke="#bbb" />
+                        <line x1="12" y1="0" x2="12" y2="16" stroke="#bbb" />
+                        <line x1="15" y1="0" x2="15" y2="16" stroke="#bbb" />
+                        <line x1="18" y1="0" x2="18" y2="16" stroke="#bbb" />
 
-                    <!-- draw an arrow for download -->
-                    <path
-                        d="
-                            M 14 13
-                            v 5
-                            h 3
-                            l -5 5
-                            l -5 -5
-                            h 3
-                            v -5
-                            z
-                            "
-                        stroke="black"
-                        fill="blue"
-                        stroke-linejoin="round"
-                    />
-                </svg>
-			</button>
-		</li>
-		
-		<li>
-			<button class='btn' title='import project' onclick='fileHandler()'>
-				<svg width="48" height="48" viewBox="0 0 24 24">
-                    <rect x="3" y="0" width="18" height="16" stroke="#bbb" fill="white" stroke-linejoin="round" />
+                        <!-- draw an arrow for download -->
+                        <path
+                            d="
+                                M 14 13
+                                v 5
+                                h 3
+                                l -5 5
+                                l -5 -5
+                                h 3
+                                v -5
+                                z"
+                            stroke="black"
+                            fill="blue"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </button>
+            </li>
+            
+            <li>
+                <button class='btn' title='import project' onclick='fileHandler()'>
+                    <svg width="48" height="48" viewBox="0 0 24 24">
+                        <rect x="3" y="0" width="18" height="16" stroke="#bbb" fill="white" stroke-linejoin="round" />
 
-                    <!-- draw in some notes -->
-                    <line x1="3" y1="2" x2="6" y2="2" stroke="green" stroke-width="3" />
-                    <line x1="6" y1="6" x2="9" y2="6" stroke="green" stroke-width="3" />
-                    <line x1="9" y1="10" x2="18" y2="10" stroke="green" stroke-width="3" />
-                    <line x1="18" y1="14" x2="21" y2="14" stroke="green" stroke-width="3" />
+                        <!-- draw in some notes -->
+                        <line x1="3" y1="2" x2="6" y2="2" stroke="green" stroke-width="3" />
+                        <line x1="6" y1="6" x2="9" y2="6" stroke="green" stroke-width="3" />
+                        <line x1="9" y1="10" x2="18" y2="10" stroke="green" stroke-width="3" />
+                        <line x1="18" y1="14" x2="21" y2="14" stroke="green" stroke-width="3" />
 
-                    <!-- set up a grid -->
-                    <line x1="3" y1="4" x2="21" y2="4" stroke="#bbb" />
-                    <line x1="3" y1="8" x2="21" y2="8" stroke="#bbb" />
-                    <line x1="3" y1="12" x2="21" y2="12" stroke="#bbb" />
-                    <line x1="6" y1="0" x2="6" y2="16" stroke="#bbb" />
-                    <line x1="9" y1="0" x2="9" y2="16" stroke="#bbb" />
-                    <line x1="12" y1="0" x2="12" y2="16" stroke="#bbb" />
-                    <line x1="15" y1="0" x2="15" y2="16" stroke="#bbb" />
-                    <line x1="18" y1="0" x2="18" y2="16" stroke="#bbb" />
+                        <!-- set up a grid -->
+                        <line x1="3" y1="4" x2="21" y2="4" stroke="#bbb" />
+                        <line x1="3" y1="8" x2="21" y2="8" stroke="#bbb" />
+                        <line x1="3" y1="12" x2="21" y2="12" stroke="#bbb" />
+                        <line x1="6" y1="0" x2="6" y2="16" stroke="#bbb" />
+                        <line x1="9" y1="0" x2="9" y2="16" stroke="#bbb" />
+                        <line x1="12" y1="0" x2="12" y2="16" stroke="#bbb" />
+                        <line x1="15" y1="0" x2="15" y2="16" stroke="#bbb" />
+                        <line x1="18" y1="0" x2="18" y2="16" stroke="#bbb" />
 
-                    <!-- draw an arrow for download -->
-                    <path
-                        d="
-                            M 14 23
-                            v -5
-                            h 3
-                            l -5 -5
-                            l -5 5
-                            h 3
-                            v 5
-                            z
-                            "
-                        stroke="black"
-                        fill="blue"
-                        stroke-linejoin="round"
-                    />
-                </svg>
-			</button>
-		</li>
-		<input type='file' id='importFile' style='display: none'>
+                        <!-- draw an arrow for download -->
+                        <path
+                            d="
+                                M 14 23
+                                v -5
+                                h 3
+                                l -5 -5
+                                l -5 5
+                                h 3
+                                v 5
+                                z"
+                            stroke="black"
+                            fill="blue"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </button>
+            </li>
+            <input type='file' id='importFile' style='display: none'>
 
-		<li>
-			<button id='importInstrumentPreset' title='import new sound' class='btn'>
-				<svg width="48" height="48" viewBox="0 0 24 24">
-                    <!-- create a wave -->
-                    <path
-                        d="
-                            M 0.5 7
-                            a 1.9 2.8 0 1 1 5.6 0
-                            m 0.05 0
-                            a 2.1 2.8 0 1 0 5.7 0
-                            m 0.05 0
-                            a 1.9 2.8 0 1 1 5.6 0
-                            m 0.05 0
-                            a 2.1 2.8 0 1 0 5.7 0
-                            "
-                        stroke="black"
-                        fill="transparent"
-                        stroke-linejoin="round"
-                    />                    
+            <li>
+                <button id='importInstrumentPreset' title='import new sound' class='btn'>
+                    <svg width="48" height="48" viewBox="0 0 24 24">
+                        <!-- create a wave -->
+                        <path
+                            d="
+                                M 0.5 7
+                                a 1.9 2.8 0 1 1 5.6 0
+                                m 0.05 0
+                                a 2.1 2.8 0 1 0 5.7 0
+                                m 0.05 0
+                                a 1.9 2.8 0 1 1 5.6 0
+                                m 0.05 0
+                                a 2.1 2.8 0 1 0 5.7 0
+                                "
+                            stroke="black"
+                            fill="transparent"
+                            stroke-linejoin="round"
+                        />                    
 
-                    <!-- draw an arrow for download -->
-                    <path
-                        d="
-                            M 14 23
-                            v -5
-                            h 3
-                            l -5 -5
-                            l -5 5
-                            h 3
-                            v 5
-                            z
-                            "
-                        stroke="black"
-                        fill="blue"
-                        stroke-linejoin="round"
-                    />
-                </svg>
-			</button>
-		</li>
-		<input type='file' id='importInstrumentPresetInput' style='display: none'>
-		
-		<li>
-			<button id='toggleStickyToolbar' title='toggle sticky toolbar' class='btn'>
-				<svg width="48" height="48" viewBox="0 0 24 24">
-                    <path
-                        d="
-                            M 8 7
-                            v 8
-                            h 3
-                            l -5 5
-                            l -5 -5
-                            h 3
-                            v -8
-                            z
-                            "
-                        stroke="black"
-                        fill="blue"
-                        stroke-linejoin="round"
-                    />
-                    <path
-                        d="
-                            M 15 19
-                            v -8
-                            h -3
-                            l 5 -5
-                            l 5 5
-                            h -3
-                            v 8
-                            z
-                            "
-                        stroke="black"
-                        fill="blue"
-                        stroke-linejoin="round"
-                    />
-                </svg>
-			</button>
-		</li>
-	</ul>
-	
-	<div id='demo'>
-		<label> demo: </label>
-		<select onchange="getDemo(this)">
-			<option label=""></option>
-			<option>
-				intrada-pezel
-			</option>
-			<option>
-				sand canyon
-			</option>
-			<option>
-				3_4 time demo
-			</option>
-			<option>
-				nakayoshi sensation
-			</option>
-		</select>
-	</div>
-	
-	<p id='loadingMsg'></p>
-	
-</div>
+                        <!-- draw an arrow for download -->
+                        <path
+                            d="
+                                M 14 23
+                                v -5
+                                h 3
+                                l -5 -5
+                                l -5 5
+                                h 3
+                                v 5
+                                z"
+                            stroke="black"
+                            fill="blue"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </button>
+            </li>
+            <input type='file' id='importInstrumentPresetInput' style='display: none'>
+            
+            <li>
+                <button id='toggleStickyToolbar' title='toggle sticky toolbar' class='btn'>
+                    <svg width="48" height="48" viewBox="0 0 24 24">
+                        <path
+                            d="
+                                M 8 7
+                                v 8
+                                h 3
+                                l -5 5
+                                l -5 -5
+                                h 3
+                                v -8
+                                z"
+                            stroke="black"
+                            fill="blue"
+                            stroke-linejoin="round"
+                        />
+                        <path
+                            d="
+                                M 15 19
+                                v -8
+                                h -3
+                                l 5 -5
+                                l 5 5
+                                h -3
+                                v 8
+                                z"
+                            stroke="black"
+                            fill="blue"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </button>
+            </li>
+        </ul>
+        
+        <div id='demo'>
+            <label> demo: </label>
+            <select onchange="getDemo(this)">
+                <option label=""></option>
+                <option>
+                    intrada-pezel
+                </option>
+                <option>
+                    sand canyon
+                </option>
+                <option>
+                    3_4 time demo
+                </option>
+                <option>
+                    nakayoshi sensation
+                </option>
+            </select>
+        </div>
+        
+        <p id='loadingMsg'></p>
+    </div>
 
+    <div id='instrumentGrid'>
+        <table>
+            <tr id='instrumentTable'>
+                <td id='1' class='context-menu-instrument' style='background-color: rgb(188,223,70)' onclick='chooseInstrument(this.id, pianoRoll)'> default instrument </td>
+            </tr>
+        </table>
+    </div>
 
-<div id='instrumentGrid'>
-	<table>
-		<tr id='instrumentTable'>
-			<td id='1' class='context-menu-instrument' selected='1' style='background-color: rgb(188,223,70)' onclick='chooseInstrument(this.id, pianoRoll)'> default instrument </td>
-		</tr>
-	</table>
-</div>
+    <br>
 
-<br>
+    <div id='piano'>
+        <div id='columnHeaderRow'></div>
+    </div>
 
-<div id='piano'>
-	<div id='columnHeaderRow'></div>
-</div>
+    <div id='pianoNotes'>
+    </div>
 
+    <div class='footer'>
+        <p> c.2017 nch | <a href='https://github.com/syncopika/piano_roll_browser'> source </a> </p>
+    </div>
 
-<div id='pianoNotes'>
-</div>
-
-
-<div class='footer'>
-	<p> c.2017 nch | <a href='https://github.com/syncopika/piano_roll_browser'> source </a> </p>
-</div>
-
-<script src="main.js"></script>
-
+    <script src="main.js"></script>
 </body>
-
 
 </html>

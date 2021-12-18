@@ -1,4 +1,6 @@
 // utility functions to handle importing instrument presets
+// currently experimental and should correspond with: https://github.com/syncopika/soundmaker
+
 class ADSREnvelope {
     constructor(){
         this.attack = 0;

@@ -257,8 +257,8 @@ function getJSONData(pianoRoll){
             var noteData = {
                 "width": noteElement.style.width,
                 "left": noteElement.style.left,
-                "volume": noteElement.getAttribute("volume"),
-                "type": noteElement.getAttribute("type")
+                "volume": noteElement.dataset.volume,
+                "type": noteElement.dataset.type,
             };
             if(!instrumentData["notes"][noteContainer.id]){
                 instrumentData["notes"][noteContainer.id] = [noteData];
@@ -381,13 +381,13 @@ function processData(data){
                 newNote.style.left = noteAttr.left;
                 newNote.style.opacity = (i === 0) ? 1.0 : (newInstrument.onionSkinOn ? 0.3 : 0.0);
                 newNote.style.zIndex = (i === 0) ? 100 : 0;
-                newNote.setAttribute("volume", noteAttr.volume);
-                newNote.setAttribute("type", noteAttr.type);
+                newNote.setAttribute("data-volume", noteAttr.volume);
+                newNote.setAttribute("data-type", noteAttr.type);
                 newInstrument.activeNotes[newNote.id] = newNote;
                 document.getElementById(noteContainerId).appendChild(newNote);
 
                 var colHeader = document.getElementById(noteContainerId.substring(noteContainerId.indexOf("col")));
-                colHeader.setAttribute("numNotes", parseInt(colHeader.getAttribute("numNotes"))+1);            
+                colHeader.setAttribute("data-num-notes", parseInt(colHeader.dataset.numNotes + 1));            
             });
         }
         newInstrument.notes = readInNotes(newInstrument, pianoRoll);
@@ -399,7 +399,6 @@ function processData(data){
     // make 1st instrument active
     var instrument1 = document.getElementById("instrumentTable").firstChild;
     instrument1.style.backgroundColor = "rgb(188,223,70)";
-    instrument1.setAttribute("selected", "1");
     instrument1.classList.add("context-menu-instrument");
     
     pianoRoll.currentInstrument = pianoRoll.instruments[0];
