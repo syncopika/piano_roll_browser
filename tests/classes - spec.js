@@ -41,14 +41,14 @@ describe('testing classes.js', function(){
     
     it('testing ElementNode class', function(){
         var el = document.createElement('div');
-        el.setAttribute("volume", .5);
-        el.setAttribute("type", "legato");
+        el.setAttribute("data-volume", .5);
+        el.setAttribute("data-type", "legato");
         el.id = "test";
         
         var elNode = new ElementNode(el);
         assert(elNode.id === el.id);
-        assert(elNode.volume === el.getAttribute("volume"));
-        assert(elNode.style === el.getAttribute("type"));
+        assert(elNode.volume === el.dataset.volume);
+        assert(elNode.style === el.dataset.type);
     });
     
     it('testing Note class', function(){
@@ -56,9 +56,9 @@ describe('testing classes.js', function(){
         var duration = 100;
         
         var el = document.createElement('div');
-        el.setAttribute("length", 5);
-        el.setAttribute("volume", .5);
-        el.setAttribute("type", "legato");
+        el.setAttribute("data-length", 5);
+        el.setAttribute("data-volume", .5);
+        el.setAttribute("data-type", "legato");
         el.id = "test";
         
         var note = new Note(freq, duration, el);

@@ -14,6 +14,7 @@ describe('first test', function(){
     it('check existence of stuff', function(){
         // make sure instrument grid is there
         cy.get('#instrumentGrid').should('be.visible');
+        
         // make sure one instrument exists
         cy.get('#instrumentGrid').find("#instrumentTable").should('be.visible');
         cy.get('#instrumentGrid').find("#instrumentTable").children().its('length').should('eq', 1);
@@ -53,13 +54,37 @@ describe('first test', function(){
         cy.get('.context-menu-list').should('be.visible');
         cy.get('#context-menu-layer').click(); // remove context-menu by clicking somewhere else
         cy.get('.context-menu-list').should('not.exist');
+    
+        // check deleting note
+        cy.get(elementId).find(note).rightclick();
+        cy.get('.context-menu-icon-delete').click();
+        cy.get(note).should('not.exist');
+    });
+    
+    it('can create and delete an instrument', function(){    
+        const instrumentTable = '#instrumentTable';
+        const addInstrument = '#addInstrument';
+        
+        cy.get(instrumentTable).find('#1').should('be.visible');
+        cy.get(addInstrument).click();
+        
+        cy.get(instrumentTable).find('#2').should('be.visible');
+        cy.get(instrumentTable).find('#2').should('have.css', 'background-color').and('eq', 'rgba(0, 0, 0, 0)');
+        
+        cy.get(instrumentTable).find('#2').click(); // switch to new instrument
+        
+        cy.get(instrumentTable).find('#2').rightclick();
+        cy.get(instrumentTable).find('#2').should('have.class', 'context-menu-active');
+        
+        // delete the newly added instrument
+        cy.get('.context-menu-icon-delete').click();
+        cy.get(instrumentTable).find('#2').should('not.exist');
+        
     });
     
     // TODO:
     // check context-menu for instrument
     // check time signature change correctly changing num measures, headers
-    // check context-menu delete
-    // check add/delete instrument
     // check add/delete measure
     
 });
