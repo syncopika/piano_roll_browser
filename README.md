@@ -79,6 +79,8 @@ For the context menus used to edit instruments and notes, I used the awesome jQu
 ### installation:    
 You don't need to install anything to use the piano roll itself (limited to just the basic sounds such as sine, sawtooth, triangle and square) locally; however, if you want to load in the demos and example custom presets, you'll need to serve the html page first on a local server. If you have Python, you can just run `python -m http.server` in this repo after you've downloaded it and navigate to `http://localhost:8000`. If you have node and npm, run `npm install` in this repo to get the dependencies (which also includes the needed libraries for running the tests!) and then run `node server.js`. Then navigate to `http://localhost:3000/` to see the piano roll.    
     
+For styling I played a bit with Sass and made a .scss file. To compile the .css file used you can download the Dart Sass binary [here](https://github.com/sass/dart-sass/releases/) and run `sass style.scss`.    
+    
 To run the tests, make sure the dependencies have been downloaded via `npm install`. Then run `npm run test`.    
     
 I also have some code to accommodate a MongoDB backend with a basic login feature in case you might want to create an application that needs a login/auth feature and a MongoDB backend ;). To get that set up locally, check out the `db_stuff` folder. You'll also need to make sure to install the devDependencies in `package.json`.    

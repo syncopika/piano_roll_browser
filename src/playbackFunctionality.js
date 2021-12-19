@@ -2,15 +2,15 @@
 
 these functions control functionality such as:
 
-- note reading / playback
-- tempo change
-- play/stop 
+- note reading/scheduling/playback
+- play/stop/record
+- clicking notes
 
 relies on PianoRoll object in classes.js 
 
 ************/
 
-
+// TODO: move elsewhere? like under Piano Roll?
 // create a new gain object
 // @param context: an AudioContext instance
 function initGain(context){
@@ -143,6 +143,7 @@ function sortNotesByPosition(instrument){
 // get an array of Note object arrays for an instrument 
 // since chords are allowed and multiple notes may start at the same x-position,
 // each array within the resulting array represents the note(s) at a position.
+//
 // @param instrument: an instance of Instrument 
 // @param pianoRollObject: an instance of PianoRoll
 // @return: an array of arrays containing Note objects
@@ -190,11 +191,15 @@ function getNotePosition(noteElement){
 }
 
 /*** 
+    
     scheduler helper functions
+    
 ***/
 
 // figure out for each instrument the minimum number of gain nodes (which is also the num of oscillator nodes) we need 
 // in order to minimize the number of nodes we need to create since that adds performance overhead
+// see /notes directory
+//
 // @param instruments: a map of instrument indexes to instruments
 // @param instrumentNotePointers: an array where each index corresponds to an instrument 
 //                                and at each index is a number representing the index of the instrument's note to start playing at
@@ -270,7 +275,8 @@ function getNumGainNodesPerInstrument(instruments, instrumentNotePointers){
 // especially if we have a lot of notes that aren't part of chords and can be used with just one gain node and oscillator.
 // but need to be careful here! if we import a custom preset, we may be importing a network of nodes (that can be reused).
 // we can still maintain a 1:1 gain to route relationship but instead of the usual case where we have 1 gain for a route, we 
-// have one network of nodes (so maybe 2 gain nodes) for a route.
+// have one network of nodes (with maybe 2 gain nodes) for a route.
+//
 // @param pianoRollObject: an instance of PianoRoll
 // @param numGainNodePerInst: a map of instrument index to the number of nodes needed for that instrument
 // @param instrumentGainNodes: a map where each key is the index of an instrument and each value will be an array of gain nodes
@@ -384,6 +390,7 @@ function routeNotesToNodes(instruments, instrumentNotePointers, instrumentGainNo
 // preprocess the nodes further by figuring out how long each note should be and its start/stop times
 // note that we should NOT actually stop any oscillators; they should just be set to 0 freq and 0 gain when they should not be playing
 // combine all notes of each instrument into an array. each element will be a map of note properties and the osc node for that note.
+//
 // @param routes: an object where each key is an instrument index mapped to a map of gain nodes mapped to the notes those gain nodes are responsible for playing. 
 // @param pianoRollObject: instance of PianoRoll
 // @param instrumentGainNodes: a map of instrument to gain nodes
@@ -517,6 +524,7 @@ function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, 
     return allNotesPerInstrument;
 }
 
+// set up all the notes and schedule them for playback
 // @param pianoRoll: an instance of PianoRoll
 // @param allInstruments: boolean indicating if all instruments should be played or not
 function scheduler(pianoRoll, allInstruments){
@@ -548,13 +556,13 @@ function scheduler(pianoRoll, allInstruments){
         }
     }
     
-    // gather the column headers so we can process them to indicate the approx. current location for playback
+    // gather the column headers so we can process them to indicate the approx. current location for playback with a marker
     // filter columnHeadersToHighlight a bit more - we only want to include up to the last column that has notes.
     // any column past that we don't want 
     var columnHeadersToHighlight = Array.from(document.getElementById("columnHeaderRow").children).splice(1); // remove first col header since it's for cosmetic purposes
     var lastColWithNotes;
     columnHeadersToHighlight.forEach((col, index) => {
-        if(col.getAttribute("numNotes") > 0){
+        if(col.dataset.numNotes > 0){
             lastColWithNotes = index;
         }
     });
@@ -797,7 +805,7 @@ function scheduler(pianoRoll, allInstruments){
     }*/
 }
 
-// implements looping play functionality
+// implements looping play functionality - TODO: fix this
 // @param pianoRollObject: an instance of PianoRoll
 // @param allInstruments: true if playing all instruments, false if not.
 function loopSignal(pianoRollObject, allInstruments){
@@ -888,8 +896,8 @@ function stopPlay(pianoRollObject){
     currNote = null;
 }
 
-
-//create a new instrument
+// TODO: move elsewhere? like under Piano Roll?
+// create a new instrument
 // @param name: name of the instrument
 // @param pianoRollObject: instance of PianoRoll
 function createNewInstrument(name, pianoRollObject){

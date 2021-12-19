@@ -191,7 +191,7 @@ function makeNoteContextMenu(pianoRollObject){
                                 options: {1: .01, 2: .05, 3: 0.10, 4: 0.15, 5: 0.20, 6: 0.25, 7: 0.30, 8: 0.35, 9: 0.40, 10: 0.45, 11: 0.50},
                                 selected: function(){
                                     var note = e.data.$trigger[0];
-                                    var currentVolume = note.getAttribute("volume");
+                                    var currentVolume = note.dataset.volume;
                                     for(key in this.options){
                                         if(this.options[key].textContent === currentVolume){
                                             return (parseInt(key) + 1) + "";
@@ -204,7 +204,7 @@ function makeNoteContextMenu(pianoRollObject){
                                         var selectedVolume = this.options[e.target.options[e.target.selectedIndex].value - 1].textContent;
                                         
                                         // update volume attribute in selected dom element 
-                                        selectedNote.setAttribute("volume", parseFloat( selectedVolume ) );
+                                        selectedNote.setAttribute("data-volume", parseFloat( selectedVolume ) );
                                     }
                                 }
                             },
@@ -214,7 +214,7 @@ function makeNoteContextMenu(pianoRollObject){
                                 type: 'select',
                                 options: pianoRollObject.defaultNoteStyles,
                                 selected: function(){
-                                    var currentStyle = e.data.$trigger[0].getAttribute("type");
+                                    var currentStyle = e.data.$trigger[0].dataset.type;
                                     for(key in this.options){
                                         if(this.options[key].textContent === currentStyle){
                                             return (parseInt(key) + 1) + "";
@@ -225,7 +225,7 @@ function makeNoteContextMenu(pianoRollObject){
                                     change: function(e){
                                         var selectedNote = e.data.$trigger[0];
                                         // update the type attribute in selected dom element 
-                                        selectedNote.setAttribute("type", this.options[e.target.options[e.target.selectedIndex].value - 1].textContent );
+                                        selectedNote.setAttribute("data-type", this.options[e.target.options[e.target.selectedIndex].value - 1].textContent );
                                     }
                                 }
                             },
@@ -238,7 +238,7 @@ function makeNoteContextMenu(pianoRollObject){
                                     var parent = note.parentNode;
 
                                     var colHeader = document.getElementById(parent.id.substring(parent.id.indexOf("col")));
-                                    colHeader.setAttribute("numNotes", parseInt(colHeader.getAttribute("numNotes"))-1);
+                                    colHeader.setAttribute("data-num-notes", parseInt(colHeader.dataset.numNotes - 1));
             
                                     parent.removeChild(note);
                                     delete pianoRollObject.currentInstrument.activeNotes[note.id];

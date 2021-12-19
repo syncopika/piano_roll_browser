@@ -251,10 +251,10 @@ function Note(freq, duration, block){
 // pass in a dom element node and the object will extract the information 
 function ElementNode(domElement){
     this.id = domElement.id;
-    this.volume = domElement.getAttribute("volume");
+    this.volume = domElement.dataset.volume;
     
     // indicates whether note is regular, legato, staccato, or glide 
-    this.style = domElement.getAttribute("type");
+    this.style = domElement.dataset.type;
 }
 
 /***** PERCUSSION CLASS ******/
@@ -397,8 +397,7 @@ function PianoManager(pianoRollObject) {
     };
     
     // load in the notes
-    this.loadPianoNotes = function(pElement){
-        
+    this.loadPianoNotes = function(pElement){   
         let totalNotes = Object.keys(this.noteMap).length;
         pElement.textContent = "loading in piano notes...";
         
