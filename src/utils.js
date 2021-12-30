@@ -420,28 +420,32 @@ function validateProject(project){
 
 // load in the example instrument presets
 function loadExamplePresets(pElement){
-    let presets = [
-        "example_presets/belltone.json",
-        "example_presets/delaySine.json",
-        "example_presets/noisySine.json",
-        "example_presets/dissonant.json"
-    ];
-    
-    let count = presets.length;
-    pElement.textContent = "loading custom instrument presets...";
-    
-    presets.forEach((preset) => {
-        fetch(preset)
-            .then(response => response.json())
-            .then(data => {
-                let name = data.name;
-                pianoRoll.instrumentPresets[name] = data.data;
-                
-                count--;
-                if(count === 0){
-                    pElement.textContent = "";
-                }
-            });
+    return new Promise((resolve, reject) => {
+        const presets = [
+            "example_presets/belltone.json",
+            "example_presets/delaySine.json",
+            "example_presets/noisySine.json",
+            "example_presets/dissonant.json",
+        ];
+        
+        let count = presets.length;
+        pElement.textContent = "loading custom instrument presets...";
+        
+        presets.forEach((preset) => {
+            fetch(preset)
+                .then(response => response.json())
+                .then(data => {
+                    const name = data.name;
+                    pianoRoll.instrumentPresets[name] = data.data;
+                    
+                    count--;
+                    
+                    if(count === 0){
+                        pElement.textContent = "";
+                        resolve(true);
+                    }
+                });
+        });
     });
 }
 
@@ -490,7 +494,7 @@ function getDemo(selectedDemo){
 
 /////////////////////// database-specific (mongodb) stuff
 /****
-    save current project to database!
+    save current project to database
 ****/
 function saveProjectToDB(){
     var jsonData;

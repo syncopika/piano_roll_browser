@@ -47,8 +47,9 @@ buildGridHeader('columnHeaderRow', pianoRoll);
 buildGrid('piano', pianoRoll);
 
 // load in presets and piano notes (TODO: maybe lazy load only when selected as instrument sound?)
-loadExamplePresets(document.getElementById('loadingMsg'));
-pianoRoll.PianoManager.loadPianoNotes(document.getElementById('loadingMsg'));
+loadExamplePresets(document.getElementById('loadingMsg')).then(_ => {
+    pianoRoll.PianoManager.loadPianoNotes(document.getElementById('loadingMsg'));
+});
 
 // allow components like the toolbar to move with the user when scrolling right after more measures are added 
 $(window).scroll(function(){

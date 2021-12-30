@@ -195,6 +195,52 @@ function getNotePosition(noteElement){
     scheduler helper functions
     
 ***/
+// get the note start and end positions for each note.
+// @param instrumentNotes: an array of arrays representing the notes
+// @return: an array of objects representing the notes, each containing 
+//          the attributes start and end for the start and end positions of the note
+function getNotesStartAndEnd(instrumentNotes){
+    var notes = [];
+    instrumentNotes.forEach((noteGroup) => {
+        noteGroup.forEach(note => {
+            var n = document.getElementById(note.block.id);
+            var startPos = getNotePosition(n);
+            notes.push({
+                start: startPos,
+                end: startPos + parseInt(n.style.width),
+            });
+        });
+    });
+    return notes;
+}
+
+// uses a priority queue to figure out the minimum number of gain nodes
+// needed to play all the notes of an instrument
+// @param notesStartAndEnd: an array of objects representing the notes, each containing 
+//                          the attributes start and end for the start and end positions 
+//                          of the note
+// @return: an integer representing the minimum number of gain nodes needed
+function getMinGainNodes(notesStartAndEnd){
+    var prevNote = null;
+    var currNote = null;
+    var minNumGainNodes = 1;
+    
+    var pq = new PriorityQueue();
+    
+    if(notesStartAndEnd.length > 1){
+        pq.add(notesStartAndEnd[0].end);
+        for(var i = 1; i < notesStartAndEnd.length; i++){
+            if(pq.peek() <= notesStartAndEnd[i].start){
+                pq.remove();
+            }
+            
+            pq.add(notesStartAndEnd[i].end);
+        }
+        minNumGainNodes = pq.size;
+    }
+    
+    return minNumGainNodes;
+}
 
 // figure out for each instrument the minimum number of gain nodes (which is also the num of oscillator nodes) we need 
 // in order to minimize the number of nodes we need to create since that adds performance overhead
@@ -208,63 +254,11 @@ function getNumGainNodesPerInstrument(instruments, instrumentNotePointers){
     var numGainNodePerInst = {};
     
     for(var instIndex in instruments){
-        var instrument = instruments[instIndex];
-        var prevNote = null;
-        var currNote = null;
         var start = instrumentNotePointers[instIndex];
-
-        for(var index = start; index < instrument.notes.length; index++){
-            var group = instrument.notes[index];
-            
-            if(index > start){
-                // find the longest note in the prev group
-                if(!prevNote){
-                    prevNote = document.getElementById(instrument.notes[index-1][0].block.id);
-                    instrument.notes[index-1].forEach((note) => {
-                        var n = document.getElementById(note.block.id);
-                        if(parseInt(n.style.width) > parseInt(prevNote.style.width)){
-                            prevNote = n;
-                        }
-                    });
-                }
-                
-                // get the longest note in curr group 
-                var longestCurrNote = document.getElementById(group[0].block.id);
-                group.forEach((note) => {
-                    var htmlNote = document.getElementById(note.block.id);
-                    if(parseInt(htmlNote.style.width) > parseInt(longestCurrNote.style.width)){
-                        longestCurrNote = htmlNote;
-                    }
-                });
-
-                currNote = longestCurrNote;
-                
-                var prevNotePos = getNotePosition(prevNote);
-                var prevNoteLen = parseInt(prevNote.style.width);
-                var currNotePos = getNotePosition(currNote);
-                
-                if(currNotePos < (prevNotePos + prevNoteLen)){
-                    // if the curr note starts before the curr note ends,
-                    // we know that we need an additional gain node to be able 
-                    // to play both notes simultaneously
-                    if(!numGainNodePerInst[instIndex]){
-                        numGainNodePerInst[instIndex] = 2;
-                    }else{
-                        numGainNodePerInst[instIndex]++;
-                    }
-                }
-                prevNote = currNote;
-            }
-            
-            if(!numGainNodePerInst[instIndex]){
-                numGainNodePerInst[instIndex] = group.length;
-            }else{
-                numGainNodePerInst[instIndex] = Math.max(
-                    numGainNodePerInst[instIndex],
-                    group.length
-                );
-            }
-        }
+        var notes = instruments[instIndex].notes.slice(start); // the notes should already be sorted in order
+        var notesStartAndEnd = getNotesStartAndEnd(notes);
+        
+        numGainNodePerInst[instIndex] = getMinGainNodes(notesStartAndEnd);
     }
     
     return numGainNodePerInst;
@@ -388,7 +382,7 @@ function routeNotesToNodes(instruments, instrumentNotePointers, instrumentGainNo
 }
 
 // preprocess the nodes further by figuring out how long each note should be and its start/stop times
-// note that we should NOT actually stop any oscillators; they should just be set to 0 freq and 0 gain when they should not be playing
+// note that we should NOT actually stop any oscillators because we will reuse them; they should just be set to 0 freq and 0 gain when they should not be playing
 // combine all notes of each instrument into an array. each element will be a map of note properties and the osc node for that note.
 //
 // @param routes: an object where each key is an instrument index mapped to a map of gain nodes mapped to the notes those gain nodes are responsible for playing. 
@@ -912,16 +906,18 @@ function createNewInstrument(name, pianoRollObject){
 
 try {
     module.exports = {
-        initGain: initGain,
-        readInNotes: readInNotes,
-        scheduler: scheduler,
-        play: play,
-        playAll: playAll,
-        stopPlay: stopPlay,
-        getCorrectLength: getCorrectLength,
-        getNumGainNodesPerInstrument: getNumGainNodesPerInstrument,
-        getNotePosition: getNotePosition,
-        createNewInstrument: createNewInstrument,
+        initGain,
+        getNotesStartAndEnd,
+        getMinGainNodes,
+        readInNotes,
+        scheduler,
+        play,
+        playAll,
+        stopPlay,
+        getCorrectLength,
+        getNumGainNodesPerInstrument,
+        getNotePosition,
+        createNewInstrument,
     }
 }catch(e){
     // ignore errors (i.e. if adding the script to an html page)
