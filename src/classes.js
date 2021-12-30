@@ -5,31 +5,31 @@
 
 *******/
 function PianoRoll(){
-    this.numberOfMeasures = 4;     // 4 measures by default
-    this.subdivision = 8;         // number of eighth notes per measure (8 for 4 quarter notes per measure, 6 for 3/4)
-    this.currentTempo = 250;     // hold the current tempo (this is time in milliseconds per 8th note). 250 ms seems about right for 120 bpm (and with the length of 8th notes as 40px)
-    this.timeSignature = "4/4"; // options are 4/4 or 3/4
-    this.instruments = [];        // list of instruments will be an array
-    this.timers = [];            // keep track of setTimeouts so all can be ended at once 
-    this.currentInstrument;     // need to keep track of what current instrument is!
-    this.audioContext;            // associate an AudioContext with this PianoRoll
-    this.audioContextDestOriginal; // the original audio context destination 
+    this.numberOfMeasures = 4;        // 4 measures by default
+    this.subdivision = 8;             // number of eighth notes per measure (8 for 4 quarter notes per measure, 6 for 3/4)
+    this.currentTempo = 250;          // hold the current tempo (this is time in milliseconds per 8th note). 250 ms seems about right for 120 bpm (and with the length of 8th notes as 40px)
+    this.timeSignature = "4/4";       // options are 4/4 or 3/4
+    this.instruments = [];            // list of instruments will be an array
+    this.timers = [];                 // keep track of setTimeouts so all can be ended at once 
+    this.currentInstrument;           // need to keep track of what current instrument is!
+    this.audioContext;                // associate an AudioContext with this PianoRoll
+    this.audioContextDestOriginal;    // the original audio context destination 
     this.audioContextDestMediaStream; // a media stream destination for the audio context (to be used when recording is desired)
     this.audioDataChunks = [];
-    this.lastTime = 0;             // the time the last note was supposed to be played
-    this.isPlaying = false;        // a boolean flag to easily quit playing
-    this.loopFlag = false;        // if playback should be looped or not 
-    this.recording = false;        // if recording. note that if looping, recording should not be possible.
-    this.recorder;                // a MediaRecorder instance
-    this.playMarker;            // the id of a column header indicating where to start playing
+    this.lastTime = 0;                // the time the last note was supposed to be played
+    this.isPlaying = false;           // a boolean flag to easily quit playing
+    this.loopFlag = false;            // if playback should be looped or not 
+    this.recording = false;           // if recording. note that if looping, recording should not be possible.
+    this.recorder;                    // a MediaRecorder instance
+    this.playMarker;                  // the id of a column header indicating where to start playing
     
-    this.lockNoteSize = "16th"; // the note-size increment to be used when moving/placing notes
-    this.addNoteSize = "last selected"; // note-size to use when adding notes (changes based on last selected/resize by default)
-    this.lastNoteSize = 40; // last clicked-on note size in px as integer 
-    this.noteIdNum = 0; // use this to create a unique number for each added note's id
+    this.lockNoteSize = "16th";          // the note-size increment to be used when moving/placing notes
+    this.addNoteSize = "last selected";  // note-size to use when adding notes (changes based on last selected/resize by default)
+    this.lastNoteSize = 40;              // last clicked-on note size in px as integer 
+    this.noteIdNum = 0;                  // use this to create a unique number for each added note's id
     
-    this.instrumentPresets = {};// a dictionary to keep track of imported instrument presets
-    this.noiseBuffer; // for percussion 
+    this.instrumentPresets = {};         // a dictionary to keep track of imported instrument presets
+    this.noiseBuffer;                    // for percussion 
     
     // colors
     this.playMarkerColor = "rgb(50, 205, 50)";
@@ -386,8 +386,8 @@ function PercussionManager(pianoRollObject){
 // via loading in .ogg files of each note on the piano roll and using AudioBufferSourceNodes :D
 function PianoManager(pianoRollObject) {
     this.audioCtx = pianoRollObject.audioContext;
-    
     this.noteMap = {};
+    
     for(let note in pianoRollObject.noteFrequencies){
         this.noteMap[note.replace('#', 's')] = "";
     }
@@ -397,7 +397,7 @@ function PianoManager(pianoRollObject) {
     };
     
     // load in the notes
-    this.loadPianoNotes = function(pElement){   
+    this.loadPianoNotes = function(pElement){
         let totalNotes = Object.keys(this.noteMap).length;
         pElement.textContent = "loading in piano notes...";
         
@@ -425,13 +425,80 @@ function PianoManager(pianoRollObject) {
     };
 }
 
+// a priority queue (min-heap) for getting the minimum number of nodes needed for an instrument
+// no prototype because there should only be one instance of these at a time
+function PriorityQueue(){
+    this.array = [];
+    this.size = 0;
+    this.lastIndex = 0;
+    
+    this.swap = function(idx1, idx2){
+        var temp = this.array[idx1];
+        this.array[idx1] = this.array[idx2];
+        this.array[idx2] = temp;
+    }
+    
+    this.add = function(num){
+        this.array[this.lastIndex++] = num;
+        
+        // bubble-up
+        var currIdx = this.lastIndex - 1;
+        var parentIdx = (currIdx - 1) / 2;
+        
+        while(this.array[parentIdx] > this.array[currIdx]){
+            this.swap(currIdx, parentIdx);
+            currIdx = parentIdx;
+            parentIdx = (currIdx - 1) / 2;
+        }
+        
+        this.size++;
+    }
+    
+    this.remove = function(){
+        if(this.size === 0){
+            return null;
+        }
+        
+        var root = this.array[0];
+        
+        this.array[0] = this.array[this.lastIndex - 1]; // move last node to root
+        this.lastIndex--;
+        
+        // bubble-down
+        for(var i = 0; (2*i + 1) < this.array.length; i++){
+            var smallestChildIdx = 2*i + 1;
+            var rightChildIdx = 2*i + 2;
+            
+            if(rightChildIdx < this.array.length){
+                // compare against right child since it exists
+                if(this.array[smallestChildIdx] > this.array[rightChildIdx]){
+                    smallestChildIdx = rightChildIdx;
+                }
+            }
+            
+            if(this.array[i] > this.array[smallestChildIdx]){
+                this.swap(i, smallestChildIdx);
+            }
+        }
+        
+        this.size--;
+        
+        return root;
+    }
+    
+    this.peek = function(){
+        return this.array[0];
+    }
+}
+
 
 try{
     module.exports = {
-        PianoRoll: PianoRoll,
-        Instrument: Instrument,
-        Note: Note,
-        ElementNode: ElementNode
+        PianoRoll,
+        Instrument,
+        Note,
+        ElementNode,
+        PriorityQueue,
     }
 }catch(e){
     // ignore
