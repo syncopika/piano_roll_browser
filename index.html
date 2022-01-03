@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 
+<html>
+
 <head>
     <meta charset='utf-8'>
     <title> a piano roll in the browser </title>
@@ -25,7 +27,7 @@
 </head>
 
 <body>
-    <div id='toolbar'>
+    <header id='toolbar'>
         <h2 id='title'> piano roll fun &#127929;</h2>
 
         <ul id='metadata'>
@@ -406,28 +408,30 @@
         </div>
         
         <p id='loadingMsg'></p>
-    </div>
+    </header>
 
-    <div id='instrumentGrid'>
-        <table>
-            <tr id='instrumentTable'>
-                <td id='1' class='context-menu-instrument' style='background-color: rgb(188,223,70)' onclick='chooseInstrument(this.id, pianoRoll)'> default instrument </td>
-            </tr>
-        </table>
-    </div>
+    <main>
+        <div id='instrumentGrid'>
+            <table>
+                <tr id='instrumentTable'>
+                    <td id='1' class='context-menu-instrument' style='background-color: rgb(188,223,70)' onclick='chooseInstrument(this.id, pianoRoll)'> default instrument </td>
+                </tr>
+            </table>
+        </div>
 
-    <br>
+        <br>
 
-    <div id='piano'>
-        <div id='columnHeaderRow'></div>
-    </div>
+        <div id='piano'>
+            <div id='columnHeaderRow'></div>
+        </div>
 
-    <div id='pianoNotes'>
-    </div>
+        <div id='pianoNotes'>
+        </div>
+    </main>
 
-    <div class='footer'>
+    <footer class='footer'>
         <p> c.2017 nch | <a href='https://github.com/syncopika/piano_roll_browser'> source </a> </p>
-    </div>
+    </footer>
 
     <script src="main.js"></script>
 </body>
