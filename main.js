@@ -35,10 +35,10 @@ $('#subdiv').html("subdivision: " + pianoRoll.subdivision);
 
 // set up initial instrument
 var context = pianoRoll.audioContext;
-var g = initGain(context);    
-g.connect(context.destination);
+var gain = initGain(context);
+gain.connect(context.destination);
 
-var initialInstrument = new Instrument("Instrument 1", g, []);
+var initialInstrument = new Instrument("Instrument 1", gain, []);
 pianoRoll.instruments.push(initialInstrument);
 pianoRoll.currentInstrument = pianoRoll.instruments[0];
 

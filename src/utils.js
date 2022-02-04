@@ -505,7 +505,7 @@ function saveProjectToDB(){
     
     $.ajax({
         type: 'POST',
-        url: '/save_score',
+        url: '/score',
         dataType: "JSON",
         data: {
             score: jsonData // the query attribute is "score"!
@@ -533,7 +533,7 @@ function selectProject(selectedPrj){
     var selectedScore = selectedPrj.options[selectedPrj.selectedIndex].text;
     $.ajax({
         type: 'GET',
-        url: '/get_score/?name=' + selectedScore,
+        url: '/score/?name=' + selectedScore,
         success: function(response){                
             console.log("got score");
             
@@ -549,6 +549,112 @@ function selectProject(selectedPrj){
             stopPlay(pianoRoll);
             clearGridAll(pianoRoll);
             processData(data);
+        }
+    });
+}
+
+function saveInfo(){
+    //console.log("saving edits.");
+    
+    // collect the info from the textareas  
+    var locInfo = document.getElementById('editLocation').value.trim();
+    var aboutInfo = document.getElementById('editAbout').value.trim();
+    
+    /* save the info in the textareas to the database, update the display, and remove textareas */
+    // is there going to be a problem if the ampersand appears in the textarea????? :/
+    $.ajax({
+        type: 'POST',
+        url: '/profile/?' + 'location=' + locInfo + '&' + 'about=' + aboutInfo,
+        success: function(response){				
+            console.log("saved info.");
+            
+            // display the changes on the client side immediately!
+            var updatedLocInfo = document.getElementById('locationText');
+            updatedLocInfo.textContent = "location: " + locInfo;
+            
+            var updatedAbout = document.getElementById('aboutText');
+            updatedAbout.textContent = aboutInfo;
+        }
+    });
+    
+    // use cancelEdit to remove the editing stuff 
+    cancelEdit();
+}
+
+function cancelEdit(){
+    /* simply remove the text areas */
+    var locationTextbox = document.getElementById("editLocation");
+    locationTextbox.parentNode.removeChild(locationTextbox);
+    
+    var aboutTextbox = document.getElementById("editAbout");
+    aboutTextbox.parentNode.removeChild(aboutTextbox);
+    
+    // remove the buttons also!
+    var sbutton = document.getElementById("saveButton");
+    var cbutton = document.getElementById("cancelButton");
+    sbutton.parentNode.removeChild(sbutton);
+    cbutton.parentNode.removeChild(cbutton);
+}
+
+function editProfile(){
+    // check if already editing. 
+    // there are many choices to check if editing is on currently, but I will choose the presence of the save button.
+    if(document.getElementById('saveButton') !== null){
+        return;
+    }
+
+    // edit sections (location, about)
+    // show textareas corresponding to the fields
+    // what about if user clicks edit, but then tries to navigate away from page? need some check for that?
+    var loc = document.getElementById('locationField');
+    var about = document.getElementById('aboutField');
+    
+    var locationTextarea = document.createElement("textarea");
+    locationTextarea.id = "editLocation";
+    
+    var currLocation = document.getElementById('locationText').textContent;
+    locationTextarea.value = currLocation.substring(currLocation.indexOf(":") + 1).trim();
+    loc.appendChild(locationTextarea);
+    
+    var aboutTextarea = document.createElement("textarea");
+    var currAbout = document.getElementById('aboutText').textContent.trim();
+    aboutTextarea.id = "editAbout";
+    aboutTextarea.value = currAbout;
+    about.appendChild(aboutTextarea);
+    
+    // add a 'save changes' button and 'cancel' button 
+    var saveButton = document.createElement("button");
+    saveButton.innerHTML = "save changes";
+    saveButton.id = "saveButton";
+    
+    var cancelButton = document.createElement("button");
+    cancelButton.innerHTML = "cancel";
+    
+    var buttonLocation = document.getElementById('userFacts');
+    
+    // attach each button with their corresponding function 
+    saveButton.addEventListener("click", saveInfo);
+    cancelButton.addEventListener("click", cancelEdit);
+    cancelButton.id = "cancelButton";
+    
+    buttonLocation.appendChild(saveButton);
+    buttonLocation.appendChild(cancelButton);
+}
+
+// delete a score 
+function deleteScore(scoreName){
+    $.ajax({
+        type: 'DELETE',
+        url: '/score?name=' + scoreName,
+        success: function(response){				
+            if(response === "success"){
+                
+                console.log("removed score: " + scoreName);
+                
+                // remove from DOM 
+                var element = document.getElementById(scoreName);
+                element.parentNode.removeChild(element);
+            }
         }
     });
 }

@@ -1,229 +1,226 @@
 <!DOCTYPE html>
 
 <head>
-	<meta charset='utf-8'>
-	<title> "<%= user.local.username %>'s" Piano Roll - Piano Roll Online </title>
-	<script src="external/jquery.min.js"></script>
-	<script src='src/classes.js'></script>
-	<script src='src/contextMenus.js'></script>
-	<script src='src/gridBuilder.js'></script>
-	<script src='src/playbackFunctionality.js'></script>
-	<script src='src/domModification.js'></script>
-	<script src='src/instrumentPreset.js'></script>
-	
-	<!-- my styling -->
-	<link rel="stylesheet" href="style.css" type="text/css"/>
-	
-	<!-- stuff needed for contextMenu -->
-	<link rel="stylesheet" href="external/jquery-contextmenu/dist/jquery.contextMenu.css" type="text/css"/>
-	<link rel="stylesheet" href="external/jquery-contextmenu/dist/jquery.contextMenu.min.css" type="text/css"/>
-	<script src='external/jquery-contextmenu/dist/jquery.ui.position.js'></script>
-	<script src='external/jquery-contextmenu/dist/jquery.ui.position.min.js'></script>
-	<script src='external/jquery-contextmenu/dist/jquery.contextMenu.min.js'></script>
-	<script src='external/jquery-contextmenu/dist/jquery.contextMenu.js'></script>
+    <meta charset='utf-8'>
+    <title> "<%= user.local.username %>'s" Piano Roll - Piano Roll Online </title>
+    <script src="external/jquery.min.js"></script>
+    <script src='src/classes.js'></script>
+    <script src='src/contextMenus.js'></script>
+    <script src='src/gridBuilder.js'></script>
+    <script src='src/playbackFunctionality.js'></script>
+    <script src='src/domModification.js'></script>
+    <script src='src/instrumentPreset.js'></script>
+    <script src='src/utils.js'></script>
+    
+    <!-- my styling -->
+    <link rel="stylesheet" href="style.css" type="text/css"/>
+    
+    <!-- stuff needed for contextMenu -->
+    <link rel="stylesheet" href="external/jquery-contextmenu/dist/jquery.contextMenu.min.css" type="text/css"/>
+    <script src='external/jquery-contextmenu/dist/jquery.ui.position.min.js'></script>
+    <script src='external/jquery-contextmenu/dist/jquery.contextMenu.min.js'></script>
 </head>
 
 
 <body>
 
-<div id='toolbar'>
+<header id='toolbar'>
+    <h2 id='title'> piano roll fun &#127929;</h2>
 
-	<h2 id='title'> piano roll fun &#127929;</h2>
-
-	<ul id='metadata'>
-		<li id='titleLabel'><h2> title:  </h2></li>
-		<li><h2 id='pieceTitle'> hi </h2></li>
-		<li>|</li>
-		<li id='composerLabel'><h2> composer:  </h2></li>
-		<li><h2 id='composer'> hi </h2></li>
-		<li>|</li>
-		<li><h2 id='measures'></h2></li>
-		<li>|</li>
-		<li>
-			<label for="lockType">
-				note lock type: 
-			</label>
-			<select name="lockType" id="lockType" onchange="updateLockNoteSize(this)">
-				<option>8th</option>
-				<option selected="selected">16th</option>
-				<option>32nd</option>
-			</select>
-		</li>
-		<li>|</li>
-		<li>
-			<label for="addNoteSize">
-				note size: 
-			</label>
-			<select name="addNoteSize" id="addNoteSize" onchange="updateAddNoteSize(this)">
-				<option selected="selected">last selected</option>
-				<option>8th</option>
-				<option>16th</option>
-				<option>32nd</option>
-			</select>
-		</li>
-		<li>|</li>
-		<li>
-			<label>
-				time signature:
-			</label>
-			<select id='timeSig'>
-				<option>4/4</option>
-				<option>3/4</option>
-			</select>
-		</li>
-		<li>|</li>
-		<li>
-			<label id='tempoLabel'> tempo: </label>
-			<input id='changeTempo' type='text' value='120'>
-		</li>
-		<li>|</li>
-		<li><h2><a href='https://github.com/syncopika/piano_roll_browser'>help!</a></h2></li>
-		<li>|</li>
-		<li><h2 id='namespace'> <a href='/profile'> profile </a> </h2></li>		
-		<li>|</li>
-		<li><h2><a href="/logout">logout</a></h2></li>
-	</ul>
+    <ul id='metadata'>
+        <li id='titleLabel'><h2> title:  </h2></li>
+        <li><h2 id='pieceTitle'> hi </h2></li>
+        <li>|</li>
+        <li id='composerLabel'><h2> composer:  </h2></li>
+        <li><h2 id='composer'> hi </h2></li>
+        <li>|</li>
+        <li><h2 id='measures'></h2></li>
+        <li>|</li>
+        <li>
+            <label for="lockType">
+                note lock type: 
+            </label>
+            <select name="lockType" id="lockType" onchange="updateLockNoteSize(this)">
+                <option>8th</option>
+                <option selected="selected">16th</option>
+                <option>32nd</option>
+            </select>
+        </li>
+        <li>|</li>
+        <li>
+            <label for="addNoteSize">
+                note size: 
+            </label>
+            <select name="addNoteSize" id="addNoteSize" onchange="updateAddNoteSize(this)">
+                <option selected="selected">last selected</option>
+                <option>8th</option>
+                <option>16th</option>
+                <option>32nd</option>
+            </select>
+        </li>
+        <li>|</li>
+        <li>
+            <label>
+                time signature:
+            </label>
+            <select id='timeSig'>
+                <option>4/4</option>
+                <option>3/4</option>
+            </select>
+        </li>
+        <li>|</li>
+        <li>
+            <label id='tempoLabel'> tempo: </label>
+            <input id='changeTempo' type='text' value='120'>
+        </li>
+        <li>|</li>
+        <li><h2><a href='https://github.com/syncopika/piano_roll_browser'>help!</a></h2></li>
+        <li>|</li>
+        <li><h2 id='namespace'> <a href='/profile'> profile </a> </h2></li>        
+        <li>|</li>
+        <li><h2><a href="/logout">logout</a></h2></li>
+    </ul>
 
 
-	<ul id='buttons'>
-		<li>
-			<button id='play' title='play current instrument' class='btn'>
-				<img src='./icons/playButton.svg'>
-			</button>
-		</li>
-		
-		<li>
-			<button id='playAll' title='play all instruments' class='btn'>
-				<img src='./icons/playAllButton.svg'>
-			</button>
-		</li>
-		
-		<li>
-			<button id='stopPlay' title='stop' class='btn'>
-				<img src='./icons/stopButton.svg'>
-			</button>
-		</li>
-		
-		<!--<li><button id='loop' class='btn'>loop</button></li>-->
-		<li>
-			<button id='record' title='record' class='btn'>
-				<img src='./icons/recordButton.svg'>
-			</button>
-		</li>
-		
-		<li>
-			<button id='addMeasure' title='add new measure' class='btn'>
-				<img src='./icons/addMeasure.svg'>
-			</button>
-		</li>
-		
-		<li>
-			<button id='delMeasure' title='remove last measure' class='btn'>
-				<img src='./icons/removeMeasure.svg'>
-			</button>
-		</li>
+    <ul id='buttons'>
+        <li>
+            <button id='play' title='play current instrument' class='btn'>
+                <img src='./icons/playButton.svg'>
+            </button>
+        </li>
+        
+        <li>
+            <button id='playAll' title='play all instruments' class='btn'>
+                <img src='./icons/playAllButton.svg'>
+            </button>
+        </li>
+        
+        <li>
+            <button id='stopPlay' title='stop' class='btn'>
+                <img src='./icons/stopButton.svg'>
+            </button>
+        </li>
+        
+        <!--<li><button id='loop' class='btn'>loop</button></li>-->
+        <li>
+            <button id='record' title='record' class='btn'>
+                <img src='./icons/recordButton.svg'>
+            </button>
+        </li>
+        
+        <li>
+            <button id='addMeasure' title='add new measure' class='btn'>
+                <img src='./icons/addMeasure.svg'>
+            </button>
+        </li>
+        
+        <li>
+            <button id='delMeasure' title='remove last measure' class='btn'>
+                <img src='./icons/removeMeasure.svg'>
+            </button>
+        </li>
 
-		<li>
-			<button id='addInstrument' title='add instrument' class='btn'>
-				<img src='./icons/addInstrument.svg'>
-			</button>
-		</li>
-		
-		<li>
-			<button id='clearGrid' title='clear grid' class='btn'>
-				<img src='./icons/clearGrid.svg'>
-			</button>
-		</li>
-		
-		<li>
-			<button class='btn' title='download project' onclick='generateJSON()'>
-				<img src='./icons/saveProject.svg'>
-			</button>
-		</li>
-		
-		<li>
-			<button class='btn' title='import project' onclick='fileHandler()'>
-				<img src='./icons/importProject.svg'>
-			</button>
-		</li>
-		<input type='file' id='importFile' style='display: none'>
+        <li>
+            <button id='addInstrument' title='add instrument' class='btn'>
+                <img src='./icons/addInstrument.svg'>
+            </button>
+        </li>
+        
+        <li>
+            <button id='clearGrid' title='clear grid' class='btn'>
+                <img src='./icons/clearGrid.svg'>
+            </button>
+        </li>
+        
+        <li>
+            <button class='btn' title='download project' onclick='generateJSON()'>
+                <img src='./icons/saveProject.svg'>
+            </button>
+        </li>
+        
+        <li>
+            <button class='btn' title='import project' onclick='fileHandler()'>
+                <img src='./icons/importProject.svg'>
+            </button>
+        </li>
+        <input type='file' id='importFile' style='display: none'>
 
-		<li>
-			<button id='importInstrumentPreset' title='import instrument preset' class='btn'>
-				<img src='./icons/importInstrument.svg'>
-			</button>
-		</li>
-		<input type='file' id='importInstrumentPresetInput' style='display: none'>
-		
-		<li>
-			<button id='toggleStickyToolbar' title='toggle sticky toolbar' class='btn'>
-				<img src='./icons/toggleStickyToolbar.svg'>
-			</button>
-		</li>
-		
-		<li>
-			<button class='btn' title='save project to db' onclick='saveProjectToDB()'>
-				<img src='./icons/saveProjectToDB.svg'>
-			</button>
-		</li>
-	</ul>
-	
-	<div id='demo'>
-		<label> demo: </label>
-		<select onchange="getDemo(this)">
-			<option label=""></option>
-			<option>
-				intrada-pezel
-			</option>
-			<option>
-				sand canyon
-			</option>
-			<option>
-				3_4 time demo
-			</option>
-			<option>
-				nakayoshi sensation
-			</option>
-		</select>
-	</div>
-	
-	<div id='yourScores'>
-		<label> your scores: </label>
-		<select onchange="selectProject(this)">
-			<option label=""></option>
-			<% for (var i = 0; i < user.local.scores.length; i++) { %>
-					<option> <%= user.local.scores[i].title %> </option>
-			<% } %>
-		</select>
-	</div>
-	
-	<p id='loadingMsg'></p>
-	
-</div>
+        <li>
+            <button id='importInstrumentPreset' title='import instrument preset' class='btn'>
+                <img src='./icons/importInstrument.svg'>
+            </button>
+        </li>
+        <input type='file' id='importInstrumentPresetInput' style='display: none'>
+        
+        <li>
+            <button id='toggleStickyToolbar' title='toggle sticky toolbar' class='btn'>
+                <img src='./icons/toggleStickyToolbar.svg'>
+            </button>
+        </li>
+        
+        <li>
+            <button class='btn' title='save project to db' onclick='saveProjectToDB()'>
+                <img src='./icons/saveProjectToDB.svg'>
+            </button>
+        </li>
+    </ul>
+    
+    <div id='demo'>
+        <label> demo: </label>
+        <select onchange="getDemo(this)">
+            <option label=""></option>
+            <option>
+                intrada-pezel
+            </option>
+            <option>
+                sand canyon
+            </option>
+            <option>
+                3_4 time demo
+            </option>
+            <option>
+                nakayoshi sensation
+            </option>
+        </select>
+    </div>
+    
+    <div id='yourScores'>
+        <label> your scores: </label>
+        <select onchange="selectProject(this)">
+            <option label=""></option>
+            <% for (var i = 0; i < user.local.scores.length; i++) { %>
+                    <option> <%= user.local.scores[i].title %> </option>
+            <% } %>
+        </select>
+    </div>
+    
+    <p id='loadingMsg'></p>
+    
+</header>
 
 
 <div id='instrumentGrid'>
-	<table>
-		<tr id='instrumentTable'>
-			<td id='1' class='context-menu-instrument' selected='1' style='background-color: rgb(188,223,70)' onclick='chooseInstrument(this.id, pianoRoll)'> default instrument </td>
-		</tr>
-	</table>
+    <table>
+        <tr id='instrumentTable'>
+            <td id='1' class='context-menu-instrument' selected='1' style='background-color: rgb(188,223,70)' onclick='chooseInstrument(this.id, pianoRoll)'> default instrument </td>
+        </tr>
+    </table>
 </div>
 
 <br>
 
-<div id='piano'>
-	<div id='columnHeaderRow'></div>
-</div>
+<main id='piano'>
+    <div id='columnHeaderRow'></div>
+</main>
 
 
 <div id='pianoNotes'>
 </div>
 
 
-<div class='footer'>
-	<p> c.2017 nch | <a href='https://github.com/syncopika/piano_roll_browser'> source </a> </p>
-</div>
+<footer class='footer'>
+    <p> c.2017 nch | <a href='https://github.com/syncopika/piano_roll_browser'> source </a> </p>
+</footer>
 
 <script src="main.js"></script>
 

@@ -3,7 +3,7 @@
 // super helpful! https://scotch.io/tutorials/easy-node-authentication-setup-and-local
 
 // load user model
-var User = require('../models/user.js');
+const User = require('../models/user.js');
 
 module.exports = function(app, passport){
 	// this will serve the login page to the user first!
@@ -20,7 +20,7 @@ module.exports = function(app, passport){
 	// when server receives a POST request to /login, need to check form input 
 	// and authenticate 
 	app.post('/login', passport.authenticate('local-login', {
-		successRedirect: '/pianoRoll',
+		successRedirect: '/pianoroll',
 		failureRedirect: '/login',
 		failureFlash: true
 	})
@@ -33,14 +33,14 @@ module.exports = function(app, passport){
 	
 	// take care of registering user after form input has been submitted 
 	app.post('/register', passport.authenticate('local-register', {
-		successRedirect: '/pianoRoll', // go to profile for user instead? (goes to piano roll for now)
+		successRedirect: '/pianoroll', // go to profile for user instead? (goes to piano roll for now)
 		failureRedirect: '/register',
 		failureFlash: true
 	})
 	);
 	
 	// direct to piano roll, with pianoRoll in the url
-	app.get('/pianoRoll', function(req, res){
+	app.get('/pianoroll', function(req, res){
 		if(req.user){
 			res.render('index.ejs', {
 				user: req.user 	// get user name from session and pass to template
@@ -59,8 +59,8 @@ module.exports = function(app, passport){
 	// if user updates their profile 
 	app.post('/profile', function(req, res){
 		// get the info as supplied by the url query 
-		var locationInfo = req.query.location.trim();
-		var aboutInfo = req.query.about.trim();
+        const locationInfo = req.query.location.trim();
+		const aboutInfo = req.query.about.trim();
 
 		// update the database 
 		var user = req.user.local.username;
@@ -96,7 +96,8 @@ module.exports = function(app, passport){
 		return false;
 	}
 	
-	app.post('/save_score', function(req, res){
+    // save score
+	app.post('/score', function(req, res){
 		// get the user 
 		var user = req.user.local.username;
 		
@@ -139,8 +140,7 @@ module.exports = function(app, passport){
 	});
 	
 	// retrieve requested score from user's scores list 
-	app.get('/get_score', function(req, res){
-		
+	app.get('/score', function(req, res){
 		// get user 
 		var user = req.user.local.username;
 		
@@ -160,7 +160,7 @@ module.exports = function(app, passport){
 	});
 	
 	// delete a score (this option is selected from the user's profile page)
-	app.delete('/delete_score', function(req, res){
+	app.delete('/score', function(req, res){
 		var user = req.user.local.username;
 		var scoreToDelete = req.query.name;
 		
@@ -188,7 +188,6 @@ module.exports = function(app, passport){
 	
 	// middleware function to make sure user is logged in
 	function isLoggedIn(req, res, next){
-		
 		// if user is authenticated, then ok
 		if(req.isAuthenticated()){
 			return next();
