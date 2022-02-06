@@ -446,6 +446,10 @@ function loadExamplePresets(pElement){
                         pElement.textContent = "";
                         resolve(true);
                     }
+                })
+                .catch((error) => {
+                    console.log("unable to import example presets");
+                    pElement.textContent = "";
                 });
         });
     });
