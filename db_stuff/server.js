@@ -48,9 +48,9 @@ const sessionMiddleware = session({
 });
 
 app.use(sessionMiddleware);            // use the sessionMiddlware variable for cookies             
-app.use(passport.initialize());           // start up passport
-app.use(passport.session());        // persistent login session (what does that mean?)
-app.use(flash());                     // connect-flash is used for flash messages stored in session.
+app.use(passport.initialize()); 
+app.use(passport.session());           // persistent login session (what does that mean?)
+app.use(flash());                      // connect-flash is used for flash messages stored in session.
 
 // pass app and passport to the routes 
 require('./routes/routes.js')(app, passport);
@@ -58,7 +58,7 @@ require('./routes/routes.js')(app, passport);
 // set directory path so the piano roll (index.ejs) will know where to look to find the required javascript files 
 // since this project is a nested directory and I want to reference my script folder outside it, I need to do this.
 // this treats the crrent directory's parent as the root directory 
-const parentDir = (__dirname).split("\\");
+let parentDir = (__dirname).split("\\");
 parentDir = parentDir.slice(0, parentDir.length - 1).join("\\");
 app.use(express.static(parentDir));
 

@@ -146,7 +146,9 @@ function getJSONData(pianoRoll){
     
     // put in composer info, name of piece 
     data["composer"] = document.getElementById("composer").textContent;
-    data["title"] = document.getElementById("pieceTitle").textContent;
+    
+    // don't allow spaces in the title b/c otherwise we won't be able to delete from db
+    data["title"] = document.getElementById("pieceTitle").textContent.trim();
     
     // get time signature (and set subdivision as well) 
     var timesig = document.getElementById("timeSig");
@@ -539,7 +541,7 @@ function selectProject(selectedPrj){
             
             var userScores = response[0].local.scores;
             for(var i = 0; i < userScores.length; i++){
-                if(userScores[i].title.trim() === selectedScore){
+                if(userScores[i].title === selectedScore){
                     data = userScores[i];
                 }
             }
@@ -556,11 +558,12 @@ function selectProject(selectedPrj){
 function saveInfo(){
     //console.log("saving edits.");
     
-    // collect the info from the textareas  
+    // collect the info from the textareas
+    // TODO: probably should be using a form 
     var locInfo = document.getElementById('editLocation').value.trim();
     var aboutInfo = document.getElementById('editAbout').value.trim();
     
-    /* save the info in the textareas to the database, update the display, and remove textareas */
+    // save the info in the textareas to the database, update the display, and remove textareas
     // is there going to be a problem if the ampersand appears in the textarea????? :/
     $.ajax({
         type: 'POST',
@@ -646,9 +649,8 @@ function deleteScore(scoreName){
     $.ajax({
         type: 'DELETE',
         url: '/score?name=' + scoreName,
-        success: function(response){				
+        success: function(response){
             if(response === "success"){
-                
                 console.log("removed score: " + scoreName);
                 
                 // remove from DOM 

@@ -7,6 +7,7 @@
 <head>
     <title> <%= user.local.username %>'s profile - Piano Roll Online </title>
     <script src="external/jquery.min.js"></script>
+    <script src="src/utils.js"></script>
 </head>
 
 <style>
@@ -119,7 +120,7 @@
         <!-- some container with columns and rows to display scores for user -->
         <div>
             <% for(var i = 0; i < user.local.scores.length; i++){ %>
-                <div class="scoreList" id=<%=  user.local.scores[i].title %>>
+                <div class="scoreList" id='<%=  user.local.scores[i].title %>'>
                     <h3> <%=  user.local.scores[i].title %> </h3>
                     <p> | </p>
                     <p class="delete" onclick="deleteScore(this.parentNode.id)"> delete </p>
