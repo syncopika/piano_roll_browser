@@ -57,7 +57,7 @@ module.exports = function(app, passport){
     });
     
     // if user updates their profile 
-    app.post('/profile', function(req, res){
+    app.put('/profile', function(req, res){
         // get the info as supplied by the url query 
         const locationInfo = req.query.location.trim();
         const aboutInfo = req.query.about.trim();

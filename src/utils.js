@@ -559,7 +559,7 @@ function selectProject(selectedPrj){
     });
 }
 
-function saveInfo(){
+function saveProfileInfo(){
     //console.log("saving edits.");
     
     // collect the info from the textareas
@@ -570,7 +570,7 @@ function saveInfo(){
     // save the info in the textareas to the database, update the display, and remove textareas
     // is there going to be a problem if the ampersand appears in the textarea????? :/
     $.ajax({
-        type: 'POST',
+        type: 'PUT',
         url: '/profile/?' + 'location=' + locInfo + '&' + 'about=' + aboutInfo,
         success: function(response){				
             console.log("saved info.");
@@ -640,7 +640,7 @@ function editProfile(){
     var buttonLocation = document.getElementById('userFacts');
     
     // attach each button with their corresponding function 
-    saveButton.addEventListener("click", saveInfo);
+    saveButton.addEventListener("click", saveProfileInfo);
     cancelButton.addEventListener("click", cancelEdit);
     cancelButton.id = "cancelButton";
     
