@@ -221,8 +221,6 @@ function getNotesStartAndEnd(instrumentNotes){
 //                          of the note
 // @return: an integer representing the minimum number of gain nodes needed
 function getMinGainNodes(notesStartAndEnd){
-    var prevNote = null;
-    var currNote = null;
     var minNumGainNodes = 1;
     
     var pq = new PriorityQueue();
@@ -887,7 +885,6 @@ function stopPlay(pianoRollObject){
     
     // global vars
     lastNote = null;
-    currNote = null;
 }
 
 // TODO: move elsewhere? like under Piano Roll?
