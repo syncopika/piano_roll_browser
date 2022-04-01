@@ -221,8 +221,6 @@ function getNotesStartAndEnd(instrumentNotes){
 //                          of the note
 // @return: an integer representing the minimum number of gain nodes needed
 function getMinGainNodes(notesStartAndEnd){
-    var prevNote = null;
-    var currNote = null;
     var minNumGainNodes = 1;
     
     var pq = new PriorityQueue();
@@ -872,9 +870,8 @@ function stopPlay(pianoRollObject){
     pianoRollObject.timers = [];
     
     // this is a cheap hack for now (for dealing with showCurrentNote)
-    // notice it uses the global variables lastNote and currNote 
-    if(lastNote && lastNote.id !== pianoRollObject.playMarker){
-        lastNote.style.backgroundColor = '#fff';
+    if(pianoRollObject.lastNoteColumn && pianoRollObject.lastNoteColumn.id !== pianoRollObject.playMarker){
+        pianoRollObject.lastNoteColumn.style.backgroundColor = '#fff';
     }
     
     // if recording
@@ -885,9 +882,7 @@ function stopPlay(pianoRollObject){
         document.getElementById('record').style.border = "";
     }
     
-    // global vars
-    lastNote = null;
-    currNote = null;
+    pianoRollObject.lastNoteColumn = null;
 }
 
 // TODO: move elsewhere? like under Piano Roll?

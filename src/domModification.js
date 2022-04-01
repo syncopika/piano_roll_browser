@@ -511,31 +511,30 @@ function changeTimeSignature(pianoRollObject, newTimeSig){
     // right now I'm using the oscillator node's onended function to 
     // highlight where the current note playing is.
 ***/
-var lastNote = null;
-var onendFunc = function(colHeaderId, lastColId, pianoRoll){
+var onendFunc = function(colHeaderId, lastColId, pianoRollObject){
     return function(){
-        if(pianoRoll.recording && colHeaderId === lastColId){
+        if(pianoRollObject.recording && colHeaderId === lastColId){
             // add some extra silence so it doesn't end so abruptly
             
             // stop the recorder when the last column has been reached
-            pianoRoll.recorder.stop();
-            pianoRoll.recording = false;
+            pianoRollObject.recorder.stop();
+            pianoRollObject.recording = false;
             
             // relies on specific html element: not the best thing to do here...
             document.getElementById('record').style.border = "";
         }
 
         // take away highlight of previous note 
-        if(lastNote && pianoRoll.playMarker !== lastNote.id){
-            lastNote.style.backgroundColor = '#fff';
+        if(pianoRollObject.lastNoteColumn && pianoRollObject.playMarker !== pianoRollObject.lastNoteColumn.id){
+            pianoRollObject.lastNoteColumn.style.backgroundColor = '#fff';
         }
         
         var currCol = document.getElementById(colHeaderId);
-        if(pianoRoll.isPlaying && pianoRoll.playMarker !== colHeaderId){
-            currCol.style.backgroundColor = pianoRoll.currNotePlayingColor;
-        }    
+        if(pianoRollObject.isPlaying && pianoRollObject.playMarker !== colHeaderId){
+            currCol.style.backgroundColor = pianoRollObject.currNotePlayingColor;
+        }
 
-        lastNote = currCol;
+        pianoRollObject.lastNoteColumn = currCol;
     }
 };
 
