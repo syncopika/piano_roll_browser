@@ -1,6 +1,8 @@
 /******* 
     
-    CONTEXT MENU FOR INSTRUMENTS 
+    CONTEXT MENU FOR INSTRUMENTS
+    using https://github.com/swisnl/jQuery-contextMenu
+    
     @param pianoRollObject: an instance of PianoRoll
     relies on dom elements with the class 'context-menu-instrument'
     
@@ -10,6 +12,15 @@ function makeInstrumentContextMenu(pianoRollObject){
         $.contextMenu({
             selector: '.context-menu-instrument', 
             zIndex: 102,
+            events: {
+                show: function(options){
+                    var changeColorInput = options.items["Change color"].$node[0].getElementsByTagName('input')[0];
+                    changeColorInput.style.border = `2px solid ${pianoRollObject.currentInstrument.noteColorStart}`;
+                    
+                    var colorPicker = createColorPicker(changeColorInput, pianoRollObject);
+                    changeColorInput.parentNode.appendChild(colorPicker);
+                }
+            },
             build: function($trigger, e){
                 var instrumentOptions = Object.assign({}, pianoRollObject.defaultInstrumentSounds);
                 var num = Object.keys(instrumentOptions).length + 1;
@@ -98,6 +109,17 @@ function makeInstrumentContextMenu(pianoRollObject){
                             }
                         },
                         sep4: "-------------",
+                        "Change color": {
+                            name: "change note color",
+                            type: "text",
+                            value: pianoRollObject.currentInstrument.noteColorStart,
+                            events: {
+                                click: function(e){
+                                    e.target.blur();
+                                }
+                            }
+                        },
+                        sep5: "-------------",
                         "Show onion-skin for this instrument": {
                             name: "Toggle onion-skin", 
                             type: "checkbox",
@@ -108,7 +130,7 @@ function makeInstrumentContextMenu(pianoRollObject){
                                 }
                             }
                         },
-                        sep5: "-------------",
+                        sep6: "-------------",
                         "Mute instrument": {
                             name: "Toggle mute",
                             type: "checkbox",
@@ -119,7 +141,7 @@ function makeInstrumentContextMenu(pianoRollObject){
                                 }
                             }
                         },
-                        sep6: "-------------",
+                        sep7: "-------------",
                         "Delete": {
                             name: "Delete", 
                             icon: "delete",
@@ -164,6 +186,58 @@ function makeInstrumentContextMenu(pianoRollObject){
             }
         });
     });
+}
+
+function createColorPicker(colorInput, pianoRollObject){
+    const colorWheel = document.createElement('canvas');
+    colorWheel.id = "colorWheel";
+    colorWheel.setAttribute('width', 150);
+    colorWheel.setAttribute('height', 150);
+
+    const colorWheelContext = colorWheel.getContext('2d');
+    const x = colorWheel.width / 2;
+    const y = colorWheel.height / 2;
+    const radius = 60;
+
+    // why 5600??
+    for(let angle = 0; angle <= 5600; angle++) {
+        const startAngle = (angle - 2) * Math.PI / 180; //convert angles to radians
+        const endAngle = (angle) * Math.PI / 180;
+        colorWheelContext.beginPath();
+        colorWheelContext.moveTo(x, y);
+        colorWheelContext.arc(x, y, radius, startAngle, endAngle, false);
+        colorWheelContext.closePath();
+        const gradient = colorWheelContext.createRadialGradient(x, y, 0, startAngle, endAngle, radius);
+        gradient.addColorStop(0, 'hsla(' + angle + ', 10%, 100%, 1)');
+        gradient.addColorStop(1, 'hsla(' + angle + ', 100%, 50%, 1)');
+        colorWheelContext.fillStyle = gradient;
+        colorWheelContext.fill();
+    }
+
+    // make black a pickable color 
+    colorWheelContext.fillStyle = "rgba(0,0,0,1)";
+    colorWheelContext.beginPath();
+    colorWheelContext.arc(10, 10, 8, 0, 2*Math.PI);
+    colorWheelContext.fill();
+
+    colorWheel.addEventListener('mousedown', (evt) => {
+        const x = evt.offsetX;
+        const y = evt.offsetY;
+        const colorPicked = colorWheel.getContext('2d', {willReadFrequently: true}).getImageData(x, y, 1, 1).data;
+        const pickedColor = 'rgb(' + colorPicked[0] + ',' + colorPicked[1] + ',' + colorPicked[2] + ')';
+        
+        // assumes colorInput is an input of type 'text'
+        colorInput.value = pickedColor;
+        colorInput.style.border = `2px solid ${pickedColor}`;
+        
+        pianoRollObject.currentInstrument.noteColorStart = pickedColor;
+        
+        // TODO: figure out what the 2nd color needs to be for the gradient (noteColorEnd)
+        // for now just leave it the default green
+        updateNoteColors(pianoRollObject.currentInstrument);
+    });
+    
+    return colorWheel;
 }
 
 
@@ -249,7 +323,7 @@ function makeNoteContextMenu(pianoRollObject){
                 }
         });
     });
-};
+}
 
 
 

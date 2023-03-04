@@ -53,7 +53,6 @@ Disclaimer: the custom instrument functionality is currently pretty limited; the
 - refactoring + tests    
     
 ### features I would like to implement:    
-- ability to change color of highlight and color of note blocks, i.e. different for each instrument    
 - be able to repeat a section    
 - looping
     
