@@ -38,6 +38,8 @@ describe('testing classes.js', function(){
         expect(instrument.name).to.equal('test');
         expect(instrument.onionSkinOn).to.be.true;
         expect(instrument.isMute).to.be.false;
+        expect(instrument.noteColorStart).to.not.be.undefined;
+        expect(instrument.noteColorEnd).to.not.be.undefined;
     });
     
     it('testing ElementNode class', function(){
