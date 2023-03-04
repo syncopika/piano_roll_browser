@@ -166,6 +166,8 @@ function getJSONData(pianoRoll){
         instrumentData["pan"] = currInstrument["pan"];
         instrumentData["waveType"] = currInstrument["waveType"];
         instrumentData["onionSkinOn"] = currInstrument["onionSkinOn"];
+        instrumentData["noteColorStart"] = currInstrument["noteColorStart"];
+        instrumentData["noteColorEnd"] = currInstrument["noteColorEnd"];
         instrumentData["notes"] = {};
         for(var note in currInstrument.activeNotes){
             var noteElement = currInstrument.activeNotes[note];
@@ -273,6 +275,7 @@ function processData(data){
         addNewInstrument(data.instruments[i].name, false, pianoRoll);
         
         var newInstrument = data.instruments[i];
+        
         // TODO: this is not ideal if we need to add more instrument attributes
         if(newInstrument.pan === undefined){
             newInstrument.pan = 0.0;
@@ -307,6 +310,13 @@ function processData(data){
             });
         }
         newInstrument.notes = readInNotes(newInstrument, pianoRoll);
+        
+        if(newInstrument.noteColorStart === undefined){
+            newInstrument.noteColorStart = "rgb(0,158,52)";
+            newInstrument.noteColorEnd = "rgb(52,208,0)";
+        }else{
+            updateNoteColors(newInstrument);
+        }
         
         // add new instrument to array
         pianoRoll.instruments.push(newInstrument);

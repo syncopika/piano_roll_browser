@@ -34,10 +34,10 @@ function PianoRoll(){
     
     // colors
     this.playMarkerColor = "rgb(50, 205, 50)";
-    this.highlightColor = "#FFFF99";
-    this.measureNumberColor = "#2980B9";
-    this.instrumentTableColor = 'rgb(188, 223, 70)';
-    this.currNotePlayingColor = 'rgb(112, 155, 224)';
+    this.highlightColor = "#FFFF99"; // yellow
+    this.measureNumberColor = "#2980B9"; // blue
+    this.instrumentTableColor = 'rgb(188, 223, 70)';  // green
+    this.currNotePlayingColor = 'rgb(112, 155, 224)'; // light blue
     
     // default instrument sounds and note styles
     this.defaultInstrumentSounds = {
@@ -231,6 +231,17 @@ function Instrument(name, gain, notesArray){
     this.pan = 0.0;
     this.isMute = false;
     this.onionSkinOn = true;
+    
+    // note color is a gradient
+    this.noteColorStart = "rgb(0,158,52)";
+    this.noteColorEnd = "rgb(52,208,0)";
+}
+
+function updateNoteColors(instrument){
+    for(var noteName in instrument.activeNotes){
+        // should be something like: linear-gradient(90deg, rgb(0, 158, 52) 90%, rgb(52, 208, 0) 99%)
+        instrument.activeNotes[noteName].style.background = `linear-gradient(90deg, ${instrument.noteColorStart} 90%, ${instrument.noteColorEnd} 99%)`;
+    }
 }
 
 /*****  NOTE CLASS ******/

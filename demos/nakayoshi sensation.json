@@ -9,8 +9,11 @@
         {
             "name": "Instrument 1",
             "volume": 0.1,
+            "pan": 0,
             "waveType": "sine",
             "onionSkinOn": true,
+            "noteColorStart": "rgb(121,201,255)",
+            "noteColorEnd": "rgb(52,208,0)",
             "notes": {
                 "F6col_0": [
                     {
@@ -3703,8 +3706,11 @@
         {
             "name": "yuni",
             "volume": 0.1,
+            "pan": 0,
             "waveType": "triangle",
             "onionSkinOn": true,
+            "noteColorStart": "rgb(255,140,96)",
+            "noteColorEnd": "rgb(52,208,0)",
             "notes": {
                 "F6col_104": [
                     {
@@ -5417,8 +5423,11 @@
         {
             "name": "chieru",
             "volume": 0.1,
+            "pan": 0,
             "waveType": "triangle",
             "onionSkinOn": true,
+            "noteColorStart": "rgb(255,121,194)",
+            "noteColorEnd": "rgb(52,208,0)",
             "notes": {
                 "F6col_121": [
                     {
@@ -6809,8 +6818,11 @@
         {
             "name": "chloe",
             "volume": 0.25,
+            "pan": 0,
             "waveType": "sine",
             "onionSkinOn": true,
+            "noteColorStart": "rgb(255,238,109)",
+            "noteColorEnd": "rgb(52,208,0)",
             "notes": {
                 "F6col_136": [
                     {
@@ -7997,8 +8009,11 @@
         {
             "name": "bass",
             "volume": 0.1,
+            "pan": 0,
             "waveType": "sawtooth",
             "onionSkinOn": false,
+            "noteColorStart": "rgb(0,158,52)",
+            "noteColorEnd": "rgb(52,208,0)",
             "notes": {
                 "F3col_104": [
                     {
@@ -11397,8 +11412,11 @@
         {
             "name": "percussion",
             "volume": 0.25,
+            "pan": 0,
             "waveType": "percussion",
             "onionSkinOn": false,
+            "noteColorStart": "rgb(0,158,52)",
+            "noteColorEnd": "rgb(52,208,0)",
             "notes": {
                 "B2col_0": [
                     {
@@ -15221,8 +15239,11 @@
         {
             "name": "new_instrument",
             "volume": 0.1,
+            "pan": 0,
             "waveType": "sine",
             "onionSkinOn": true,
+            "noteColorStart": "rgb(0,158,52)",
+            "noteColorEnd": "rgb(52,208,0)",
             "notes": {
                 "F5col_40": [
                     {

@@ -205,10 +205,12 @@ function mouseupHelper(newNote, pianoRollObject, pianoRollInterface, eventsToRem
 // creates a new html element representing a note 
 // @param pianoRollObject: an instance of PianoRoll
 function createNewNoteElement(pianoRollObject){
+    var currInst = pianoRollObject.currentInstrument;
+    
     var newNote = document.createElement('div');
-    newNote.setAttribute("data-volume", pianoRollObject.currentInstrument.volume);
+    newNote.setAttribute("data-volume", currInst.volume);
     newNote.setAttribute("data-type", "default"); 
-    newNote.style.background = "linear-gradient(90deg, rgba(0,158,52,1) 90%, rgba(52,208,0,1) 99%";
+    newNote.style.background = `linear-gradient(90deg, ${currInst.noteColorStart} 90%, ${currInst.noteColorEnd} 99%`;
     newNote.style.height = "15px";
     newNote.style.position = "absolute";
     newNote.style.opacity = 1.0;
