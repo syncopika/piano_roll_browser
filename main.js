@@ -71,9 +71,7 @@ $(window).scroll(function(){
     
     $('#toolbar').css('left', $(window).scrollLeft());
     
-    if(toggleStickyToolbar){
-        $('#toolbar').css('top', $(window).scrollTop());
-    }else{
+    if(!toggleStickyToolbar){
         $('#toolbar').css('top', 0);
     }
     

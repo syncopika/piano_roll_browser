@@ -98,6 +98,12 @@ function bindButtons(pianoRollObject){
     document.getElementById('toggleStickyToolbar').addEventListener('click', function(evt){
         toggleStickyToolbar = !toggleStickyToolbar;
         evt.target.parentNode.style.backgroundColor = toggleStickyToolbar ? "#d0d0d0" : "";
+        
+        if(toggleStickyToolbar){
+            document.getElementById('toolbar').style.position = 'sticky';
+        }else{
+            document.getElementById('toolbar').style.position = 'relative';
+        }
     });
     
     /*
@@ -123,6 +129,10 @@ function bindButtons(pianoRollObject){
     // import instrument preset
     document.getElementById('importInstrumentPreset').addEventListener('click', function(){
         importInstrumentPreset(pianoRollObject); // from instrumentPreset.js
+    });
+    
+    document.getElementById('toggleAutoScroll').addEventListener('click', function(){
+        pianoRollObject.autoScroll = !pianoRollObject.autoScroll;
     });
 }
 

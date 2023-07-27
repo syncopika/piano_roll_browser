@@ -607,6 +607,8 @@ function scheduler(pianoRoll, allInstruments){
         highlightOsc.start(highlightNextTime);
         highlightNextTime += (getCorrectLength(40, pianoRoll) / 1000);
         highlightOsc.stop(highlightNextTime);
+        
+        // onendFunc comes from domModification.js
         highlightOsc.onended = onendFunc(
             header.id, 
             columnHeadersToHighlight[columnHeadersToHighlight.length-1].id, 
