@@ -20,12 +20,16 @@ html {
 	
 	// this is important for letting the grid expand horizontally
 	white-space: nowrap;
+
+    overflow: scroll;
+    max-width: 100%;
+    position: relative;
 }
 
 #pianoNotes {
 	position: absolute;
 	width: 50px;
-	z-index: 100;
+	z-index: 200;
 	background-color: #fff;
 }
 

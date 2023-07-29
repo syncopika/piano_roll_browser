@@ -28,9 +28,10 @@ function addNoteToCurrInstrument(currNotes, newNote){
 // gets a list of possible positions that a note could be placed within a grid cell based on the current note size lock set
 // @param containerElement: an HTML element representing a grid cell, where notes can be placed
 // @param pianoRollObject: an instance of PianoRoll
+// @param scrollOffset: a number representing any horizontal scroll offset of the main container
 // @return: a list of integers, with each integer representing a possible style.left value (in px) of a note of the container
-function getSubdivisionPositions(containerElement, pianoRollObject){
-    var targetContPos = containerElement.getBoundingClientRect().left + window.pageXOffset;
+function getSubdivisionPositions(containerElement, pianoRollObject, scrollOffset=0){
+    var targetContPos = containerElement.getBoundingClientRect().left + scrollOffset;
     var currLockType = pianoRollObject.lockNoteSize;
     var subdivisionCount = Math.floor(parseInt(containerElement.style.width) / (pianoRollObject.noteSizeMap[currLockType]));
     var possibleNotePos = [];
@@ -45,14 +46,15 @@ function getSubdivisionPositions(containerElement, pianoRollObject){
 // checks to see if a note can be placed within a grid cell
 // @param posToPlace: an integer representing the x coordinate of a position to place
 // @param currContainerChildren: an HTMLCollection of child nodes of an html element
+// @param scrollOffset: a number representing any horizontal scroll offset of the main container
 // @return: true if posToPlace can hold a new note, else false
-function canPlaceNote(posToPlace, currContainerChildren){
+function canPlaceNote(posToPlace, currContainerChildren, scrollOffset=0){
     // check to make sure posToPlace doesn't equal the left position of any of the 
     // children of the target container to place in - also, we only care about
     // children that are part of this current instrument's notes, so check opacity
     for(var i = 0; i < currContainerChildren.length; i++){
         var note = currContainerChildren[i];
-        if((note.getBoundingClientRect().left + window.pageXOffset) === posToPlace &&
+        if((note.getBoundingClientRect().left + scrollOffset) === posToPlace &&
             note.style.opacity == 1){
             return false;
         }
@@ -77,10 +79,13 @@ function placeNoteAtPosition(note, pianoRollObject, evt){
         }
     }
     
+    var scrollOffset = document.getElementById("piano").scrollLeft;
+
     // a little tricky but note that the last entry in possibleNotePos will be the start position 
     // of the neighboring note container to the right!
-    var possibleNotePos = getSubdivisionPositions(targetContainer, pianoRollObject);
-    var currX = evt.x + window.pageXOffset;
+    var possibleNotePos = getSubdivisionPositions(targetContainer, pianoRollObject, scrollOffset);
+
+    var currX = evt.x + scrollOffset;
     var lockNoteLength = pianoRollObject.noteSizeMap[pianoRollObject.lockNoteSize];
     var posToPlace = null;
 
@@ -107,7 +112,7 @@ function placeNoteAtPosition(note, pianoRollObject, evt){
     pianoRollObject.lastNoteSize = parseInt(note.style.width);
     
     // make sure this current instrument doesn't already have a note in position to place
-    if(canPlaceNote(posToPlace, targetContainer.children)){
+    if(canPlaceNote(posToPlace, targetContainer.children, scrollOffset)){
         // update current column header before moving (if moving a note)
         var container = note.parentNode;
         if(container){
@@ -115,7 +120,7 @@ function placeNoteAtPosition(note, pianoRollObject, evt){
             colHeader.setAttribute("data-num-notes", parseInt(colHeader.dataset.numNotes - 1));
         }
         
-        note.style.left = possibleNotePos[i] + "px";
+        note.style.left = (posToPlace - 8) + "px"; // TODO: why is there 8px of extra padding showing up somewhere? this works but not sure why/where it's coming from
         targetContainer.appendChild(note);
         
         var colHeader = document.getElementById(targetContainer.id.substring(targetContainer.id.indexOf("col")));
@@ -139,15 +144,17 @@ function resizeHelper(newNote, pianoRollObject, evt){
     
     evt.preventDefault();
 
-    var pos = evt.x + window.pageXOffset;
-    var diff = pos - (newNote.getBoundingClientRect().left + parseInt(newNote.style.width) + window.pageXOffset);
+    var scrollOffset = document.getElementById("piano").scrollLeft;
+    var pos = evt.x + scrollOffset;
+    var diff = pos - (newNote.getBoundingClientRect().left + parseInt(newNote.style.width) + scrollOffset);
 
     var currLockType = pianoRollObject.lockNoteSize;
     var currNoteWidth = parseInt(newNote.style.width);
     var noteSize = pianoRollObject.noteSizeMap[currLockType];
     
-    var nextBlockPos = window.pageXOffset + newNote.getBoundingClientRect().left + currNoteWidth + noteSize;
-    var prevBlockPos = window.pageXOffset + newNote.getBoundingClientRect().left + currNoteWidth - noteSize;
+    var newNoteLeft = newNote.getBoundingClientRect().left;
+    var nextBlockPos = scrollOffset + newNoteLeft + currNoteWidth + noteSize;
+    var prevBlockPos = scrollOffset + newNoteLeft + currNoteWidth - noteSize;
 
     if(diff > 0){
         if(inRange(pos, nextBlockPos, nextBlockPos+3)){
@@ -359,19 +366,20 @@ function addNewMeasure(pianoRollObject, container){
         columnHeaderParent.appendChild(newHeader);
     }
     
-    // now add new columns for each note
-    // note specific id of element 
-    var noteRows = document.getElementById("piano").children;
+    // now add new columns for each note 
+    var noteRowsParent = document.getElementById("grid"); // TODO: pls don't get element by id here
+    var noteRowsChildren = Array.from(noteRowsParent.children);
+    var startIndex = noteRowsChildren.findIndex(x => x.id === "C8");
     
-    // start at 1 to skip column header row 
-    for(var j = 1; j < noteRows.length; j++){
+    // start at the index of C8
+    for(var j = startIndex; j < noteRowsChildren.length; j++){
+        var rowParent = noteRowsChildren[j];
         for(var k = 0; k < pianoRollObject.subdivision; k++){
-            var rowParent = noteRows[j];
-            var newColumnCell = createColumnCell(noteRows[j].id, lastColNum+k-1, pianoRollObject);
+            var newColumnCell = createColumnCell(rowParent.id, lastColNum+k-1, pianoRollObject);
             rowParent.appendChild(newColumnCell);
         }
-        // adjust width of row 
-        noteRows[j].style.width = parseInt(noteRows[j].style.width)+20+"%";
+        // adjust width of row
+        rowParent.style.width = rowParent.scrollWidth + "px";
     }
     pianoRollObject.numberOfMeasures++;
 }
@@ -535,10 +543,11 @@ var onendFunc = function(colHeaderId, lastColId, pianoRollObject){
         if(pianoRollObject.isPlaying && pianoRollObject.playMarker !== colHeaderId){
             currCol.style.backgroundColor = pianoRollObject.currNotePlayingColor;
 
+            
             if(pianoRollObject.autoScroll){
                 var pageWidth = document.body.getBoundingClientRect().width;
-                window.scrollTo({
-                    left: currCol.offsetLeft - pageWidth/2,
+                document.getElementById("piano").scrollTo({
+                    left: currCol.offsetLeft,
                     behavior: "smooth",
                 });
             }

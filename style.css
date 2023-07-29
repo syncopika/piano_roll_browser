@@ -9,13 +9,16 @@ html body {
 #piano {
   display: inline-block;
   white-space: nowrap;
+  overflow: scroll;
+  max-width: 100%;
+  position: relative;
 }
 
 #pianoNotes {
   position: absolute;
   width: 50px;
-  z-index: 100;
   background-color: #fff;
+  z-index: 200;
 }
 
 #changeTempo {

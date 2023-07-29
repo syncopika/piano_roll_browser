@@ -133,6 +133,17 @@ function bindButtons(pianoRollObject){
     
     document.getElementById('toggleAutoScroll').addEventListener('click', function(){
         pianoRollObject.autoScroll = !pianoRollObject.autoScroll;
+        /*
+            if(pianoRollObject.autoScroll){
+                var pageWidth = document.body.getBoundingClientRect().width;
+                setInterval(() => {
+                    document.getElementById('piano').scrollBy({
+                        left: 50, //currCol.offsetLeft - pageWidth/2,
+                        behavior: "smooth",
+                    });
+                }, 30);
+            }
+        */
     });
 }
 
@@ -307,7 +318,7 @@ function processData(data){
             newInstrument.notes[noteContainerId].forEach((noteAttr) => {
                 var newNote = createNewNoteElement(pianoRoll);
                 newNote.style.width = noteAttr.width;
-                newNote.style.left = noteAttr.left;
+                newNote.style.left = (parseInt(noteAttr.left) - 8) + "px"; // TODO: why is there 8px of extra padding showing up?
                 newNote.style.opacity = (i === 0) ? 1.0 : (newInstrument.onionSkinOn ? 0.3 : 0.0);
                 newNote.style.zIndex = (i === 0) ? 100 : 0;
                 newNote.setAttribute("data-volume", noteAttr.volume);

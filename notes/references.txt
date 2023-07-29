@@ -24,6 +24,7 @@ https://stackoverflow.com/questions/26233180/resize-a-div-on-border-drag-and-dro
 https://stackoverflow.com/questions/45534302/jquery-how-to-disable-not-allowed-cursor-while-dragging
 https://stackoverflow.com/questions/18094134/fixed-gradient-background-with-css
 https://stackoverflow.com/questions/16348031/disable-scrolling-when-touch-moving-certain-element
+https://stackoverflow.com/questions/42723494/div-horizontal-scrollbar-child-div-background-doesnt-get-full-width-when-hove
 
 // super, super important!
 https://github.com/WebAudio/web-audio-api/issues/76#issuecomment-107679878

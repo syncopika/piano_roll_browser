@@ -44,7 +44,7 @@ pianoRoll.currentInstrument = pianoRoll.instruments[0];
 
 // create piano roll grid
 buildGridHeader('columnHeaderRow', pianoRoll);
-buildGrid('piano', pianoRoll);
+buildGrid('grid', pianoRoll);
 
 // load in presets and piano notes (TODO: maybe lazy load only when selected as instrument sound?)
 loadExamplePresets(document.getElementById('loadingMsg')).then(_ => {
@@ -52,22 +52,10 @@ loadExamplePresets(document.getElementById('loadingMsg')).then(_ => {
 });
 
 // allow components like the toolbar to move with the user when scrolling right after more measures are added 
-$(window).scroll(function(){
+$("#piano").scroll(function(){
     // change position of the piano notes bar on the left to move 
-    // with horizontal scroll 
-    $('#pianoNotes').css('top', $("#C8").position().top);
-    $('#pianoNotes').css('left', $(window).scrollLeft());
-    
-    // adjust the left padding the mobile note bar! it should only 
-    // stick to the left edge when moving it. otherwise, keep some padding.  
-    if($('#pianoNotes').position().left === 0){
-        $('#pianoNotes').css('padding-left', '8px');
-    }else{
-        $('#pianoNotes').css('padding-left', '0px');
-    }
-    
-    // move other elements accordingly too 
-    $('#instrumentGrid').css('left', $(window).scrollLeft());
+    // with horizontal scroll
+    $('#pianoNotes').css('left', $("#piano").scrollLeft());
     
     $('#toolbar').css('left', $(window).scrollLeft());
     
