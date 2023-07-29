@@ -8,5 +8,5 @@
    width="48" 
    height="48"
 >
-    <circle cx="12" cy="13" r="8" fill="red" stroke-linejoin="round" />
+    <circle cx="12" cy="13" r="9" fill="red" stroke="black" stroke-width="1.2" />
 </svg>

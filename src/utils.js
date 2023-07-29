@@ -97,7 +97,8 @@ function bindButtons(pianoRollObject){
     
     document.getElementById('toggleStickyToolbar').addEventListener('click', function(evt){
         toggleStickyToolbar = !toggleStickyToolbar;
-        evt.target.parentNode.style.backgroundColor = toggleStickyToolbar ? "#d0d0d0" : "";
+        
+        document.getElementById('toggleStickyToolbar').style.backgroundColor = toggleStickyToolbar ? "#d0d0d0" : "";
         
         if(toggleStickyToolbar){
             document.getElementById('toolbar').style.position = 'sticky';
@@ -123,7 +124,7 @@ function bindButtons(pianoRollObject){
         redrawCellBorders(pianoRollObject, 'columnHeaderRow');
         
         // update measure count 
-        $('#measures').text( "measure count: " + pianoRollObject.numberOfMeasures );
+        document.getElementById("measures").textContent = "measure count: " + pianoRollObject.numberOfMeasures;
     });
     
     // import instrument preset
@@ -133,17 +134,7 @@ function bindButtons(pianoRollObject){
     
     document.getElementById('toggleAutoScroll').addEventListener('click', function(){
         pianoRollObject.autoScroll = !pianoRollObject.autoScroll;
-        /*
-            if(pianoRollObject.autoScroll){
-                var pageWidth = document.body.getBoundingClientRect().width;
-                setInterval(() => {
-                    document.getElementById('piano').scrollBy({
-                        left: 50, //currCol.offsetLeft - pageWidth/2,
-                        behavior: "smooth",
-                    });
-                }, 30);
-            }
-        */
+        document.getElementById('toggleAutoScroll').style.backgroundColor = pianoRollObject.autoScroll ? "#d0d0d0" : "";
     });
 }
 
