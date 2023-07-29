@@ -3,14 +3,6 @@ $(document).ready(function(){
     $("body").css("display", "block");
     $("#pianoNotes").css("display", "block");
     
-    /*  
-        special block for just piano notes 
-        this div is supposed to move right when scrolling right
-    */
-    var position = $('#C8').position();
-    $('#pianoNotes').css('left', position.left);
-    $('#pianoNotes').css('top', position.top);
-    
     // guard against inadvertently closing the page
     $(window).on('beforeunload', function(evt){
         // this should trigger the generic popup asking to confirm if you want to leave
@@ -30,8 +22,7 @@ makeInstrumentContextMenu(pianoRoll);
 makeNoteContextMenu(pianoRoll);
 bindButtons(pianoRoll); // from utils.js
 
-$('#measures').html("measure count: " + pianoRoll.numberOfMeasures);
-$('#subdiv').html("subdivision: " + pianoRoll.subdivision);
+document.getElementById('measures').textContent = "measure count: " + pianoRoll.numberOfMeasures;
 
 // set up initial instrument
 var context = pianoRoll.audioContext;

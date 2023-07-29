@@ -4,7 +4,7 @@ $font-family: Arial;
 $border-regular: 1px solid #000;
 
 html {
-	font-family: $font-family;
+    font-family: $font-family;
     
     body {
         // override padding-bottom from contextMenu/css/screen.css
@@ -16,10 +16,10 @@ html {
 }
 
 #piano {
-	display: inline-block;
-	
-	// this is important for letting the grid expand horizontally
-	white-space: nowrap;
+    display: inline-block;
+    
+    // this is important for letting the grid expand horizontally
+    white-space: nowrap;
 
     overflow: scroll;
     max-width: 100%;
@@ -27,27 +27,27 @@ html {
 }
 
 #pianoNotes {
-	position: absolute;
-	width: 50px;
-	z-index: 200;
-	background-color: #fff;
+    position: absolute;
+    width: 50px;
+    z-index: 200;
+    background-color: #fff;
 }
 
 #changeTempo {
-	width: 40px;
+    width: 40px;
 }
 
 #title {
-	margin: 0 auto;
-	text-align: center;
+    margin: 0 auto;
+    text-align: center;
 }
 
 #toolbar {
-	position: relative;
-	margin: 0 auto;
-	text-align: center;
-	background-color: #fff;
-	z-index: 101;
+    position: relative;
+    margin: 0 auto;
+    text-align: center;
+    background-color: #fff;
+    z-index: 101;
     
     ul {
         text-align: center;
@@ -68,50 +68,50 @@ html {
 }
 
 #instrumentGrid {
-	position: relative;
+    position: relative;
 }
 
 #demo {
-	margin-top: 10px;
+    margin-top: 10px;
 }
 
 table, tr, td {
-	border: $border-regular;
+    border: $border-regular;
 }
 
 .thinBorder {
-	background: linear-gradient(to right, rgba(255,255,255,0) 97%, rgba(0,0,0,1) 3%);
+    background: linear-gradient(to right, rgba(255,255,255,0) 97%, rgba(0,0,0,1) 3%);
 }
 
 .thickBorder {
-	background: linear-gradient(to right, rgba(255,255,255,0) 93%, rgba(0,0,0,1) 7%);
+    background: linear-gradient(to right, rgba(255,255,255,0) 93%, rgba(0,0,0,1) 7%);
 }
 
 .footer {
-	position: relative;
-	text-align: center;
-	margin-top: 3%;
-	font-size: 12px;
-	font-family: $font-family;
-	border-top: $border-regular;
+    position: relative;
+    text-align: center;
+    margin-top: 3%;
+    font-size: 12px;
+    font-family: $font-family;
+    border-top: $border-regular;
 }
 
 .btn {
-	border: $border-regular;
-	border-radius: 2px;
-	padding: 2px;
-	box-shadow: .1em .1em #d3d3d3;
+    border: $border-regular;
+    border-radius: 2px;
+    padding: 2px;
+    box-shadow: .1em .1em #d3d3d3;
 }
 
 .btn:hover {
-	background-color: #d0d0d0;
+    background-color: #d0d0d0;
 }
 
 select, option {
-	height: 24px;
+    height: 24px;
 }
 
 img {
-	width: 3vw;
-	height: auto; 
+    width: 3vw;
+    height: auto; 
 }

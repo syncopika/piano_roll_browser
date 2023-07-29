@@ -542,7 +542,6 @@ var onendFunc = function(colHeaderId, lastColId, pianoRollObject){
         var currCol = document.getElementById(colHeaderId);
         if(pianoRollObject.isPlaying && pianoRollObject.playMarker !== colHeaderId){
             currCol.style.backgroundColor = pianoRollObject.currNotePlayingColor;
-
             
             if(pianoRollObject.autoScroll){
                 var pageWidth = document.body.getBoundingClientRect().width;
