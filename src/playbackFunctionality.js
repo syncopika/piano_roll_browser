@@ -187,7 +187,8 @@ function getCorrectLength(length, pianoRollObject){
 // @param noteElement: an HTML element of a note 
 // @return: a float value representing the position of the note element
 function getNotePosition(noteElement){
-    return noteElement.getBoundingClientRect().left + window.pageXOffset;
+    var scrollOffset = document.getElementById("piano").scrollLeft; // TODO: pass in scrollLeft rather than hardcode element here?
+    return noteElement.getBoundingClientRect().left + scrollOffset;
 }
 
 /*** 
