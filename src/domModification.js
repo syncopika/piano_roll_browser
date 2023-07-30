@@ -120,7 +120,7 @@ function placeNoteAtPosition(note, pianoRollObject, evt){
             colHeader.setAttribute("data-num-notes", parseInt(colHeader.dataset.numNotes - 1));
         }
         
-        note.style.left = (posToPlace - 8) + "px"; // TODO: why is there 8px of extra padding showing up somewhere? this works but not sure why/where it's coming from
+        note.style.left = (posToPlace - 8) + "px"; // TODO: why is there 8px of extra padding showing up somewhere? this works but not sure why/where it's coming from :(
         targetContainer.appendChild(note);
         
         var colHeader = document.getElementById(targetContainer.id.substring(targetContainer.id.indexOf("col")));
@@ -369,7 +369,7 @@ function addNewMeasure(pianoRollObject, container){
     // now add new columns for each note 
     var noteRowsParent = document.getElementById("grid"); // TODO: pls don't get element by id here
     var noteRowsChildren = Array.from(noteRowsParent.children);
-    var startIndex = noteRowsChildren.findIndex(x => x.id === "C8");
+    var startIndex = noteRowsChildren.findIndex(x => x.id === "C8"); // in case there's other elements in noteRowsParent (but really there shouldn't be)
     
     // start at the index of C8
     for(var j = startIndex; j < noteRowsChildren.length; j++){
@@ -402,6 +402,13 @@ function deleteMeasure(pianoRollObject){
         }
     }
     
+    // calculate width of measure to remove
+    var measureWidth = 0;
+    for(var i = lastMeasureStartColNum; i < lastMeasureStartColNum + pianoRollObject.subdivision; i++){
+        var colHeader = document.getElementById("col_" + i);
+        measureWidth += parseInt(colHeader.style.width);
+    }
+    
     // remove the columns from the ui
     for(var i = lastMeasureStartColNum; i < lastMeasureStartColNum + pianoRollObject.subdivision; i++){
         var colHeader = document.getElementById("col_" + i);
@@ -413,6 +420,15 @@ function deleteMeasure(pianoRollObject){
             if(col){
                 col.parentNode.removeChild(col);
             }
+        }
+    }
+    
+    // adjust width of each row
+    for(var note in pianoRollObject.noteFrequencies){
+        var noteName = note.replace('#', 's');
+        var row = document.getElementById(noteName);
+        if(row){
+            row.style.width = (parseInt(row.style.width) - measureWidth) + "px";
         }
     }
     

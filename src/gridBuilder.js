@@ -105,8 +105,6 @@ function buildGrid(gridDivId, pianoRollObject){
         //first create new element for new pitch
         var newRow = document.createElement('div');
         newRow.id = replaceSharp(note);
-        newRow.style.display = "block";
-        newRow.style.width = "100%";
         
         // this creates the notes on the left of the piano roll. it is static.
         var newRowText = document.createElement('div');
