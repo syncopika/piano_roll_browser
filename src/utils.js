@@ -251,6 +251,15 @@ function processData(data){
     
     pianoRoll.subdivision = data.subdivision || 8;
     
+    // reset play marker if any
+    if(pianoRoll.playMarker){
+        var prevMarker = document.getElementById(pianoRoll.playMarker);
+        if(prevMarker){
+            prevMarker.style.backgroundColor = "#fff";
+        }
+        pianoRoll.playMarker = null;
+    }
+    
     // reset measure boundaries if time sig is not 4/4 
     redrawCellBorders(pianoRoll, 'columnHeaderRow');
     
