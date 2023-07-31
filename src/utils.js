@@ -340,10 +340,10 @@ function processData(data){
         if(newInstrument.noteColorStart === undefined){
             newInstrument.noteColorStart = "rgb(0,158,52)";
             newInstrument.noteColorEnd = "rgb(52,208,0)";
-        }else{
-            updateNoteColors(newInstrument);
         }
         
+        updateNoteColors(newInstrument);
+
         // add new instrument to array
         pianoRoll.instruments.push(newInstrument);
     }
