@@ -3,14 +3,6 @@ $(document).ready(function(){
     $("body").css("display", "block");
     $("#pianoNotes").css("display", "block");
     
-    /*  
-        special block for just piano notes 
-        this div is supposed to move right when scrolling right
-    */
-    var position = $('#C8').position();
-    $('#pianoNotes').css('left', position.left);
-    $('#pianoNotes').css('top', position.top);
-    
     // guard against inadvertently closing the page
     $(window).on('beforeunload', function(evt){
         // this should trigger the generic popup asking to confirm if you want to leave
@@ -30,8 +22,7 @@ makeInstrumentContextMenu(pianoRoll);
 makeNoteContextMenu(pianoRoll);
 bindButtons(pianoRoll); // from utils.js
 
-$('#measures').html("measure count: " + pianoRoll.numberOfMeasures);
-$('#subdiv').html("subdivision: " + pianoRoll.subdivision);
+document.getElementById('measures').textContent = "measure count: " + pianoRoll.numberOfMeasures;
 
 // set up initial instrument
 var context = pianoRoll.audioContext;
@@ -44,7 +35,7 @@ pianoRoll.currentInstrument = pianoRoll.instruments[0];
 
 // create piano roll grid
 buildGridHeader('columnHeaderRow', pianoRoll);
-buildGrid('piano', pianoRoll);
+buildGrid('grid', pianoRoll);
 
 // load in presets and piano notes (TODO: maybe lazy load only when selected as instrument sound?)
 loadExamplePresets(document.getElementById('loadingMsg')).then(_ => {
@@ -52,28 +43,14 @@ loadExamplePresets(document.getElementById('loadingMsg')).then(_ => {
 });
 
 // allow components like the toolbar to move with the user when scrolling right after more measures are added 
-$(window).scroll(function(){
+$("#piano").scroll(function(){
     // change position of the piano notes bar on the left to move 
-    // with horizontal scroll 
-    $('#pianoNotes').css('top', $("#C8").position().top);
-    $('#pianoNotes').css('left', $(window).scrollLeft());
-    
-    // adjust the left padding the mobile note bar! it should only 
-    // stick to the left edge when moving it. otherwise, keep some padding.  
-    if($('#pianoNotes').position().left === 0){
-        $('#pianoNotes').css('padding-left', '8px');
-    }else{
-        $('#pianoNotes').css('padding-left', '0px');
-    }
-    
-    // move other elements accordingly too 
-    $('#instrumentGrid').css('left', $(window).scrollLeft());
+    // with horizontal scroll
+    $('#pianoNotes').css('left', $("#piano").scrollLeft());
     
     $('#toolbar').css('left', $(window).scrollLeft());
     
-    if(toggleStickyToolbar){
-        $('#toolbar').css('top', $(window).scrollTop());
-    }else{
+    if(!toggleStickyToolbar){
         $('#toolbar').css('top', 0);
     }
     

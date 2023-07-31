@@ -91,8 +91,7 @@ function highlightHeader(headerId, pianoRollObject){
 function buildGrid(gridDivId, pianoRollObject){
     var thePiano = document.getElementById(gridDivId);
     
-    // this special div is the bar that shows the available notes 
-    // TODO? move this out of here?
+    // this special div is the bar that shows the available notes. this scrolls with the user.
     var pianoNotes = document.getElementById('pianoNotes');
     
     for(var note in pianoRollObject.noteFrequencies){
@@ -107,6 +106,7 @@ function buildGrid(gridDivId, pianoRollObject){
         var newRow = document.createElement('div');
         newRow.id = replaceSharp(note);
         
+        // this creates the notes on the left of the piano roll. it is static.
         var newRowText = document.createElement('div');
         newRowText.innerHTML = note.substring(0, note.length - 1) + "<sub>" + note[note.length-1] + "</sub>";
         newRowText.style.fontSize = '11px';
@@ -118,7 +118,7 @@ function buildGrid(gridDivId, pianoRollObject){
         newRow.appendChild(newRowText);
         thePiano.append(newRow);
         
-        // add new row to pianoNotes div - this will just be a block holding all the notes 
+        // add new note to pianoNotes div
         var newRowClone = newRow.cloneNode();
         newRowClone.id = "pianoNotes_" + newRow.id;
         var textClone = newRowText.cloneNode();
@@ -161,7 +161,7 @@ function createColumnCell(pitch, colNum, pianoRollObject){
         addNote(this.id, pianoRollObject, evt, true);
     });
     
-    // allow for highlighting to make it clear which note a block is
+    // allow for highlighting to make it clear which note a block corresponds to
     column.addEventListener("mouseenter", function(){ highlightRow(this.id, pianoRollObject.highlightColor) });
     column.addEventListener("mouseleave", function(){ highlightRow(this.id, 'transparent') });
     return column;

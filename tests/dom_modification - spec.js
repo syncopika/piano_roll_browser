@@ -63,12 +63,13 @@ describe('testing domModification.js', function(){
     it('testing canPlaceNote', function(){
        // mock child elements of a grid cell (e.g. notes that already exist within a cell)
        // in this case we have a note at pos with x=60 so another note should not be able to be placed there
-       // we also have an onion-skinned note which belongs to another instrument, so we can still place a 
+       // we also have an onion-skinned note@ x=70 which belongs to another instrument, so we can still place a 
        // note for the current instrument at that same position
        var children = [
         {style: {opacity: 1}, getBoundingClientRect: function(){return {left: 60}}},
         {style: {opacity: 0.5}, getBoundingClientRect: function(){return {left: 70}}},
        ];
+       
        expect(canPlaceNote(60, children)).to.equal(false);
        expect(canPlaceNote(70, children)).to.equal(true);
        expect(canPlaceNote(80, children)).to.equal(true);

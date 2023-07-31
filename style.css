@@ -9,13 +9,16 @@ html body {
 #piano {
   display: inline-block;
   white-space: nowrap;
+  overflow: scroll;
+  max-width: 100%;
+  position: relative;
 }
 
 #pianoNotes {
   position: absolute;
   width: 50px;
-  z-index: 100;
   background-color: #fff;
+  z-index: 200;
 }
 
 #changeTempo {
@@ -33,6 +36,7 @@ html body {
   text-align: center;
   background-color: #fff;
   z-index: 101;
+  top: 0;
 }
 #toolbar ul {
   text-align: center;

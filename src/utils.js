@@ -97,7 +97,14 @@ function bindButtons(pianoRollObject){
     
     document.getElementById('toggleStickyToolbar').addEventListener('click', function(evt){
         toggleStickyToolbar = !toggleStickyToolbar;
-        evt.target.parentNode.style.backgroundColor = toggleStickyToolbar ? "#d0d0d0" : "";
+        
+        document.getElementById('toggleStickyToolbar').style.backgroundColor = toggleStickyToolbar ? "#d0d0d0" : "";
+        
+        if(toggleStickyToolbar){
+            document.getElementById('toolbar').style.position = 'sticky';
+        }else{
+            document.getElementById('toolbar').style.position = 'relative';
+        }
     });
     
     /*
@@ -117,12 +124,17 @@ function bindButtons(pianoRollObject){
         redrawCellBorders(pianoRollObject, 'columnHeaderRow');
         
         // update measure count 
-        $('#measures').text( "measure count: " + pianoRollObject.numberOfMeasures );
+        document.getElementById("measures").textContent = "measure count: " + pianoRollObject.numberOfMeasures;
     });
     
     // import instrument preset
     document.getElementById('importInstrumentPreset').addEventListener('click', function(){
         importInstrumentPreset(pianoRollObject); // from instrumentPreset.js
+    });
+    
+    document.getElementById('toggleAutoScroll').addEventListener('click', function(){
+        pianoRollObject.autoScroll = !pianoRollObject.autoScroll;
+        document.getElementById('toggleAutoScroll').style.backgroundColor = pianoRollObject.autoScroll ? "#d0d0d0" : "";
     });
 }
 
@@ -172,9 +184,14 @@ function getJSONData(pianoRoll){
         for(var note in currInstrument.activeNotes){
             var noteElement = currInstrument.activeNotes[note];
             var noteContainer = noteElement.parentNode;
+            
+            // sorry this is a bit complicated but I like the current grid setup, which unfortunately
+            // causes some weird 8px offset (probably because css is still pretty mysterious to me).
+            // to make sure the left position for each note is still consistent with the old ui,
+            // we're making an adjustment to the left position value
             var noteData = {
                 "width": noteElement.style.width,
-                "left": noteElement.style.left,
+                "left": (parseInt(noteElement.style.left) + 8) + "px",
                 "volume": noteElement.dataset.volume,
                 "type": noteElement.dataset.type,
             };
@@ -234,6 +251,15 @@ function processData(data){
     
     pianoRoll.subdivision = data.subdivision || 8;
     
+    // reset play marker if any
+    if(pianoRoll.playMarker){
+        var prevMarker = document.getElementById(pianoRoll.playMarker);
+        if(prevMarker){
+            prevMarker.style.backgroundColor = "#fff";
+        }
+        pianoRoll.playMarker = null;
+    }
+    
     // reset measure boundaries if time sig is not 4/4 
     redrawCellBorders(pianoRoll, 'columnHeaderRow');
     
@@ -259,7 +285,7 @@ function processData(data){
     }
     
     // update num of measures 
-    $('#measures').text( "measure count: " + pianoRoll.numberOfMeasures );
+    document.getElementById('measures').textContent = "measure count: " + pianoRoll.numberOfMeasures;
 
     // then assign instruments array the data 
     pianoRoll.instruments = []; // clear instruments array 
@@ -297,7 +323,7 @@ function processData(data){
             newInstrument.notes[noteContainerId].forEach((noteAttr) => {
                 var newNote = createNewNoteElement(pianoRoll);
                 newNote.style.width = noteAttr.width;
-                newNote.style.left = noteAttr.left;
+                newNote.style.left = (parseInt(noteAttr.left) - 8) + "px"; // TODO: find a way to not have to adjust because of magic 8px of padding
                 newNote.style.opacity = (i === 0) ? 1.0 : (newInstrument.onionSkinOn ? 0.3 : 0.0);
                 newNote.style.zIndex = (i === 0) ? 100 : 0;
                 newNote.setAttribute("data-volume", noteAttr.volume);
@@ -314,10 +340,10 @@ function processData(data){
         if(newInstrument.noteColorStart === undefined){
             newInstrument.noteColorStart = "rgb(0,158,52)";
             newInstrument.noteColorEnd = "rgb(52,208,0)";
-        }else{
-            updateNoteColors(newInstrument);
         }
         
+        updateNoteColors(newInstrument);
+
         // add new instrument to array
         pianoRoll.instruments.push(newInstrument);
     }

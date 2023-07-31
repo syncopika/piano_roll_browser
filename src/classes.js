@@ -23,6 +23,7 @@ function PianoRoll(){
     this.recorder;                    // a MediaRecorder instance
     this.playMarker;                  // the id of a column header indicating where to start playing
     this.lastNoteColumn;              // html element of the column header of the last note that was played
+    this.autoScroll = false;          // if auto scroll when playing
     
     this.lockNoteSize = "16th";          // the note-size increment to be used when moving/placing notes
     this.addNoteSize = "last selected";  // note-size to use when adding notes (changes based on last selected/resize by default)

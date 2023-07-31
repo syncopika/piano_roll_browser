@@ -187,7 +187,8 @@ function getCorrectLength(length, pianoRollObject){
 // @param noteElement: an HTML element of a note 
 // @return: a float value representing the position of the note element
 function getNotePosition(noteElement){
-    return noteElement.getBoundingClientRect().left + window.pageXOffset;
+    var scrollOffset = document.getElementById("piano").scrollLeft; // TODO: pass in scrollLeft rather than hardcode element here?
+    return noteElement.getBoundingClientRect().left + scrollOffset;
 }
 
 /*** 
@@ -607,6 +608,8 @@ function scheduler(pianoRoll, allInstruments){
         highlightOsc.start(highlightNextTime);
         highlightNextTime += (getCorrectLength(40, pianoRoll) / 1000);
         highlightOsc.stop(highlightNextTime);
+        
+        // onendFunc comes from domModification.js
         highlightOsc.onended = onendFunc(
             header.id, 
             columnHeadersToHighlight[columnHeadersToHighlight.length-1].id, 
