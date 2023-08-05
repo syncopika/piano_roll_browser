@@ -223,7 +223,7 @@ function createNewNoteElement(pianoRollObject){
     newNote.style.opacity = 1.0;
     newNote.style.zIndex = 100;
     newNote.classList.add("noteElement");
-    newNote.classList.add("context-menu-one");
+    newNote.classList.add("context-menu-note");
     newNote.id = "note" + pianoRollObject.noteIdNum++;
     
     if(pianoRollObject.addNoteSize === "last selected"){

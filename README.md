@@ -2,7 +2,7 @@
 a music sequencer inspired by LMMS, one of the best software applications ever!    
 also influenced a bit by PxTone Collage, another great application!    
     
-**It is highly recommended that Chrome be used for optimal functionality (except for recording) at the moment. Additionally, please note that this application is not intended to be used on mobile devices.**    
+**Please note that this application is not intended to be used on mobile devices.**    
     
 ![screenshot of the piano roll](screenshots/current.png "current look")    
     
@@ -67,13 +67,11 @@ My implementation also does not use the canvas element like some other piano rol
     
 Users can place and move notes freely on the piano roll. In order to do that, my program looks at a couple of factors: the location of the cursor and the note lock size, which can be an 8th note (1 block on the piano roll), 16th note (half a block), or 32nd note. The note lock size determines the incremental distance a note block can be moved. The smaller the note, the more possible locations within a piano roll block it could be placed. For note movement, the cursor's location is taken into account and if it is over a piano roll block, my program determines, based on the cursor's x-position, what position within the piano roll block the cursor is closest to and places the note at that position.    
     
-Additionally, I wanted to keep it light, simple and easily portable so I minimized the number of dependencies (just jQuery!).    
-    
 For the svg icons, I crafted them manually (with help from [this wonderful tutorial](https://www.aleksandrhovhannisyan.com/blog/svg-tutorial-how-to-code-svg-icons-by-hand/) by Aleksandr Hovhannisyan). Hopefully they're not too awful!    
     
 For the piano instrument sounds I used the Steinway D from the Equinox Grand Pianos soundfont.    
     
-For the context menus used to edit instruments and notes, I used the awesome jQuery contextMenu library provided here: https://swisnl.github.io/jQuery-contextMenu/. Thanks very much to them!    
+For the context menus used to edit instruments and notes, I used the awesome jQuery contextMenu library provided here: https://swisnl.github.io/jQuery-contextMenu/ as inspiration. Thanks very much to them!    
     
 ### installation:    
 You don't need to install anything to use the piano roll itself (limited to just the basic sounds such as sine, sawtooth, triangle and square) locally; however, if you want to load in the demos and example custom presets, you'll need to serve the html page first on a local server. If you have Python, you can just run `python -m http.server` in this repo after you've downloaded it and navigate to `http://localhost:8000`. If you have node and npm, run `npm install` in this repo to get the dependencies (which also includes the needed libraries for running the tests!) and then run `node server.js`. Then navigate to `http://localhost:3000/` to see the piano roll.    
