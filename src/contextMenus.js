@@ -8,8 +8,44 @@ function createContextMenuElement(){
     menu.style.borderRadius = "0.2em";
     menu.style.boxShadow = "0 2px 5px rgba(0,0,0.5)";
     menu.style.zIndex = 201;
-    
     return menu;
+}
+
+function createContextMenuLayer(){
+    const layer = document.createElement('div');
+    layer.style.position = "fixed";
+    layer.style.width = "100%";
+    layer.style.height = "100%";
+    layer.style.zIndex = 200;
+    layer.style.top = "0px";
+    layer.style.left = "0px";
+    layer.style.opacity = "0";
+    layer.id = "context-menu-layer";
+    
+    layer.addEventListener('pointerdown', (evt) => {
+        if(evt.target.classList.contains("context-menu-element")){
+            return;
+        }
+        
+        if(evt.target.classList.contains("context-menu-note")){
+            return;
+        }
+        
+        // close context menu if opened
+        const instCtxMenu = document.getElementById('instrument-context-menu');
+        if(instCtxMenu && instCtxMenu.style.display !== "none"){
+            instCtxMenu.parentNode.removeChild(instCtxMenu);
+            layer.parentNode.removeChild(layer);
+        }
+        
+        const noteCtxMenu = document.getElementById('note-context-menu');
+        if(noteCtxMenu && noteCtxMenu.style.display !== "none"){
+            noteCtxMenu.parentNode.removeChild(noteCtxMenu);
+            layer.parentNode.removeChild(layer);
+        }
+    });
+    
+    return layer;
 }
 
 // contextMenuElement: an HTML element that will be the parent of childElements
@@ -82,7 +118,6 @@ function populateContextMenu(contextMenuElement, childElements, pianoRollObject)
             newLabel.appendChild(checkBox);
             inputElement = checkBox;
         }else if(type === "input-range"){
-            // https://stackoverflow.com/questions/10004723/html5-input-type-range-show-range-value
             const slider = document.createElement('input');
             slider.className = "context-menu-element";
             slider.type = "range";
@@ -289,9 +324,11 @@ function setupInstrumentContextMenu(pianoRollObject, evt){
     
     instrumentContextMenu.setAttribute("instrument-num", evt.target.id);
     instrumentContextMenu.style.display = "block";
-    instrumentContextMenu.style.top = evt.target.getBoundingClientRect().top + "px";
+    instrumentContextMenu.style.top = (evt.target.getBoundingClientRect().top + window.pageYOffset) + "px";
     instrumentContextMenu.style.left = evt.target.getBoundingClientRect().left + "px";
-        
+    
+    const contextMenuLayer = createContextMenuLayer();
+    document.body.appendChild(contextMenuLayer);
     document.body.appendChild(instrumentContextMenu);
 }
 
@@ -303,7 +340,7 @@ function setupNoteContextMenu(pianoRollObject, evt){
             min: 0.01,
             max: 0.50,
             step: 0.01,
-            value: parseFloat(evt.target.getAttribute("data-volume")), //pianoRollObject.currentInstrument.volume,
+            value: parseFloat(evt.target.getAttribute("data-volume")),
             events: {
                 change: function(e){
                     var selectedNote = evt.target;
@@ -351,9 +388,11 @@ function setupNoteContextMenu(pianoRollObject, evt){
     populateContextMenu(noteContextMenu, noteMenuElements, pianoRollObject);
     
     noteContextMenu.style.display = "block";
-    noteContextMenu.style.top = evt.target.getBoundingClientRect().top + "px";
+    noteContextMenu.style.top = (evt.target.getBoundingClientRect().top + window.pageYOffset) + "px";
     noteContextMenu.style.left = evt.target.getBoundingClientRect().left + "px";
-        
+
+    const contextMenuLayer = createContextMenuLayer();
+    document.body.appendChild(contextMenuLayer);        
     document.body.appendChild(noteContextMenu);
 }
 

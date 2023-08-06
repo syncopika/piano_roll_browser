@@ -1,5 +1,4 @@
 // prevent flash of unstylized content 
-// https://stackoverflow.com/questions/2304941/what-is-the-non-jquery-equivalent-of-document-ready
 document.addEventListener("DOMContentLoaded", () => {
     //console.log("im ready");
     document.body.style.display = "block";
@@ -12,7 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return "are you sure you want to leave?";
     });
 });
-
 
 // flag for toggling the toolbar to be static or sticky
 var toggleStickyToolbar = false;
@@ -51,29 +49,6 @@ document.getElementById("piano").addEventListener("scroll", (evt) => {
     }
 });
 
-document.addEventListener('click', (evt) => {
-    if(evt.target.classList.contains("context-menu-element")){
-        return;
-    }
-    
-    if(evt.target.classList.contains("context-menu-note")){
-        return;
-    }
-    
-    // close context menu if opened
-    const instCtxMenu = document.getElementById('instrument-context-menu');
-    if(instCtxMenu && instCtxMenu.style.display !== "none"){
-        instCtxMenu.parentNode.removeChild(instCtxMenu);
-    }
-    
-    const noteCtxMenu = document.getElementById('note-context-menu');
-    if(noteCtxMenu && noteCtxMenu.style.display !== "none"){
-        noteCtxMenu.parentNode.removeChild(noteCtxMenu);
-    }
-});
-
-
-// https://stackoverflow.com/questions/50538072/which-events-should-i-listen-for-to-hide-a-custom-context-menu-in-javascript
 document.addEventListener('contextmenu', (evt) => {
     // close context menu if opened
     const instCtxMenu = document.getElementById('instrument-context-menu');
