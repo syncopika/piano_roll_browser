@@ -167,6 +167,7 @@ function populateContextMenu(contextMenuElement, childElements, pianoRollObject)
             if(element.icon === "delete"){
                 inputElement.style.color = "#f00";
                 inputElement.style.fontWeight = "bold";
+                inputElement.classList.add("context-menu-delete");
             }
         }
         
@@ -267,7 +268,6 @@ function setupInstrumentContextMenu(pianoRollObject, evt){
             icon: "delete",
             events: {
                 click: function(){
-                    // what if current instrument is the one to be deleted?
                     var instCtxMenu = document.getElementById('instrument-context-menu');
                     var instrumentNum = parseInt(instCtxMenu.getAttribute('instrument-num'));
                     var instrumentTableElement = document.getElementById(instrumentNum);
@@ -280,6 +280,18 @@ function setupInstrumentContextMenu(pianoRollObject, evt){
                         for(var noteId in instrument.activeNotes){
                             var noteElement = instrument.activeNotes[noteId];
                             noteElement.parentNode.removeChild(noteElement);
+                        }
+                        
+                        // remove context menu if open
+                        var ctxMenu = document.getElementById('instrument-context-menu');
+                        if(ctxMenu){
+                            ctxMenu.parentNode.removeChild(ctxMenu);
+                        
+                            // remove context menu layer as well if menu is open
+                            var ctxMenuLayer = document.getElementById('context-menu-layer');
+                            if(ctxMenuLayer){
+                                ctxMenuLayer.parentNode.removeChild(ctxMenuLayer);
+                            }
                         }
                         
                         // remove it from pianoRollObject
@@ -378,6 +390,12 @@ function setupNoteContextMenu(pianoRollObject, evt){
                     // close context menu
                     var menu = document.getElementById("note-context-menu");
                     menu.parentNode.removeChild(menu);
+                    
+                    // remove context menu layer
+                    var ctxMenuLayer = document.getElementById('context-menu-layer');
+                    if(ctxMenuLayer){
+                        ctxMenuLayer.parentNode.removeChild(ctxMenuLayer);
+                    }
                 }
             }
         },
