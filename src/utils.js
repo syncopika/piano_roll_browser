@@ -411,6 +411,8 @@ function importInstrumentPreset(pianoRoll){
                 
                     // store the preset in the PianoRoll obj 
                     pianoRoll.instrumentPresets[presetName] = data.data;
+                    
+                    console.log(`imported: ${presetName}`);
                 }
             })(file);
             

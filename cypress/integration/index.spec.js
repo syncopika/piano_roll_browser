@@ -21,17 +21,17 @@ describe('first test', function(){
         
         // make sure the piano roll grid is there
         cy.get('#piano').should('be.visible');
-        // expect the right number of notes
-        cy.get('#piano').children().its('length').should('eq', 74); // 73 + 1 for the columnHeader row
+        cy.get('#grid').should('be.visible');
         
         // make sure the mobile piano keys div is there
         cy.get('#pianoNotes').should('be.visible');
+        
         // check number of notes
-        cy.get('#pianoNotes').children().its('length').should('eq', 73);
+        cy.get('#grid').children().its('length').should('eq', 73);
         
         // check buttons
         cy.get('#buttons').should('be.visible');
-        cy.get('#buttons').find('li').its('length').should('eq', 12);
+        cy.get('#buttons').find('li').its('length').should('eq', 13);
     });
     
     it('can create a new note', function(){
@@ -48,16 +48,16 @@ describe('first test', function(){
         
         // check context-menu on right-click
         cy.get('#context-menu-layer').should('not.exist');
-        cy.get(elementId).find(note).should('have.class', 'context-menu-one');
+        cy.get(elementId).find(note).should('have.class', 'context-menu-note');
         cy.get(elementId).find(note).rightclick(); // open context-menu
-        cy.get(elementId).find(note).should('have.class', 'context-menu-active');
-        cy.get('.context-menu-list').should('be.visible');
+
+        cy.get('#note-context-menu').should('be.visible');
         cy.get('#context-menu-layer').click(); // remove context-menu by clicking somewhere else
-        cy.get('.context-menu-list').should('not.exist');
+        cy.get('#note-context-menu').should('not.exist');
     
         // check deleting note
         cy.get(elementId).find(note).rightclick();
-        cy.get('.context-menu-icon-delete').click();
+        cy.get('.context-menu-delete').click();
         cy.get(note).should('not.exist');
     });
     
@@ -74,10 +74,10 @@ describe('first test', function(){
         cy.get(instrumentTable).find('#2').click(); // switch to new instrument
         
         cy.get(instrumentTable).find('#2').rightclick();
-        cy.get(instrumentTable).find('#2').should('have.class', 'context-menu-active');
+         cy.get('#instrument-context-menu').should('be.visible');
         
         // delete the newly added instrument
-        cy.get('.context-menu-icon-delete').click();
+        cy.get('.context-menu-delete').click();
         cy.get(instrumentTable).find('#2').should('not.exist');
         
     });

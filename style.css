@@ -93,6 +93,10 @@ table, tr, td {
   background-color: #d0d0d0;
 }
 
+.context-menu-icon:hover {
+    cursor: pointer;
+}
+
 select, option {
   height: 24px;
 }

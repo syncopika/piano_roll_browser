@@ -1,0 +1,28 @@
+manual testing scenarios for piano-roll-browser
+
+notes
+- add a note
+- remove a note
+- change volume
+- change style
+
+instruments
+- add an instrument
+- remove an instrument
+- mute an instrument
+- change an instrument's base volume
+- change an instrument's panning
+- change an instrument's notes' color
+- change an instrument's sound
+- rename an instrument
+
+instruments presets
+- add a new preset
+  - make sure it's present in dropdown for instrument context menu
+
+projects
+- import a project
+- export a project
+
+toolbar
+- make sure all the buttons do what they're supposed to
