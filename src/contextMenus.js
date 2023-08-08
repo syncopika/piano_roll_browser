@@ -29,11 +29,8 @@ function createContextMenuLayer(){
     layer.id = "context-menu-layer";
     
     layer.addEventListener('pointerdown', (evt) => {
-        if(evt.target.classList.contains("context-menu-element")){
-            return;
-        }
-        
-        if(evt.target.classList.contains("context-menu-note")){
+        if(evt.target.classList.contains("context-menu-element") ||
+           evt.target.classList.contains("context-menu-note")){
             return;
         }
         
@@ -144,6 +141,8 @@ function populateContextMenu(contextMenuElement, childElements, pianoRollObject)
             sliderVal.value = slider.value;
             //sliderVal.style.width = "20%";
             sliderVal.addEventListener('change', function(evt){
+                if(this.value > slider.max) this.value = slider.max;
+                if(this.value < slider.min) this.value = slider.min;
                 slider.value = this.value;
             });
             
