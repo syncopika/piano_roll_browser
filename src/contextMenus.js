@@ -8,6 +8,12 @@ function createContextMenuElement(){
     menu.style.borderRadius = "0.2em";
     menu.style.boxShadow = "0 2px 5px rgba(0,0,0.5)";
     menu.style.zIndex = 201;
+    
+    menu.addEventListener('contextmenu', (evt) => {
+        evt.preventDefault();
+        evt.stopPropagation();
+    });
+    
     return menu;
 }
 
@@ -23,11 +29,8 @@ function createContextMenuLayer(){
     layer.id = "context-menu-layer";
     
     layer.addEventListener('pointerdown', (evt) => {
-        if(evt.target.classList.contains("context-menu-element")){
-            return;
-        }
-        
-        if(evt.target.classList.contains("context-menu-note")){
+        if(evt.target.classList.contains("context-menu-element") ||
+           evt.target.classList.contains("context-menu-note")){
             return;
         }
         
@@ -77,7 +80,7 @@ function populateContextMenu(contextMenuElement, childElements, pianoRollObject)
         
         const type = childElements[label].type;
         const element = childElements[label];
-        let inputElement = null
+        let inputElement = [];
         if(type === "text"){
             const textInput = document.createElement('input');
             textInput.className = "context-menu-element";
@@ -87,7 +90,7 @@ function populateContextMenu(contextMenuElement, childElements, pianoRollObject)
             
             newLabel.appendChild(textInput);
             
-            inputElement = textInput;
+            inputElement = [textInput];
         }else if(type === "select"){
             const selectBox = document.createElement('select');
             selectBox.className = "context-menu-element";
@@ -109,14 +112,14 @@ function populateContextMenu(contextMenuElement, childElements, pianoRollObject)
                 selectBox.appendChild(newOpt);
             }
             newLabel.appendChild(selectBox);
-            inputElement = selectBox;
+            inputElement = [selectBox];
         }else if(type === "checkbox"){
             const checkBox = document.createElement('input');
             checkBox.type = "checkbox";
             checkBox.className = "context-menu-element";
             checkBox.checked = element.checked;
             newLabel.appendChild(checkBox);
-            inputElement = checkBox;
+            inputElement = [checkBox];
         }else if(type === "input-range"){
             const slider = document.createElement('input');
             slider.className = "context-menu-element";
@@ -138,13 +141,16 @@ function populateContextMenu(contextMenuElement, childElements, pianoRollObject)
             sliderVal.value = slider.value;
             //sliderVal.style.width = "20%";
             sliderVal.addEventListener('change', function(evt){
-                this.previousElementSibling.value = this.value;
+                const val = parseFloat(this.value);
+                if(val > slider.max) this.value = slider.max;
+                if(val < slider.min) this.value = slider.min;
+                slider.value = this.value;
             });
             
             newLabel.appendChild(slider);
             newLabel.appendChild(sliderVal);
             
-            inputElement = slider;
+            inputElement = [slider, sliderVal];
         }else if(type === "select-color"){
             const changeColorInput = document.createElement('input');
             changeColorInput.className = "context-menu-element";
@@ -159,21 +165,24 @@ function populateContextMenu(contextMenuElement, childElements, pianoRollObject)
             var colorPicker = createColorPicker(changeColorInput, pianoRollObject);
             newLabel.appendChild(colorPicker);
             
-            inputElement = changeColorInput;
+            inputElement = [changeColorInput];
         }else if(type === "icon"){
-            inputElement = newEl;
             newLabel.classList.add("context-menu-icon");
             
             if(element.icon === "delete"){
-                inputElement.style.color = "#f00";
-                inputElement.style.fontWeight = "bold";
-                inputElement.classList.add("context-menu-delete");
+                newEl.style.color = "#f00";
+                newEl.style.fontWeight = "bold";
+                newEl.classList.add("context-menu-delete");
             }
+            
+            inputElement = [newEl];
         }
         
         if(inputElement && element.events){
             for(let eventName in element.events){
-                inputElement.addEventListener(eventName, element.events[eventName]);
+                for(let input of inputElement){
+                    input.addEventListener(eventName, element.events[eventName]);
+                }
             }
         }
         
