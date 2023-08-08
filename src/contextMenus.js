@@ -141,8 +141,9 @@ function populateContextMenu(contextMenuElement, childElements, pianoRollObject)
             sliderVal.value = slider.value;
             //sliderVal.style.width = "20%";
             sliderVal.addEventListener('change', function(evt){
-                if(this.value > slider.max) this.value = slider.max;
-                if(this.value < slider.min) this.value = slider.min;
+                const val = parseFloat(this.value);
+                if(val > slider.max) this.value = slider.max;
+                if(val < slider.min) this.value = slider.min;
                 slider.value = this.value;
             });
             
