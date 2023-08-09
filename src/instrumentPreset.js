@@ -30,7 +30,11 @@ class ADSREnvelope {
         let baseParamVal = volToUse ? volToUse : targetNodeParam.value; // i.e. gain.gain.value
         
         // you want to keep the value changes from the envelope steady throughout even if the note duration is not long enough to use the whole envelope
-        targetNodeParam.cancelAndHoldAtTime(time);
+        // NOTE: cancelAndHoldAtTime is not implemented in Firefox :(
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1308431, https://github.com/WebAudio/web-audio-api/issues/2437
+        if(targetNodeParam.cancelAndHoldAtTime){
+            targetNodeParam.cancelAndHoldAtTime(time);
+        }
         
         targetNodeParam.linearRampToValueAtTime(0.0, time);
         targetNodeParam.linearRampToValueAtTime(baseParamVal, time + this.attack);
