@@ -42,6 +42,8 @@ https://www.vdveen.net/webaudio/waprog.htm
 https://sound.stackexchange.com/questions/27798/what-time-range-is-used-for-adsr-envelopes
 https://github.com/sonic-pi-net/sonic-pi/blob/main/etc/doc/tutorial/02.4-Durations-with-Envelopes.md
 https://stackoverflow.com/questions/34694580/how-do-i-correctly-cancel-a-currently-changing-audioparam-in-the-web-audio-api
+https://bugzilla.mozilla.org/show_bug.cgi?id=1308431
+https://github.com/WebAudio/web-audio-api/issues/2437
 
 // make it recordable?
 https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createMediaStreamDestination

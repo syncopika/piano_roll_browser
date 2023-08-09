@@ -1,0 +1,633 @@
+{
+    "measures": 9,
+    "tempo": 140,
+    "composer": "François Couperin (1668-1733)",
+    "title": "Les Barricades Mysterieuses (excerpt)",
+    "timeSignature": "4/4",
+    "subdivision": 8,
+    "instruments": [
+        {
+            "name": "Instrument 1",
+            "volume": 0.2,
+            "pan": 0,
+            "waveType": "sine",
+            "onionSkinOn": true,
+            "noteColorStart": "rgb(255,116,169)",
+            "noteColorEnd": "rgb(52,208,0)",
+            "notes": {
+                "Bb4col_1": [
+                    {
+                        "width": "40px",
+                        "left": "100px",
+                        "volume": "0.2",
+                        "type": "legato"
+                    }
+                ],
+                "D5col_2": [
+                    {
+                        "width": "40px",
+                        "left": "140px",
+                        "volume": "0.2",
+                        "type": "legato"
+                    }
+                ],
+                "Bb4col_3": [
+                    {
+                        "width": "80px",
+                        "left": "180px",
+                        "volume": "0.2",
+                        "type": "legato"
+                    }
+                ],
+                "C5col_5": [
+                    {
+                        "width": "40px",
+                        "left": "260px",
+                        "volume": "0.2",
+                        "type": "legato"
+                    }
+                ],
+                "F5col_6": [
+                    {
+                        "width": "40px",
+                        "left": "300px",
+                        "volume": "0.2",
+                        "type": "legato"
+                    }
+                ],
+                "A4col_7": [
+                    {
+                        "width": "80px",
+                        "left": "340px",
+                        "volume": "0.2",
+                        "type": "legato"
+                    }
+                ],
+                "Bb3col_2": [
+                    {
+                        "width": "80px",
+                        "left": "140px",
+                        "volume": "0.31",
+                        "type": "legato"
+                    }
+                ],
+                "F4col_4": [
+                    {
+                        "width": "80px",
+                        "left": "220px",
+                        "volume": "0.26",
+                        "type": "legato"
+                    }
+                ],
+                "D5col_10": [
+                    {
+                        "width": "40px",
+                        "left": "460px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_11": [
+                    {
+                        "width": "80px",
+                        "left": "500px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "C5col_13": [
+                    {
+                        "width": "40px",
+                        "left": "580px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "F5col_14": [
+                    {
+                        "width": "40px",
+                        "left": "620px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_15": [
+                    {
+                        "width": "80px",
+                        "left": "660px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Bb3col_8": [
+                    {
+                        "width": "160px",
+                        "left": "380px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "D3col_20": [
+                    {
+                        "width": "160px",
+                        "left": "860px",
+                        "volume": "0.27",
+                        "type": "default"
+                    }
+                ],
+                "Eb3col_24": [
+                    {
+                        "width": "160px",
+                        "left": "1020px",
+                        "volume": "0.26",
+                        "type": "default"
+                    }
+                ],
+                "F3col_28": [
+                    {
+                        "width": "160px",
+                        "left": "1180px",
+                        "volume": "0.27",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_9": [
+                    {
+                        "width": "40px",
+                        "left": "420px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "A4col_17": [
+                    {
+                        "width": "40px",
+                        "left": "740px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_18": [
+                    {
+                        "width": "40px",
+                        "left": "780px",
+                        "volume": "0.24",
+                        "type": "default"
+                    }
+                ],
+                "F4col_19": [
+                    {
+                        "width": "80px",
+                        "left": "820px",
+                        "volume": "0.3",
+                        "type": "default"
+                    }
+                ],
+                "A4col_21": [
+                    {
+                        "width": "40px",
+                        "left": "900px",
+                        "volume": "0.29",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_22": [
+                    {
+                        "width": "40px",
+                        "left": "940px",
+                        "volume": "0.3",
+                        "type": "default"
+                    }
+                ],
+                "G4col_23": [
+                    {
+                        "width": "80px",
+                        "left": "980px",
+                        "volume": "0.3",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_26": [
+                    {
+                        "width": "40px",
+                        "left": "1100px",
+                        "volume": "0.32",
+                        "type": "default"
+                    }
+                ],
+                "F4col_27": [
+                    {
+                        "width": "40px",
+                        "left": "1140px",
+                        "volume": "0.33",
+                        "type": "default"
+                    }
+                ],
+                "A4col_25": [
+                    {
+                        "width": "40px",
+                        "left": "1060px",
+                        "volume": "0.31",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_28": [
+                    {
+                        "width": "40px",
+                        "left": "1180px",
+                        "volume": "0.34",
+                        "type": "default"
+                    }
+                ],
+                "Eb5col_29": [
+                    {
+                        "width": "40px",
+                        "left": "1220px",
+                        "volume": "0.34",
+                        "type": "default"
+                    }
+                ],
+                "D5col_30": [
+                    {
+                        "width": "10px",
+                        "left": "1260px",
+                        "volume": "0.31",
+                        "type": "legato"
+                    },
+                    {
+                        "width": "20px",
+                        "left": "1280px",
+                        "volume": "0.29",
+                        "type": "default"
+                    }
+                ],
+                "C5col_31": [
+                    {
+                        "width": "40px",
+                        "left": "1300px",
+                        "volume": "0.34",
+                        "type": "default"
+                    }
+                ],
+                "F3col_6": [
+                    {
+                        "width": "80px",
+                        "left": "300px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "F3col_12": [
+                    {
+                        "width": "160px",
+                        "left": "540px",
+                        "volume": "0.24",
+                        "type": "default"
+                    }
+                ],
+                "G3col_16": [
+                    {
+                        "width": "160px",
+                        "left": "700px",
+                        "volume": "0.27",
+                        "type": "default"
+                    }
+                ],
+                "F4col_10": [
+                    {
+                        "width": "160px",
+                        "left": "460px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Eb5col_30": [
+                    {
+                        "width": "10px",
+                        "left": "1270px",
+                        "volume": "0.31",
+                        "type": "legato"
+                    }
+                ],
+                "Bb3col_32": [
+                    {
+                        "width": "160px",
+                        "left": "1340px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "F3col_36": [
+                    {
+                        "width": "160px",
+                        "left": "1500px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "D5col_32": [
+                    {
+                        "width": "40px",
+                        "left": "1340px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "D5col_34": [
+                    {
+                        "width": "40px",
+                        "left": "1420px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_33": [
+                    {
+                        "width": "40px",
+                        "left": "1380px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_35": [
+                    {
+                        "width": "80px",
+                        "left": "1460px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "C5col_37": [
+                    {
+                        "width": "40px",
+                        "left": "1540px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "F5col_38": [
+                    {
+                        "width": "40px",
+                        "left": "1580px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_39": [
+                    {
+                        "width": "80px",
+                        "left": "1620px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_41": [
+                    {
+                        "width": "40px",
+                        "left": "1700px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "D5col_42": [
+                    {
+                        "width": "40px",
+                        "left": "1740px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_43": [
+                    {
+                        "width": "80px",
+                        "left": "1780px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "C5col_45": [
+                    {
+                        "width": "40px",
+                        "left": "1860px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "F5col_46": [
+                    {
+                        "width": "40px",
+                        "left": "1900px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_47": [
+                    {
+                        "width": "80px",
+                        "left": "1940px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "A4col_49": [
+                    {
+                        "width": "40px",
+                        "left": "2020px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_50": [
+                    {
+                        "width": "40px",
+                        "left": "2060px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "F4col_51": [
+                    {
+                        "width": "80px",
+                        "left": "2100px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "F4col_53": [
+                    {
+                        "width": "40px",
+                        "left": "2180px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_54": [
+                    {
+                        "width": "40px",
+                        "left": "2220px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "A4col_55": [
+                    {
+                        "width": "40px",
+                        "left": "2260px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "G4col_56": [
+                    {
+                        "width": "40px",
+                        "left": "2300px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "A4col_57": [
+                    {
+                        "width": "40px",
+                        "left": "2340px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_58": [
+                    {
+                        "width": "40px",
+                        "left": "2380px",
+                        "volume": "0.18",
+                        "type": "default"
+                    }
+                ],
+                "F4col_59": [
+                    {
+                        "width": "80px",
+                        "left": "2420px",
+                        "volume": "0.14",
+                        "type": "default"
+                    }
+                ],
+                "A4col_61": [
+                    {
+                        "width": "40px",
+                        "left": "2500px",
+                        "volume": "0.13",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_62": [
+                    {
+                        "width": "40px",
+                        "left": "2540px",
+                        "volume": "0.11",
+                        "type": "default"
+                    }
+                ],
+                "A4col_63": [
+                    {
+                        "width": "40px",
+                        "left": "2580px",
+                        "volume": "0.11",
+                        "type": "default"
+                    },
+                    {
+                        "width": "10px",
+                        "left": "2610px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Bb4col_64": [
+                    {
+                        "width": "280px",
+                        "left": "2620px",
+                        "volume": "0.09",
+                        "type": "default"
+                    }
+                ],
+                "Bb3col_40": [
+                    {
+                        "width": "160px",
+                        "left": "1660px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "F3col_44": [
+                    {
+                        "width": "160px",
+                        "left": "1820px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "G3col_48": [
+                    {
+                        "width": "160px",
+                        "left": "1980px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "D3col_52": [
+                    {
+                        "width": "160px",
+                        "left": "2140px",
+                        "volume": "0.2",
+                        "type": "default"
+                    }
+                ],
+                "Eb3col_56": [
+                    {
+                        "width": "160px",
+                        "left": "2300px",
+                        "volume": "0.15",
+                        "type": "default"
+                    }
+                ],
+                "F3col_60": [
+                    {
+                        "width": "160px",
+                        "left": "2460px",
+                        "volume": "0.12",
+                        "type": "default"
+                    }
+                ],
+                "G3col_58": [
+                    {
+                        "width": "160px",
+                        "left": "2380px",
+                        "volume": "0.13",
+                        "type": "default"
+                    }
+                ],
+                "F4col_62": [
+                    {
+                        "width": "160px",
+                        "left": "2540px",
+                        "volume": "0.12",
+                        "type": "default"
+                    }
+                ],
+                "Bb3col_64": [
+                    {
+                        "width": "280px",
+                        "left": "2620px",
+                        "volume": "0.11",
+                        "type": "default"
+                    }
+                ],
+                "D3col_64": [
+                    {
+                        "width": "280px",
+                        "left": "2620px",
+                        "volume": "0.12",
+                        "type": "default"
+                    }
+                ]
+            }
+        }
+    ]
+}

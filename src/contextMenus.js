@@ -139,7 +139,7 @@ function populateContextMenu(contextMenuElement, childElements, pianoRollObject)
             sliderVal.min = slider.min;
             sliderVal.max = slider.max;
             sliderVal.value = slider.value;
-            //sliderVal.style.width = "20%";
+            sliderVal.style.width = "20%";
             sliderVal.addEventListener('change', function(evt){
                 const val = parseFloat(this.value);
                 if(val > slider.max) this.value = slider.max;
@@ -147,6 +147,7 @@ function populateContextMenu(contextMenuElement, childElements, pianoRollObject)
                 slider.value = this.value;
             });
             
+            newLabel.appendChild(document.createElement('br'));
             newLabel.appendChild(slider);
             newLabel.appendChild(sliderVal);
             
