@@ -87,6 +87,8 @@ I also have some code to accommodate a MongoDB backend with a basic login featur
 ### demos:    
 Intrada - Johann Pezel (1639 - 1694). One of my favorite brass quintet pieces!    
     
+Les Barricades Mysterieuses (excerpt) - François Couperin (1668-1733)    
+    
 Sand Canyon (Kirby's Dream Land 3) - Jun Ishikawa
     
 3_4 time demo - my own composition    
