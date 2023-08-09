@@ -7,7 +7,7 @@ function createContextMenuElement(){
     menu.style.border = "1px solid #bebebe";
     menu.style.borderRadius = "0.2em";
     menu.style.boxShadow = "0 2px 5px rgba(0,0,0.5)";
-    menu.style.zIndex = 201;
+    menu.style.zIndex = 210;
     
     menu.addEventListener('contextmenu', (evt) => {
         evt.preventDefault();
@@ -22,7 +22,7 @@ function createContextMenuLayer(){
     layer.style.position = "fixed";
     layer.style.width = "100%";
     layer.style.height = "100%";
-    layer.style.zIndex = 200;
+    layer.style.zIndex = 209;
     layer.style.top = "0px";
     layer.style.left = "0px";
     layer.style.opacity = "0";
