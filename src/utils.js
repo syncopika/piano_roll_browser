@@ -55,6 +55,10 @@ function bindButtons(pianoRollObject){
         })
     });
     
+    document.getElementById('pausePlay').addEventListener('click', function(){
+        pausePlay(pianoRoll);
+    });
+    
     document.getElementById('stopPlay').addEventListener('click', function(){
         stopPlay(pianoRoll);
     });

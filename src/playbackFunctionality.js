@@ -568,10 +568,9 @@ function scheduler(pianoRoll, allInstruments){
     var highlightNextTime = ctx.currentTime;
     
     // in the case where the user specified a measure to start playing at, we need to update instrumentNotePointers to start at the right note
-    var startMarker = pianoRoll.playMarker; // if user specified a certain column to start playing at 
+    var startMarker = pianoRoll.playMarker; // if it's currently paused OR user specified a certain column to start playing at
     if(startMarker){
         var startPos = getNotePosition(document.getElementById(startMarker));
-    
         for(var instIdx in instrumentsToPlay){
             var currInst = instrumentsToPlay[instIdx];
             // have each instrument start with the note at index given by startMarker
@@ -596,7 +595,6 @@ function scheduler(pianoRoll, allInstruments){
                 }
             }
         }
-        
         columnHeadersToHighlight = columnHeadersToHighlight.splice(parseInt(startMarker.match(/[0-9]+/g)[0]));
     }
     
@@ -846,12 +844,15 @@ function recordPlay(pianoRollObject){
     }
 }
 
-//stop playback
+//paused playback
 // @param pianoRollObject: an instance of PianoRoll
-function stopPlay(pianoRollObject){
-
+function pausePlay(pianoRollObject){
+    // highlightHeader comes from gridBuilder.js
+    highlightHeader(pianoRollObject.lastNoteColumn.id, pianoRollObject);
+  
     pianoRollObject.isPlaying = false;
 
+    // stop all currently-playing or scheduled nodes
     for(var i = 0; i < pianoRollObject.timers.length; i++){
         var node = pianoRollObject.timers[i];
         node.stop(0);
@@ -859,6 +860,35 @@ function stopPlay(pianoRollObject){
         node.disconnect();
     }
     
+    // add a new fresh gain node for each instrument
+    for(var j = 0; j < pianoRollObject.instruments.length; j++){
+        // I don't think this actually helps since we might have multiple gains per instrument :<
+        //pianoRollObject.instruments[j].gain.disconnect();
+        
+        // create a new gain for each instrument (this really is only needed when clicking notes, not playback)
+        var newGain = initGain(pianoRollObject.audioContext);
+        newGain.connect(pianoRollObject.audioContext.destination);
+        pianoRollObject.instruments[j].gain = newGain;
+    }
+
+    // clear out timers array (which holds the oscillator nodes)
+    pianoRollObject.timers = [];
+}
+
+//stop playback
+// @param pianoRollObject: an instance of PianoRoll
+function stopPlay(pianoRollObject){
+    pianoRollObject.isPlaying = false;
+
+    // stop all currently-playing or scheduled nodes
+    for(var i = 0; i < pianoRollObject.timers.length; i++){
+        var node = pianoRollObject.timers[i];
+        node.stop(0);
+        node.ended = null; // unhook onendFunc 
+        node.disconnect();
+    }
+    
+    // add a new fresh gain node for each instrument
     for(var j = 0; j < pianoRollObject.instruments.length; j++){
         // I don't think this actually helps since we might have multiple gains per instrument :<
         //pianoRollObject.instruments[j].gain.disconnect();
@@ -877,11 +907,18 @@ function stopPlay(pianoRollObject){
         pianoRollObject.lastNoteColumn.style.backgroundColor = '#fff';
     }
     
+    // clear play marker if set
+    var prevMarker = document.getElementById(pianoRollObject.playMarker);
+    if(prevMarker){
+        prevMarker.style.backgroundColor = "#fff";
+    }
+    pianoRollObject.playMarker = null;
+    
     // if recording
     if(pianoRollObject.recording){
         pianoRollObject.recorder.stop();
         pianoRollObject.recording = false;
-        // html-specific: not the best thing to do here...
+        // this is relying on an assumed id - probably not the best thing to do here...
         document.getElementById('record').style.border = "";
     }
     
@@ -911,6 +948,7 @@ try {
         scheduler,
         play,
         playAll,
+        pausePlay,
         stopPlay,
         getCorrectLength,
         getNumGainNodesPerInstrument,
