@@ -907,6 +907,13 @@ function stopPlay(pianoRollObject){
         pianoRollObject.lastNoteColumn.style.backgroundColor = '#fff';
     }
     
+    // clear play marker if set
+    var prevMarker = document.getElementById(pianoRollObject.playMarker);
+    if(prevMarker){
+        prevMarker.style.backgroundColor = "#fff";
+    }
+    pianoRollObject.playMarker = null;
+    
     // if recording
     if(pianoRollObject.recording){
         pianoRollObject.recorder.stop();
