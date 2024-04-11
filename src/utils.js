@@ -51,8 +51,9 @@ function bindButtons(pianoRollObject){
     
     document.getElementById('playAll').addEventListener('click', function(){
         context.resume().then(() => {
+            buildVisualizer('piano', pianoRoll);
             playAll(pianoRoll);
-        })
+        });
     });
     
     document.getElementById('pausePlay').addEventListener('click', function(){
@@ -61,15 +62,17 @@ function bindButtons(pianoRollObject){
     
     document.getElementById('stopPlay').addEventListener('click', function(){
         stopPlay(pianoRoll);
+        
+        if(pianoRoll.visualizerCanvas) removeVisualizer(pianoRoll);
     });
     
     document.getElementById('record').addEventListener('click', function(){
         if(this.style.border === ""){
-            this.style.border = "solid 2px rgb(180,0,0)";
+            this.style.border = "solid 2px rgb(180, 0 ,0)";
         }
         context.resume().then(() => {
             recordPlay(pianoRoll);
-        })
+        });
     });
     
     document.getElementById("changeTempo").addEventListener('change', function(){

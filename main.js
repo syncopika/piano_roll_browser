@@ -36,6 +36,11 @@ pianoRoll.currentInstrument = pianoRoll.instruments[0];
 buildGridHeader('columnHeaderRow', pianoRoll);
 buildGrid('grid', pianoRoll);
 
+// TODO: why does waiting a bit help? shouldn't I not need to?
+// TODO: should just rebuild visualizer every time play is called? cause length of roll can change
+//setTimeout(() => buildVisualizer('piano', pianoRoll), 100);
+//buildVisualizer('grid', pianoRoll);
+
 // load in presets and piano notes (TODO: maybe lazy load only when selected as instrument sound?)
 loadExamplePresets(document.getElementById('loadingMsg')).then(_ => {
     pianoRoll.PianoManager.loadPianoNotes(document.getElementById('loadingMsg'));

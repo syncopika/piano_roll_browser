@@ -31,7 +31,13 @@ function PianoRoll(){
     this.noteIdNum = 0;                  // use this to create a unique number for each added note's id
     
     this.instrumentPresets = {};         // a dictionary to keep track of imported instrument presets
-    this.noiseBuffer;                    // for percussion 
+    this.noiseBuffer;                    // for percussion
+    
+    // canvas + context reference for visualizer
+    this.showVisualizer = true;
+    this.analyserNode = null;
+    this.visualizerCanvas = null;
+    this.visualizerContext = null;
     
     // colors
     this.playMarkerColor = "rgb(50, 205, 50)";
@@ -213,6 +219,10 @@ function PianoRoll(){
                 }
             }
         })(this);
+        
+        const analyser = context.createAnalyser();
+        analyser.connect(context.destination);
+        this.analyserNode = analyser;
         
         this.PercussionManager = new PercussionManager(this);        
         this.PianoManager = new PianoManager(this);

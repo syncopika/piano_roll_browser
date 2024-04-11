@@ -567,6 +567,11 @@ var onendFunc = function(colHeaderId, lastColId, pianoRollObject){
                 });
             }
         }
+        
+        // TODO: visualization stuff
+        if(pianoRollObject.analyserNode){
+            updateVisualizer(pianoRollObject);
+        }
 
         pianoRollObject.lastNoteColumn = currCol;
     }
