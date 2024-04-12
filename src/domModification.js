@@ -568,7 +568,7 @@ var onendFunc = function(colHeaderId, lastColId, pianoRollObject){
             }
         }
         
-        // TODO: visualization stuff
+        // visualization stuff
         if(pianoRollObject.analyserNode){
             updateVisualizer(pianoRollObject);
         }

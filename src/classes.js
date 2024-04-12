@@ -33,11 +33,12 @@ function PianoRoll(){
     this.instrumentPresets = {};         // a dictionary to keep track of imported instrument presets
     this.noiseBuffer;                    // for percussion
     
-    // canvas + context reference for visualizer
-    this.showVisualizer = true;
+    // stuff needed for the visualizer
+    this.showVisualizer = false;
     this.analyserNode = null;
     this.visualizerCanvas = null;
-    this.visualizerContext = null;
+    this.visualizerOffscreenCanvas = null;
+    this.visualizerWebWorker = null;
     
     // colors
     this.playMarkerColor = "rgb(50, 205, 50)";

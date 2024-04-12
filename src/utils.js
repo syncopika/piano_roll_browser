@@ -45,13 +45,14 @@ function bindButtons(pianoRollObject){
     document.getElementById('play').addEventListener('click', function(){
         // resume the context per the Web Audio autoplay policy 
         context.resume().then(() => {
+            if(pianoRoll.showVisualizer) buildVisualizer('grid', pianoRoll);
             play(pianoRoll);
         })
     });
     
     document.getElementById('playAll').addEventListener('click', function(){
         context.resume().then(() => {
-            buildVisualizer('piano', pianoRoll);
+            if(pianoRoll.showVisualizer) buildVisualizer('grid', pianoRoll);
             playAll(pianoRoll);
         });
     });
@@ -63,7 +64,18 @@ function bindButtons(pianoRollObject){
     document.getElementById('stopPlay').addEventListener('click', function(){
         stopPlay(pianoRoll);
         
-        if(pianoRoll.visualizerCanvas) removeVisualizer(pianoRoll);
+        if(pianoRoll.visualizerCanvas){
+            removeVisualizer(pianoRoll);
+        }
+    });
+    
+    document.getElementById('toggleVisualizer').addEventListener('click', function(evt){
+        pianoRoll.showVisualizer = !pianoRoll.showVisualizer;
+        if(pianoRoll.showVisualizer){
+            evt.target.style.border = '1px solid #00ff00';
+        }else{
+            evt.target.style.border = '';
+        }
     });
     
     document.getElementById('record').addEventListener('click', function(){
