@@ -34,8 +34,11 @@ function bindButtons(pianoRollObject){
     });
     
     document.getElementById('clearGrid').addEventListener('click', function(){
-        clearGrid(pianoRollObject.currentInstrument);
-        showOnionSkin(pianoRollObject);
+        const confirmClear = confirm('are you sure you want to clear the grid?');
+        if(confirmClear){
+          clearGrid(pianoRollObject.currentInstrument);
+          showOnionSkin(pianoRollObject);
+        }
     });
     
     document.getElementById('addInstrument').addEventListener('click', function(){
@@ -71,20 +74,19 @@ function bindButtons(pianoRollObject){
     
     document.getElementById('toggleVisualizer').addEventListener('click', function(evt){
         pianoRoll.showVisualizer = !pianoRoll.showVisualizer;
-        if(pianoRoll.showVisualizer){
-            evt.target.style.border = '1px solid #00ff00';
-        }else{
-            evt.target.style.border = '';
-        }
+        document.getElementById('toggleVisualizer').style.backgroundColor = pianoRoll.showVisualizer ? "#d0d0d0" : "";
     });
     
     document.getElementById('record').addEventListener('click', function(){
-        if(this.style.border === ""){
-            this.style.border = "solid 2px rgb(180, 0 ,0)";
+        const confirmRecord = confirm('are you sure you want to record?');
+        if(confirmRecord){
+          if(this.style.border === ""){
+              this.style.border = "solid 2px rgb(180, 0 ,0)";
+          }
+          context.resume().then(() => {
+              recordPlay(pianoRoll);
+          });
         }
-        context.resume().then(() => {
-            recordPlay(pianoRoll);
-        });
     });
     
     document.getElementById("changeTempo").addEventListener('change', function(){

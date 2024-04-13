@@ -568,8 +568,10 @@ var onendFunc = function(colHeaderId, lastColId, pianoRollObject){
             }
         }
         
-        // visualization stuff
-        if(pianoRollObject.analyserNode){
+        // do visualization stuff
+        // TODO: alternatively, we might not need to rely on an oscillator's onended callback
+        // maybe we can try using requestAnimationFrame and just update the visualizer that way?
+        if(pianoRollObject.visualizerCanvas){
             updateVisualizer(pianoRollObject);
         }
 

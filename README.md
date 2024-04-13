@@ -12,6 +12,8 @@ also influenced a bit by PxTone Collage, another great application!
 - each note is customizable    
 - togglable onion skin    
 - recordable    
+- has a visualizer (although may be a bit buggy atm)    
+![visualizer](screenshots/visualizer.gif "visualizer")    
     
 ### instructions:    
 - To change the name of the piece or the composer, double-click on 'title' or 'composer', just above the buttons.     
@@ -98,7 +100,3 @@ copycat_demo - my own composition (check out the original [here](https://opengam
 なかよしセンセーション (Princess Connect! Re:Dive) - Kaoru Okubo    
     
 Route 209 theme (Pokémon Diamond/Pearl) - Hitomi Sato
-
-
-    
-

@@ -2,7 +2,10 @@
 
 // @param gridDivId: a string representing an HTML element id of the grid
 // @param pianoRollObject: an instance of PianoRoll 
-function buildVisualizer(gridDivId, pianoRollObject){  
+function buildVisualizer(gridDivId, pianoRollObject){
+    // remove existing visualizer if there is one (e.g. if pause -> play)
+    removeVisualizer(pianoRollObject);
+  
     const thePiano = document.getElementById(gridDivId);
     
     const dimensions = thePiano.getBoundingClientRect();
