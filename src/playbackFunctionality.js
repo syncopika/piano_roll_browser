@@ -415,7 +415,12 @@ function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, 
                 if(pianoRollObject.recording){
                     panNode.connect(pianoRollObject.audioContextDestMediaStream);
                 }
-                panNode.connect(pianoRollObject.audioContextDestOriginal);
+                
+                if(pianoRollObject.showVisualizer){
+                    panNode.connect(pianoRollObject.analyserNode);
+                }else{
+                    panNode.connect(pianoRollObject.audioContextDestOriginal);
+                }
                 
                 // set pan node value
                 panNode.pan.setValueAtTime(panVal, 0.0);
@@ -609,10 +614,11 @@ function scheduler(pianoRoll, allInstruments){
         
         // onendFunc comes from domModification.js
         highlightOsc.onended = onendFunc(
-            header.id, 
-            columnHeadersToHighlight[columnHeadersToHighlight.length-1].id, 
+            header.id,
+            columnHeadersToHighlight[columnHeadersToHighlight.length-1].id,
             pianoRoll
         );
+        
         // TODO: maybe use a separate timers array just for these highlight oscillators? don't mix with the notes
         pianoRoll.timers.push(highlightOsc);
     });
@@ -844,7 +850,7 @@ function recordPlay(pianoRollObject){
     }
 }
 
-//paused playback
+// paused playback
 // @param pianoRollObject: an instance of PianoRoll
 function pausePlay(pianoRollObject){
     // highlightHeader comes from gridBuilder.js
@@ -862,12 +868,15 @@ function pausePlay(pianoRollObject){
     
     // add a new fresh gain node for each instrument
     for(var j = 0; j < pianoRollObject.instruments.length; j++){
-        // I don't think this actually helps since we might have multiple gains per instrument :<
-        //pianoRollObject.instruments[j].gain.disconnect();
-        
         // create a new gain for each instrument (this really is only needed when clicking notes, not playback)
         var newGain = initGain(pianoRollObject.audioContext);
-        newGain.connect(pianoRollObject.audioContext.destination);
+        
+        if(pianoRollObject.showVisualizer){
+            newGain.connect(pianoRollObject.analyserNode);
+        }else{
+            newGain.connect(pianoRollObject.audioContext.destination);
+        }
+        
         pianoRollObject.instruments[j].gain = newGain;
     }
 
@@ -895,7 +904,13 @@ function stopPlay(pianoRollObject){
         
         // create a new gain for each instrument (this really is only needed when clicking notes, not playback)
         var newGain = initGain(pianoRollObject.audioContext);
-        newGain.connect(pianoRollObject.audioContext.destination);
+        
+        if(pianoRollObject.showVisualizer){
+            newGain.connect(pianoRollObject.analyserNode);
+        }else{
+            newGain.connect(pianoRollObject.audioContext.destination);
+        }
+        
         pianoRollObject.instruments[j].gain = newGain;
     }
 
@@ -932,7 +947,12 @@ function stopPlay(pianoRollObject){
 function createNewInstrument(name, pianoRollObject){
     // make new gain node for the instrument 
     var newGain = initGain(pianoRollObject.audioContext);
-    newGain.connect(pianoRollObject.audioContext.destination);
+    
+    if(pianoRollObject.showVisualizer){
+        newGain.connect(pianoRollObject.analyserNode);
+    }else{
+        newGain.connect(pianoRollObject.audioContext.destination);
+    }
     
     // create new instrument with oscillator
     var newInstrument = new Instrument("new_instrument", newGain, []);

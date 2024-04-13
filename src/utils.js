@@ -34,8 +34,11 @@ function bindButtons(pianoRollObject){
     });
     
     document.getElementById('clearGrid').addEventListener('click', function(){
-        clearGrid(pianoRollObject.currentInstrument);
-        showOnionSkin(pianoRollObject);
+        const confirmClear = confirm('are you sure you want to clear the grid?');
+        if(confirmClear){
+          clearGrid(pianoRollObject.currentInstrument);
+          showOnionSkin(pianoRollObject);
+        }
     });
     
     document.getElementById('addInstrument').addEventListener('click', function(){
@@ -45,14 +48,16 @@ function bindButtons(pianoRollObject){
     document.getElementById('play').addEventListener('click', function(){
         // resume the context per the Web Audio autoplay policy 
         context.resume().then(() => {
+            if(pianoRoll.showVisualizer) buildVisualizer('grid', pianoRoll);
             play(pianoRoll);
         })
     });
     
     document.getElementById('playAll').addEventListener('click', function(){
         context.resume().then(() => {
+            if(pianoRoll.showVisualizer) buildVisualizer('grid', pianoRoll);
             playAll(pianoRoll);
-        })
+        });
     });
     
     document.getElementById('pausePlay').addEventListener('click', function(){
@@ -61,15 +66,27 @@ function bindButtons(pianoRollObject){
     
     document.getElementById('stopPlay').addEventListener('click', function(){
         stopPlay(pianoRoll);
+        
+        if(pianoRoll.visualizerCanvas){
+            removeVisualizer(pianoRoll);
+        }
+    });
+    
+    document.getElementById('toggleVisualizer').addEventListener('click', function(evt){
+        pianoRoll.showVisualizer = !pianoRoll.showVisualizer;
+        document.getElementById('toggleVisualizer').style.backgroundColor = pianoRoll.showVisualizer ? "#d0d0d0" : "";
     });
     
     document.getElementById('record').addEventListener('click', function(){
-        if(this.style.border === ""){
-            this.style.border = "solid 2px rgb(180,0,0)";
+        const confirmRecord = confirm('are you sure you want to record?');
+        if(confirmRecord){
+          if(this.style.border === ""){
+              this.style.border = "solid 2px rgb(180, 0 ,0)";
+          }
+          context.resume().then(() => {
+              recordPlay(pianoRoll);
+          });
         }
-        context.resume().then(() => {
-            recordPlay(pianoRoll);
-        })
     });
     
     document.getElementById("changeTempo").addEventListener('change', function(){
