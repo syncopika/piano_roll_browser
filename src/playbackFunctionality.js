@@ -287,8 +287,8 @@ function addNodesPerInstrument(pianoRollObject, numGainNodePerInst, instrumentGa
     // and take its gain nodes and osc nodes and add them as lists to the above lists. 
     // so in the end we should have a list of lists for gain and osc nodes 
     for(let i = 0; i < numGainNodePerInst[instIndex]; i++){
-      var newGainNodes;
-      var newOscNodes;
+      let newGainNodes;
+      let newOscNodes;
       const currInst = pianoRollObject.instruments[instIndex];
             
       if(pianoRollObject.instrumentPresets[currInst.waveType]){
@@ -335,7 +335,7 @@ function addNodesPerInstrument(pianoRollObject, numGainNodePerInst, instrumentGa
 // @param posTracker: a map of instrument index to another map where each key represents a gain node (a route)
 //                    and each value is the end position of the last note assigned
 function routeNotesToNodes(instruments, instrumentNotePointers, instrumentGainNodes, routes, posTracker){
-  for(var instrumentIndex in instruments){
+  for(const instrumentIndex in instruments){
     const instrument = instruments[instrumentIndex];
         
     if(instrumentGainNodes[instrumentIndex] === undefined){
@@ -392,7 +392,7 @@ function routeNotesToNodes(instruments, instrumentNotePointers, instrumentGainNo
 function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, instrumentOscNodes){
   const allNotesPerInstrument = {};
     
-  for(var instIndex in routes){
+  for(const instIndex in routes){
     allNotesPerInstrument[instIndex] = [];
         
     const instrumentRoutes = routes[instIndex];
@@ -440,7 +440,7 @@ function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, 
                 
         // by default, 70% of the note duration should be played 
         // the rest of the time can be devoted to the spacer 
-        var realDuration;
+        let realDuration;
         if(thisNote.block.style === "staccato"){
           realDuration = (0.50 * thisNote.duration) / 1000;
         }else if(thisNote.block.style === "legato"){
@@ -450,7 +450,7 @@ function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, 
         }
                 
         let startTimeOffset = 0;
-        var thisNotePos;
+        let thisNotePos;
         if(i === 0){
           // the first note on the piano roll might not start at the beginning (i.e. there might be an initial rest)
           // so let's account for that here 
@@ -467,10 +467,10 @@ function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, 
         }else{
           // find out how much space there is between curr note and prev note to figure out when curr note should start
           const prevNotePos = getNotePosition(document.getElementById(notes[i-1].block.id));
-          var thisNotePos = getNotePosition(document.getElementById(thisNote.block.id));
-          const timeDiff = getCorrectLength(thisNotePos - prevNotePos, pianoRollObject) / 1000;
+          const currNotePos = getNotePosition(document.getElementById(thisNote.block.id));
+          const timeDiff = getCorrectLength(currNotePos - prevNotePos, pianoRollObject) / 1000;
           startTimeOffset = timeOffsetAcc + timeDiff;
-          thisNotePos = thisNotePos;
+          thisNotePos = currNotePos;
         }
 
         timeOffsetAcc = startTimeOffset;
@@ -496,7 +496,7 @@ function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, 
     // should start at the same time, decide on an offset and fix the values as needed.
     // use the positions of each note to figure out which start together
     // TODO: correct time scheduling precision errors? or look into gradual scheduling, if possible?
-    var positionMap = {}; // group notes by positions
+    const positionMap = {}; // group notes by positions
     const instrumentNotes = allNotesPerInstrument[instIndex];
     instrumentNotes.forEach((note) => {
       if(positionMap[note.position]){
@@ -509,7 +509,7 @@ function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, 
         
     // now only adjust the offset for notes in the same chord
     for(const position in positionMap){
-      var chord = positionMap[position];
+      const chord = positionMap[position];
       if(chord.length > 1){
         // assign everyone the same startTimeOffset value
         chord.forEach((note) => {
@@ -537,7 +537,7 @@ function scheduler(pianoRoll, allInstruments){
     
   if(!allInstruments && !pianoRoll.currentInstrument.isMute){
     // just the current instrument
-    for(var j = 0; j < pianoRoll.instruments.length; j++){
+    for(let j = 0; j < pianoRoll.instruments.length; j++){
       if(pianoRoll.instruments[j] === pianoRoll.currentInstrument){
         instrumentsToPlay[j] = pianoRoll.instruments[j];
         instrumentNotePointers[j] = 0;
@@ -546,7 +546,7 @@ function scheduler(pianoRoll, allInstruments){
     }
   }else if(allInstruments){
     // only non-muted instruments
-    for(var i = 0; i < pianoRoll.instruments.length; i++){
+    for(let i = 0; i < pianoRoll.instruments.length; i++){
       if(!pianoRoll.instruments[i].isMute){
         instrumentsToPlay[i] = pianoRoll.instruments[i];
         instrumentNotePointers[i] = 0;
@@ -579,7 +579,7 @@ function scheduler(pianoRoll, allInstruments){
     for(const instIdx in instrumentsToPlay){
       const currInst = instrumentsToPlay[instIdx];
       // have each instrument start with the note at index given by startMarker
-      for(var j = 0; j < currInst.notes.length; j++){
+      for(let j = 0; j < currInst.notes.length; j++){
         try{
           // the elements of the notes array are arrays of Note objects, hence the [0]
           const columnCell = document.getElementById(currInst.notes[j][0].block.id).parentNode;
@@ -650,7 +650,7 @@ function scheduler(pianoRoll, allInstruments){
     });
   }
     
-  for(var i in instrumentsToPlay){
+  for(const i in instrumentsToPlay){
     const currInstNotes = allNotesPerInstrument[i];
     if(currInstNotes === undefined){
       // no notes for this instrument

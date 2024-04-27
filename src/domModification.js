@@ -392,7 +392,7 @@ function deleteMeasure(pianoRollObject){
   // go through each instrument's activenotes and delete
   for(const instrument of pianoRollObject.instruments){
     const instNotes = instrument.activeNotes;
-    for(var note in instNotes){
+    for(const note in instNotes){
       if(parseInt(instNotes[note].parentNode.id.split("_")[1]) >= lastMeasureStartColNum){
         //console.log("need to delete column note: " + parseInt(instNotes[note].parentNode.id.split("_")[1]));
         const noteElement = instNotes[note];
@@ -404,18 +404,18 @@ function deleteMeasure(pianoRollObject){
     
   // calculate width of measure to remove
   let measureWidth = 0;
-  for(var i = lastMeasureStartColNum; i < lastMeasureStartColNum + pianoRollObject.subdivision; i++){
-    var colHeader = document.getElementById("col_" + i);
+  for(let i = lastMeasureStartColNum; i < lastMeasureStartColNum + pianoRollObject.subdivision; i++){
+    const colHeader = document.getElementById("col_" + i);
     measureWidth += parseInt(colHeader.style.width);
   }
     
   // remove the columns from the ui
-  for(var i = lastMeasureStartColNum; i < lastMeasureStartColNum + pianoRollObject.subdivision; i++){
-    var colHeader = document.getElementById("col_" + i);
+  for(let i = lastMeasureStartColNum; i < lastMeasureStartColNum + pianoRollObject.subdivision; i++){
+    const colHeader = document.getElementById("col_" + i);
     colHeader.parentNode.removeChild(colHeader);
         
-    for(var note in pianoRollObject.noteFrequencies){
-      var noteName = note.replace('#', 's');
+    for(const note in pianoRollObject.noteFrequencies){
+      const noteName = note.replace('#', 's');
       const col = document.getElementById(noteName + "col_" + i);
       if(col){
         col.parentNode.removeChild(col);
@@ -424,8 +424,8 @@ function deleteMeasure(pianoRollObject){
   }
     
   // adjust width of each row
-  for(var note in pianoRollObject.noteFrequencies){
-    var noteName = note.replace('#', 's');
+  for(const note in pianoRollObject.noteFrequencies){
+    const noteName = note.replace('#', 's');
     const row = document.getElementById(noteName);
     if(row){
       row.style.width = (parseInt(row.style.width) - measureWidth) + "px";
