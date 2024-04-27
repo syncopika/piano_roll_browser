@@ -39,12 +39,12 @@ app.set('view engine', 'ejs');
 // make a sessionMiddleware variable to link up mongoStore in order to log all the current sessions
 // that way we can access all the current users and list them in the chatroom 
 const sessionMiddleware = session({
-    secret: 'aweawesomeawesomeawesomesome',
-    store: mongoStore.create({
-        mongoUrl: configDB.url
-    }),
-    resave: false,
-    saveUninitialized: false,
+  secret: 'aweawesomeawesomeawesomesome',
+  store: mongoStore.create({
+    mongoUrl: configDB.url
+  }),
+  resave: false,
+  saveUninitialized: false,
 });
 
 app.use(sessionMiddleware);            // use the sessionMiddlware variable for cookies             
@@ -64,5 +64,5 @@ app.use(express.static(parentDir));
 
 
 http.listen(port, function(){
-    console.log('listening on *:' + port);
+  console.log('listening on *:' + port);
 });
