@@ -33,7 +33,6 @@
     "eslint": "^9.1.1",
     "express": "^4.17.1",
     "express-session": "^1.17.2",
-    "jquery-contextmenu": "^2.9.0",
     "jsdom": "^14.0.0",
     "mocha": "^6.2.0",
     "mongodb": "^4.1.2",
