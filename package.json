@@ -5,7 +5,9 @@
   "main": "",
   "scripts": {
     "test": "node ./node_modules/nyc/bin/nyc ./node_modules/mocha/bin/mocha --require tests/jsdom.js tests/*.js",
-    "cypress": "./node_modules/.bin/cypress open"
+    "cypress": "./node_modules/.bin/cypress open",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix"
   },
   "repository": {
     "type": "git",
@@ -17,25 +19,26 @@
     "url": "https://github.com/syncopika/piano_roll_browser/issues"
   },
   "homepage": "https://github.com/syncopika/piano_roll_browser#readme",
-  "dependencies": {
-    "chai": "^4.2.0",
-    "express": "^4.17.1",
-    "jquery-contextmenu": "^2.9.0",
-    "jsdom": "^14.0.0",
-    "mocha": "^6.2.0",
-    "nyc": "^14.1.1"
-  },
   "devDependencies": {
+    "@html-eslint/eslint-plugin": "^0.24.1",
+    "@html-eslint/parser": "^0.24.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
+    "chai": "^4.2.0",
     "connect-flash": "^0.1.1",
     "connect-mongo": "^4.6.0",
     "cookie-parser": "^1.4.5",
     "cypress": "^9.1.0",
     "ejs": "^3.1.6",
+    "eslint": "^9.1.1",
+    "express": "^4.17.1",
     "express-session": "^1.17.2",
+    "jquery-contextmenu": "^2.9.0",
+    "jsdom": "^14.0.0",
+    "mocha": "^6.2.0",
     "mongodb": "^4.1.2",
     "mongoose": "^6.0.8",
+    "nyc": "^14.1.1",
     "passport": "^0.5.0",
     "passport-local": "^1.0.0",
     "pre-commit": "^1.2.2"

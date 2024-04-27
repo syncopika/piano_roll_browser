@@ -1,20 +1,20 @@
 // user model FOR PIANO ROLL APP 
 
 // required tools 
-var mongoose =     require('mongoose');
-var bcrypt      =     require('bcryptjs');
+const mongoose =     require('mongoose');
+const bcrypt      =     require('bcryptjs');
 
 // define schema for user model.
 // only handling local authentication
-var userSchema = mongoose.Schema({
-    local: {
-        username: String,
-        password: String,
-        about: String,
-        location: String,
-        joinDate: String,
-        scores: Array // an array of JSON files corresponding to scores 
-    }
+const userSchema = mongoose.Schema({
+  local: {
+    username: String,
+    password: String,
+    about: String,
+    location: String,
+    joinDate: String,
+    scores: Array // an array of JSON files corresponding to scores 
+  }
 });
 
 
@@ -22,13 +22,13 @@ var userSchema = mongoose.Schema({
 
 // generate a hash with a given password.
 userSchema.methods.generateHash = function(password){
-    return bcrypt.hashSync(password, bcrypt.genSaltSync(8));
-}
+  return bcrypt.hashSync(password, bcrypt.genSaltSync(8));
+};
 
 // check if a password is valid (i.e. don't allow certain characters)
 userSchema.methods.validPassword = function(password){
-    return bcrypt.compareSync(password, this.local.password);
-}
+  return bcrypt.compareSync(password, this.local.password);
+};
 
 // create the user model and expose it to the application
 // IMPORTANT!!!
