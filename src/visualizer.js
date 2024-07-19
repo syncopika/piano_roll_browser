@@ -34,11 +34,11 @@ function buildVisualizer(gridDivId, pianoRollObject){
 
 function updateVisualizer(pianoRollObject){
   if(pianoRollObject.visualizerCanvas){
+    console.log('updating visualizer');
     // use a web worker offscreen canvas to
-    // do this drawing stuff? pass it the analyser node data.
+    // do this drawing stuff. pass it the analyser node data.
     // https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas
     // https://web.dev/articles/offscreen-canvas
-    pianoRollObject.analyserNode.fftSize = 2048;
     const bufferLen = pianoRollObject.analyserNode.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLen);
     pianoRollObject.analyserNode.getByteTimeDomainData(dataArray);
@@ -48,6 +48,9 @@ function updateVisualizer(pianoRollObject){
       [{data: dataArray}, dataArray.buffer]
     );
   }
+  
+  pianoRollObject.visualizerRequestAnimationFrameId = 
+    window.requestAnimationFrame((timestamp) => updateVisualizer(pianoRollObject)); 
 }
 
 function removeVisualizer(pianoRollObject){
