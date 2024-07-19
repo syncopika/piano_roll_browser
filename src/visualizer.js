@@ -34,7 +34,6 @@ function buildVisualizer(gridDivId, pianoRollObject){
 
 function updateVisualizer(pianoRollObject){
   if(pianoRollObject.visualizerCanvas){
-    console.log('updating visualizer');
     // use a web worker offscreen canvas to
     // do this drawing stuff. pass it the analyser node data.
     // https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas
