@@ -39,6 +39,7 @@ function PianoRoll(){
   this.visualizerCanvas = null;
   this.visualizerOffscreenCanvas = null;
   this.visualizerWebWorker = null;
+  this.visualizerRequestAnimationFrameId = null;
     
   // colors
   this.playMarkerColor = "rgb(50, 205, 50)";
@@ -223,6 +224,7 @@ function PianoRoll(){
         
     const analyser = context.createAnalyser();
     analyser.connect(context.destination);
+    analyser.fftSize = 2048;
     this.analyserNode = analyser;
         
     this.PercussionManager = new PercussionManager(this);        

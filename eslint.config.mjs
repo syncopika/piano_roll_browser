@@ -1,10 +1,9 @@
-// eslint.config.js
+// eslint.config.mjs
 // https://github.com/eslint/eslint/issues/17400
 
 import js from "@eslint/js";
 import html from "@html-eslint/eslint-plugin";
 import parser from "@html-eslint/parser";
-import globals from "globals";
 
 export default [
   {

@@ -75,6 +75,12 @@ function bindButtons(pianoRollObject){
   document.getElementById('toggleVisualizer').addEventListener('click', function(evt){
     pianoRoll.showVisualizer = !pianoRoll.showVisualizer;
     document.getElementById('toggleVisualizer').style.backgroundColor = pianoRoll.showVisualizer ? "#d0d0d0" : "";
+    if(pianoRoll.showVisualizer){
+      pianoRoll.visualizerRequestAnimationFrameId = window.requestAnimationFrame((timestamp) => updateVisualizer(pianoRoll));
+    }else{
+      cancelAnimationFrame(pianoRoll.visualizerRequestAnimationFrameId);
+      pianoRoll.visualizerRequestAnimationFrameId = null;
+    }
   });
     
   document.getElementById('record').addEventListener('click', function(){
