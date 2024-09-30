@@ -374,13 +374,13 @@ function addNewMeasure(pianoRollObject, container){
   // start at the index of C8
   for(let j = startIndex; j < noteRowsChildren.length; j++){
     const rowParent = noteRowsChildren[j];
+    const pitch = rowParent.id;
     for(let k = 0; k < pianoRollObject.subdivision; k++){
-      const newColumnCell = createColumnCell(rowParent.id, lastColNum+k-1, pianoRollObject);
+      const newColumnCell = createColumnCell(pitch, lastColNum+k-1, pianoRollObject);
       rowParent.appendChild(newColumnCell);
     }
-    // adjust width of row
-    rowParent.style.width = rowParent.scrollWidth + "px";
   }
+  
   pianoRollObject.numberOfMeasures++;
 }
 
@@ -609,7 +609,7 @@ function redrawCellBorders(pianoRollObject, headerId){
   for(let i = 1; i < headers.length; i++){
     const columnHeader = headers[i];
     const colNum = parseInt(headers[i].id.match(/\d+/g)[0]);
-    columnHeader.innerHTML = "";
+    columnHeader.textContent = "";
     columnHeader.className = "thinBorder";
         
     const subdiv = (i % subdivision) === 0 ? subdivision : (i % subdivision);
@@ -617,7 +617,7 @@ function redrawCellBorders(pianoRollObject, headerId){
     // mark the measure number 
     if(subdiv === 1){
       const measureNumber = document.createElement("h2");
-      measureNumber.innerHTML = measureCounter++;
+      measureNumber.textContent = measureCounter++;
       measureNumber.style.margin = '0 0 0 0';
       measureNumber.style.color = pianoRollObject.measureNumberColor;
             
@@ -695,9 +695,9 @@ function addNewInstrument(name, createBool, pianoRollObject){
   newInstrument.style.backgroundColor = "transparent";
     
   if(name === undefined){
-    newInstrument.innerHTML = "new_instrument";
+    newInstrument.textContent = "new_instrument";
   }else{
-    newInstrument.innerHTML = name;
+    newInstrument.textContent = name;
   }
   newInstrument.addEventListener('click', function(event){
     // pass the event target's id to chooseInstrument()
