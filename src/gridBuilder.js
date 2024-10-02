@@ -105,13 +105,14 @@ function buildGrid(gridDivId, pianoRollObject){
     //first create new element for new pitch
     const newRow = document.createElement('div');
     newRow.id = replaceSharp(note);
+    newRow.style.display = "table-row";
         
     // this creates the notes on the left of the piano roll. it is static.
     const newRowText = document.createElement('div');
     newRowText.innerHTML = note.substring(0, note.length - 1) + "<sub>" + note[note.length-1] + "</sub>";
-    newRowText.style.fontSize = '11px';
+    newRowText.style.fontSize = "11px";
     newRowText.style.border = "1px solid #000";
-    newRowText.style.display = 'inline-block';
+    newRowText.style.display = "inline-block";
     newRowText.style.width = "50px";
     newRowText.style.verticalAlign = "middle";
         
@@ -143,7 +144,6 @@ function createColumnCell(pitch, colNum, pianoRollObject){
   column.style.display = 'inline-block';
   column.style.width = "40px";
   column.style.height = "15px";
-  column.style.zIndex = "5";
   column.style.verticalAlign = "middle";
   column.style.backgroundColor = "transparent";
   column.setAttribute("data-type", "default"); 
