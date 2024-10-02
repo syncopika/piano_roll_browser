@@ -5,6 +5,7 @@ notes
 - remove a note
 - change volume
 - change style
+- make sure yellow row highlight on mouseover spans the whole container, even when scrolled
 
 instruments
 - add an instrument
