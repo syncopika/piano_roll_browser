@@ -52,6 +52,30 @@ function updateVisualizer(pianoRollObject){
     window.requestAnimationFrame((timestamp) => updateVisualizer(pianoRollObject)); 
 }
 
+// for passing note data for note ripples visualization
+// we will pass data for ALL notes of a piece to the worker (is this a bad idea?? ¯\_(ツ)_/¯)
+// I think it's easier to work with requestAnimationFrame this way
+function updateRipplesVisualizer(pianoRollObject, noteData, stop=false){
+  // noteData should be an array of objects, with each object representing a note of the piece
+  // each object in noteData should look like:
+  // {
+  //  start: noteStart, // should be unix timestamp
+  //  end: noteEnd, // unix timestamp
+  //  freq: number,
+  //  color, // string, e.g. rgb(x,y,z)
+  // }
+  //
+  if(pianoRollObject.visualizerCanvas){
+    pianoRollObject.visualizerWebWorker.postMessage(
+      [{
+        visualizationType: 'ripples',
+        stop: false,
+        data: noteData,
+      }]
+    );
+  }
+}
+
 function removeVisualizer(pianoRollObject){
   if(pianoRollObject.visualizerCanvas){
     pianoRollObject.visualizerCanvas.parentNode.removeChild(pianoRollObject.visualizerCanvas);

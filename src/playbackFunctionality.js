@@ -649,6 +649,36 @@ function scheduler(pianoRoll, allInstruments){
       });
     });
   }
+  
+  // for ripples visualizer
+  if(pianoRoll.showVisualizer && pianoRoll.visualizerCanvas && pianoRoll.selectedVisualizer === 'ripples'){
+    //console.log(pianoRollObject.currentInstrument.notes);
+    //updateRipplesVisualizer(pianoRollObject, pianoRollObject.currentInstrument.notes);
+    const visualizerNotes = [];
+    const now = Date.now();
+    for(const i in instrumentsToPlay){
+      const currInstNotes = allNotesPerInstrument[i];
+      if(currInstNotes === undefined){
+        // no notes for this instrument
+        continue;
+      }
+      currInstNotes.forEach((note) => {
+        const duration = note.duration;
+        const volume = note.volume;
+        const startTimeOffset = note.startTimeOffset;
+        const startTime = thisTime + startTimeOffset;
+        const endTime = startTime + duration;
+        const otherParams = note.note;
+        visualizerNotes.push({
+          start: now + (startTime * 1000),
+          end: now + (endTime * 1000),
+          volume,
+          freq: otherParams.freq,
+        });
+      });
+    }
+    updateRipplesVisualizer(pianoRoll, visualizerNotes);
+  }
     
   for(const i in instrumentsToPlay){
     const currInstNotes = allNotesPerInstrument[i];

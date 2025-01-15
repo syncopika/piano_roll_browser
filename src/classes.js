@@ -35,6 +35,7 @@ function PianoRoll(){
     
   // stuff needed for the visualizer
   this.showVisualizer = false;
+  this.selectedVizualizer = null;
   this.analyserNode = null;
   this.visualizerCanvas = null;
   this.visualizerOffscreenCanvas = null;

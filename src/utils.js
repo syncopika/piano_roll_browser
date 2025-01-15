@@ -76,10 +76,16 @@ function bindButtons(pianoRollObject){
     pianoRoll.showVisualizer = !pianoRoll.showVisualizer;
     document.getElementById('toggleVisualizer').style.backgroundColor = pianoRoll.showVisualizer ? "#d0d0d0" : "";
     if(pianoRoll.showVisualizer){
-      pianoRoll.visualizerRequestAnimationFrameId = window.requestAnimationFrame((timestamp) => updateVisualizer(pianoRoll));
+      //pianoRoll.visualizerRequestAnimationFrameId = window.requestAnimationFrame((timestamp) => updateVisualizer(pianoRoll)); // regular wave visualizer
+      pianoRoll.selectedVisualizer = 'ripples';
     }else{
       cancelAnimationFrame(pianoRoll.visualizerRequestAnimationFrameId);
       pianoRoll.visualizerRequestAnimationFrameId = null;
+      
+      if(pianoRoll.selectedVisualizer === 'ripples'){
+        // stop the ripple visualizer
+        updateRipplesVisualizer(pianoRoll, [], true);
+      }
     }
   });
     
