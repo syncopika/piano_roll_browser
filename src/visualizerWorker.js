@@ -7,7 +7,6 @@ let canvas = null;
 let ripples = [];
 
 let visualizerIsRunning = false;
-let stopVisualizer = false;
 
 self.onmessage = function(msg){
   //console.log(msg);
@@ -18,9 +17,11 @@ self.onmessage = function(msg){
     if(msg.data[0].visualizationType === 'ripples'){
       const stop = msg.data[0].stop;
       if(!stop && !visualizerIsRunning){
-        const data = msg.data[0].data;
-        drawRipplesVisualization(data, canvas);
         visualizerIsRunning = true;
+        const noteData = msg.data[0].data;
+        drawRipplesVisualization(noteData, canvas);
+      }else if(stop && visualizerIsRunning){
+        visualizerIsRunning = false;
       }
     }else{
       const data = msg.data[0].data;
@@ -70,7 +71,7 @@ class Ripple {
   constructor(type, canvasCtx, x, y, start){
     this.type = type;
     this.radius = 90 * Math.random() + 10;
-    this.speed = 2 * Math.random() + 0.2;
+    this.speed = Math.random() + 0.2;
     this.color = this.colors[Math.floor(Math.random() * this.colors.length)];
     this.lineCap = this.lineCaps[Math.floor(Math.random() * this.lineCaps.length)];
     this.ctx = canvasCtx;
@@ -106,6 +107,7 @@ class Ripple {
     if(this.lights && now >= this.startTime){
       this.lights.forEach(l => {
         if(!l.done){
+          // TODO: just draw a circle instead of this stuff. it should get incrementally larger until a specific radius probably?
           if(this.type === 'circle'){
             if(this.distance(l.currX, l.currY) < this.radius){
               const nextX = l.currX + (l.forward.x * this.speed);
@@ -137,8 +139,7 @@ class Ripple {
 }
 
 function renderRipples(){
-  if(stopVisualizer){
-    visualizerIsRunning = false;
+  if(!visualizerIsRunning){
     ripples = [];
     return;
   }
@@ -153,6 +154,7 @@ function renderRipples(){
     
     if(ripples.length === 0){
       visualizerIsRunning = false;
+      return;
     }
     
     if(ripples.length > 0){
@@ -166,13 +168,11 @@ function drawRipplesVisualization(data, canvas){
   const height = canvas.height;
   const ctx = canvas.getContext('2d');
   
-  // use requestAnimationFrame to draw the notes as needed as ripples
-  //console.log('hello from the web worker!');
-  //console.log(data);
-  const x = Math.random() * width;
-  const y = Math.random() * height;
-  
-  ripples = data.map(d => new Ripple('circle', ctx, x, y, d.start));
+  ripples = data.map(d => {
+    const x = Math.random() * width;
+    const y = Math.random() * height;
+    return new Ripple('circle', ctx, x, y, d.start);
+  });
   
   renderRipples();
 }

@@ -20,7 +20,7 @@ function bindButtons(pianoRollObject){
         deleteMeasure(pianoRollObject);
                 
         // update ui with correct num measures
-        const measureCounterElement = document.getElementById("measures");
+        const measureCounterElement = document.getElementById('measures');
         measureCounterElement.textContent = "measure count: " + pianoRollObject.numberOfMeasures;
       }
     }
@@ -29,7 +29,7 @@ function bindButtons(pianoRollObject){
   document.getElementById('addMeasure').addEventListener('click', function(){
     addNewMeasure(pianoRollObject, document.getElementById('columnHeaderRow'));
         
-    const measureCounterElement = document.getElementById("measures");
+    const measureCounterElement = document.getElementById('measures');
     measureCounterElement.textContent = "measure count: " + pianoRollObject.numberOfMeasures;
   });
     
@@ -66,6 +66,11 @@ function bindButtons(pianoRollObject){
     
   document.getElementById('stopPlay').addEventListener('click', function(){
     stopPlay(pianoRoll);
+    
+    if(pianoRoll.visualizerCanvas && pianoRoll.selectedVisualizer === 'ripples'){
+      // stop the visualizer
+      updateRipplesVisualizer(pianoRoll, [], true);
+    }
         
     if(pianoRoll.visualizerCanvas){
       removeVisualizer(pianoRoll);
@@ -76,6 +81,7 @@ function bindButtons(pianoRollObject){
     pianoRoll.showVisualizer = !pianoRoll.showVisualizer;
     document.getElementById('toggleVisualizer').style.backgroundColor = pianoRoll.showVisualizer ? "#d0d0d0" : "";
     if(pianoRoll.showVisualizer){
+      // TODO: allow user to choose between regular wave visualizer and ripples visualizer
       //pianoRoll.visualizerRequestAnimationFrameId = window.requestAnimationFrame((timestamp) => updateVisualizer(pianoRoll)); // regular wave visualizer
       pianoRoll.selectedVisualizer = 'ripples';
     }else{
@@ -101,7 +107,7 @@ function bindButtons(pianoRollObject){
     }
   });
     
-  document.getElementById("changeTempo").addEventListener('change', function(){
+  document.getElementById('changeTempo').addEventListener('change', function(){
     changeTempo(pianoRoll, this);
   });
     

@@ -24,6 +24,7 @@ function buildVisualizer(gridDivId, pianoRollObject){
   thePiano.appendChild(canvas);
     
   pianoRollObject.visualizerCanvas = canvas;
+  
   pianoRollObject.visualizerWebWorker = new Worker('./src/visualizerWorker.js');
     
   const offscreen = canvas.transferControlToOffscreen();
@@ -69,7 +70,7 @@ function updateRipplesVisualizer(pianoRollObject, noteData, stop=false){
     pianoRollObject.visualizerWebWorker.postMessage(
       [{
         visualizationType: 'ripples',
-        stop: false,
+        stop,
         data: noteData,
       }]
     );
@@ -81,6 +82,7 @@ function removeVisualizer(pianoRollObject){
     pianoRollObject.visualizerCanvas.parentNode.removeChild(pianoRollObject.visualizerCanvas);
     pianoRollObject.visualizerCanvas = null;
     pianoRollObject.visualizerOffscreenCanvas = null;
+    pianoRollObject.visualizerWebWorker.terminate(); // important!
     pianoRollObject.visualizerWebWorker = null;
   }
 }

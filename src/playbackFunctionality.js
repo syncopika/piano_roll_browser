@@ -651,9 +651,7 @@ function scheduler(pianoRoll, allInstruments){
   }
   
   // for ripples visualizer
-  if(pianoRoll.showVisualizer && pianoRoll.visualizerCanvas && pianoRoll.selectedVisualizer === 'ripples'){
-    //console.log(pianoRollObject.currentInstrument.notes);
-    //updateRipplesVisualizer(pianoRollObject, pianoRollObject.currentInstrument.notes);
+  if(pianoRoll.visualizerCanvas && pianoRoll.selectedVisualizer === 'ripples'){
     const visualizerNotes = [];
     const now = Date.now();
     for(const i in instrumentsToPlay){
@@ -669,9 +667,10 @@ function scheduler(pianoRoll, allInstruments){
         const startTime = thisTime + startTimeOffset;
         const endTime = startTime + duration;
         const otherParams = note.note;
+        // don't rely on thisTime because that's audioContext.currentTime, which only ever increases
         visualizerNotes.push({
-          start: now + (startTime * 1000),
-          end: now + (endTime * 1000),
+          start: now + (startTimeOffset * 1000),
+          end: now + ((startTimeOffset + duration) * 1000),
           volume,
           freq: otherParams.freq,
         });
