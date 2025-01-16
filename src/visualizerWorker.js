@@ -68,9 +68,8 @@ class Ripple {
   colors = ['red', 'black', 'yellow', 'green', 'blue', 'pink', 'purple'];
   lineCaps = ['butt', 'round', 'square'];
   
-  constructor(type, canvasCtx, x, y, start){
+  constructor(canvasCtx, x, y, start){
     this.type = type;
-    this.radius = 90 * Math.random() + 10;
     this.speed = Math.random() + 0.2;
     this.color = this.colors[Math.floor(Math.random() * this.colors.length)];
     this.lineCap = this.lineCaps[Math.floor(Math.random() * this.lineCaps.length)];
@@ -80,20 +79,13 @@ class Ripple {
     this.startTime = start;
     this.isFinished = false;
     
-    let deg = 0;
-    const slices = 8;
-    const sliceDeg = 360 / slices;
-    for(let i = 0; i < slices; i++){
-      this.lights.push({
-        forward: {x: Math.cos(deg * Math.PI / 180), y: Math.sin(deg * Math.PI / 180)},
-        currX: x,
-        currY: y,
-        currWidth: 18 * Math.random() + 1, // TODO: set random line width per firework instead of per light?
-        done: false,
-      });
-      
-      deg += sliceDeg;
-    }
+    this.lights.push({
+      currX: x,
+      currY: y,
+      currRadius: Math.random() * 5,
+      maxRadius: 30 * Math.random() + (5 * Math.random()),
+      done: false,
+    });
   }
     
   distance(currX, currY){
@@ -107,31 +99,21 @@ class Ripple {
     if(this.lights && now >= this.startTime){
       this.lights.forEach(l => {
         if(!l.done){
-          // TODO: just draw a circle instead of this stuff. it should get incrementally larger until a specific radius probably?
-          if(this.type === 'circle'){
-            if(this.distance(l.currX, l.currY) < this.radius){
-              const nextX = l.currX + (l.forward.x * this.speed);
-              const nextY = l.currY + (l.forward.y * this.speed);
-              this.ctx.strokeStyle = this.color;
-              this.ctx.lineCap = this.lineCap;
-              this.ctx.lineWidth = l.currWidth;
-              this.ctx.beginPath();
-              this.ctx.moveTo(nextX, nextY);
-              this.ctx.lineTo(nextX, nextY + 1); // this.ctx.lineTo(nextX + 1, nextY + 1); for slanted lights
-              this.ctx.closePath();
-              this.ctx.stroke();
-              l.currX = nextX;
-              l.currY = nextY;
-              l.currWidth -= 1;
-            }else{
-              l.done = true;
-            }
+          if(l.currRadius < l.maxRadius){
+            this.ctx.strokeStyle = this.color;
+            this.ctx.lineCap = this.lineCap;
+            this.ctx.lineWidth = l.currWidth + this.speed;
+            this.ctx.beginPath();
+            this.ctx.arc(l.currX, l.currY, l.currRadius, 0, 2 * Math.PI);
+            this.ctx.stroke();
+            l.currRadius += this.speed;
+          }else{
+            l.done = true;
           }
         }
       });
       this.lights = this.lights.filter(l => !l.done);
       if(this.lights.length === 0){
-        //console.log('done rendering firework');
         this.isFinished = true;
       }
     }
@@ -171,7 +153,7 @@ function drawRipplesVisualization(data, canvas){
   ripples = data.map(d => {
     const x = Math.random() * width;
     const y = Math.random() * height;
-    return new Ripple('circle', ctx, x, y, d.start);
+    return new Ripple(ctx, x, y, d.start);
   });
   
   renderRipples();
