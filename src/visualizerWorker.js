@@ -69,7 +69,6 @@ class Ripple {
   lineCaps = ['butt', 'round', 'square'];
   
   constructor(canvasCtx, x, y, start){
-    this.type = type;
     this.speed = Math.random() + 0.2;
     this.color = this.colors[Math.floor(Math.random() * this.colors.length)];
     this.lineCap = this.lineCaps[Math.floor(Math.random() * this.lineCaps.length)];
@@ -153,7 +152,7 @@ function drawRipplesVisualization(data, canvas){
   ripples = data.map(d => {
     const x = Math.random() * width;
     const y = Math.random() * height;
-    return new Ripple(ctx, x, y, d.start);
+    return new Ripple(ctx, d.x, d.y, d.start);
   });
   
   renderRipples();
