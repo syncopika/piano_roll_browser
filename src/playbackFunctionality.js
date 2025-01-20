@@ -416,7 +416,7 @@ function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, 
           panNode.connect(pianoRollObject.audioContextDestMediaStream);
         }
                 
-        if(pianoRollObject.showVisualizer){
+        if(pianoRollObject.selectedVisualizer === 'wave'){
           panNode.connect(pianoRollObject.analyserNode);
         }else{
           panNode.connect(pianoRollObject.audioContextDestOriginal);
@@ -649,6 +649,38 @@ function scheduler(pianoRoll, allInstruments){
       });
     });
   }
+  
+  // for ripples visualizer
+  if(pianoRoll.visualizerCanvas && pianoRoll.selectedVisualizer === 'ripples'){
+    const visualizerNotes = [];
+    const now = Date.now();
+    for(const i in instrumentsToPlay){
+      const currInstNotes = allNotesPerInstrument[i];
+      if(currInstNotes === undefined){
+        // no notes for this instrument
+        continue;
+      }
+      currInstNotes.forEach((note) => {
+        const duration = note.duration;
+        const volume = note.volume;
+        const startTimeOffset = note.startTimeOffset;
+        const startTime = thisTime + startTimeOffset;
+        const endTime = startTime + duration;
+        const otherParams = note.note;
+        const boundingRect = document.getElementById(otherParams.block.id).getBoundingClientRect();
+        // don't rely on thisTime because that's audioContext.currentTime, which only ever increases
+        visualizerNotes.push({
+          start: now + (startTimeOffset * 1000),
+          end: now + ((startTimeOffset + duration) * 1000),
+          volume,
+          freq: otherParams.freq,
+          x: boundingRect.x,
+          y: boundingRect.y,
+        });
+      });
+    }
+    updateRipplesVisualizer(pianoRoll, visualizerNotes);
+  }
     
   for(const i in instrumentsToPlay){
     const currInstNotes = allNotesPerInstrument[i];
@@ -871,7 +903,7 @@ function pausePlay(pianoRollObject){
     // create a new gain for each instrument (this really is only needed when clicking notes, not playback)
     const newGain = initGain(pianoRollObject.audioContext);
         
-    if(pianoRollObject.showVisualizer){
+    if(pianoRollObject.selectedVisualizer === 'wave'){
       newGain.connect(pianoRollObject.analyserNode);
     }else{
       newGain.connect(pianoRollObject.audioContext.destination);
@@ -905,7 +937,7 @@ function stopPlay(pianoRollObject){
     // create a new gain for each instrument (this really is only needed when clicking notes, not playback)
     const newGain = initGain(pianoRollObject.audioContext);
         
-    if(pianoRollObject.showVisualizer){
+    if(pianoRollObject.selectedVisualizer === 'wave'){
       newGain.connect(pianoRollObject.analyserNode);
     }else{
       newGain.connect(pianoRollObject.audioContext.destination);
@@ -948,7 +980,7 @@ function createNewInstrument(name, pianoRollObject){
   // make new gain node for the instrument 
   const newGain = initGain(pianoRollObject.audioContext);
     
-  if(pianoRollObject.showVisualizer){
+  if(pianoRollObject.selectedVisualizer === 'wave'){
     newGain.connect(pianoRollObject.analyserNode);
   }else{
     newGain.connect(pianoRollObject.audioContext.destination);
