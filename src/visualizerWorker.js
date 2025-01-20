@@ -129,7 +129,7 @@ function renderRipples(){
     //console.log("rendering ripples");
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
+    
     ripples.forEach(f => f.render());
     ripples = ripples.filter(f => !f.isFinished);
     

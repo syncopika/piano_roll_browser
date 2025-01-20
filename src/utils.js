@@ -48,14 +48,24 @@ function bindButtons(pianoRollObject){
   document.getElementById('play').addEventListener('click', function(){
     // resume the context per the Web Audio autoplay policy 
     context.resume().then(() => {
-      if(pianoRoll.showVisualizer) buildVisualizer('grid', pianoRoll);
+      if(pianoRoll.selectedVisualizer){
+        buildVisualizer('grid', pianoRoll);
+        if(pianoRoll.selectedVisualizer === 'wave'){
+            updateVisualizer(pianoRoll);
+        }
+      }
       play(pianoRoll);
     });
   });
     
   document.getElementById('playAll').addEventListener('click', function(){
     context.resume().then(() => {
-      if(pianoRoll.showVisualizer) buildVisualizer('grid', pianoRoll);
+      if(pianoRoll.selectedVisualizer){
+        buildVisualizer('grid', pianoRoll);
+        if(pianoRoll.selectedVisualizer === 'wave'){
+            updateVisualizer(pianoRoll);
+        }
+      }
       playAll(pianoRoll);
     });
   });
@@ -78,20 +88,73 @@ function bindButtons(pianoRollObject){
   });
     
   document.getElementById('toggleVisualizer').addEventListener('click', function(evt){
-    pianoRoll.showVisualizer = !pianoRoll.showVisualizer;
-    document.getElementById('toggleVisualizer').style.backgroundColor = pianoRoll.showVisualizer ? "#d0d0d0" : "";
-    if(pianoRoll.showVisualizer){
-      // TODO: allow user to choose between regular wave visualizer and ripples visualizer
-      //pianoRoll.visualizerRequestAnimationFrameId = window.requestAnimationFrame((timestamp) => updateVisualizer(pianoRoll)); // regular wave visualizer
-      pianoRoll.selectedVisualizer = 'ripples';
-    }else{
+    if(pianoRoll.selectedVisualizer === 'wave'){
+      // turn off wave visualizer
+      document.getElementById('toggleVisualizer').style.backgroundColor = '';
       cancelAnimationFrame(pianoRoll.visualizerRequestAnimationFrameId);
       pianoRoll.visualizerRequestAnimationFrameId = null;
-      
+      pianoRoll.selectedVisualizer = null;
+    }else{
+      // if ripples visualizer is selected, turn it off
       if(pianoRoll.selectedVisualizer === 'ripples'){
-        // stop the ripple visualizer
+        document.getElementById('toggleRipplesVisualizer').style.backgroundColor = '';
         updateRipplesVisualizer(pianoRoll, [], true);
+        
+        // if currently playing, let user know the visualizer will take effect
+        // on next play. this is because we attach the analyser node on play
+        // (we can't add the analyser node during playback)
+        if(pianoRoll.isPlaying){
+          alert('this visualizer will take effect on next playback!');
+        }
+        
+        if(pianoRoll.visualizerCanvas){
+          removeVisualizer(pianoRoll);
+        }
       }
+      
+      // allow toggling the wave visualizer on/off
+      if(pianoRoll.selectedVisualizer === null){
+        pianoRoll.visualizerRequestAnimationFrameId = window.requestAnimationFrame((timestamp) => updateVisualizer(pianoRoll));
+      }
+      
+      document.getElementById('toggleVisualizer').style.backgroundColor = '#d0d0d0';
+      pianoRoll.selectedVisualizer = 'wave';
+    }
+  });
+  
+  document.getElementById('toggleRipplesVisualizer').addEventListener('click', function(evt){
+    // this one is tricky because of how the ripple visualizer is currently implemented.
+    // we pass all the scheduled notes upfront to the web worker for the visualization on playback so
+    // it's actually not in sync real-time with the audio (it's all pre-planned basically).
+    // this makes it difficult to just turn on/off.
+    if(pianoRoll.selectedVisualizer !== 'ripples'){
+      // turn off the other visualizer first if on
+      if(pianoRoll.selectedVisualizer === 'wave'){
+        document.getElementById('toggleVisualizer').style.backgroundColor = '';
+        cancelAnimationFrame(pianoRoll.visualizerRequestAnimationFrameId);
+        pianoRoll.visualizerRequestAnimationFrameId = null;
+        pianoRoll.selectedVisualizer = null;
+      }
+      
+      if(pianoRoll.visualizerCanvas){
+        removeVisualizer(pianoRoll);
+      }
+      
+      document.getElementById('toggleRipplesVisualizer').style.backgroundColor = '#d0d0d0';
+      pianoRoll.selectedVisualizer = 'ripples';
+      
+      // note that turning on this visualizer whilst audio playback is happeing won't do anything. 
+      // it needs to be turned on first before the play button is pressed
+      // so if playback is already happening, let the user know
+      if(pianoRoll.isPlaying){
+        alert('this visualizer will take effect on next playback!');
+      }
+    }else if(pianoRoll.selectedVisualizer === 'ripples'){
+      // if currently playing, stop rendering the ripples
+      document.getElementById('toggleRipplesVisualizer').style.backgroundColor = '';
+      pianoRoll.selectedVisualizer = null;
+      // TODO: send signal to web worker to stop rendering ripples (but continue processing them)
+      // if the visualizer is currently happening
     }
   });
     

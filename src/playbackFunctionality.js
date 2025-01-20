@@ -416,7 +416,7 @@ function configureInstrumentNotes(routes, pianoRollObject, instrumentGainNodes, 
           panNode.connect(pianoRollObject.audioContextDestMediaStream);
         }
                 
-        if(pianoRollObject.showVisualizer){
+        if(pianoRollObject.selectedVisualizer === 'wave'){
           panNode.connect(pianoRollObject.analyserNode);
         }else{
           panNode.connect(pianoRollObject.audioContextDestOriginal);
@@ -903,7 +903,7 @@ function pausePlay(pianoRollObject){
     // create a new gain for each instrument (this really is only needed when clicking notes, not playback)
     const newGain = initGain(pianoRollObject.audioContext);
         
-    if(pianoRollObject.showVisualizer){
+    if(pianoRollObject.selectedVisualizer === 'wave'){
       newGain.connect(pianoRollObject.analyserNode);
     }else{
       newGain.connect(pianoRollObject.audioContext.destination);
@@ -937,7 +937,7 @@ function stopPlay(pianoRollObject){
     // create a new gain for each instrument (this really is only needed when clicking notes, not playback)
     const newGain = initGain(pianoRollObject.audioContext);
         
-    if(pianoRollObject.showVisualizer){
+    if(pianoRollObject.selectedVisualizer === 'wave'){
       newGain.connect(pianoRollObject.analyserNode);
     }else{
       newGain.connect(pianoRollObject.audioContext.destination);
@@ -980,7 +980,7 @@ function createNewInstrument(name, pianoRollObject){
   // make new gain node for the instrument 
   const newGain = initGain(pianoRollObject.audioContext);
     
-  if(pianoRollObject.showVisualizer){
+  if(pianoRollObject.selectedVisualizer === 'wave'){
     newGain.connect(pianoRollObject.analyserNode);
   }else{
     newGain.connect(pianoRollObject.audioContext.destination);

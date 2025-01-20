@@ -34,7 +34,6 @@ function PianoRoll(){
   this.noiseBuffer;                    // for percussion
     
   // stuff needed for the visualizer
-  this.showVisualizer = false;
   this.selectedVizualizer = null;
   this.analyserNode = null;
   this.visualizerCanvas = null;
