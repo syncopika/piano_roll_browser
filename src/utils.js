@@ -91,8 +91,7 @@ function bindButtons(pianoRollObject){
     if(pianoRoll.selectedVisualizer === 'wave'){
       // turn off wave visualizer
       document.getElementById('toggleVisualizer').style.backgroundColor = '';
-      cancelAnimationFrame(pianoRoll.visualizerRequestAnimationFrameId);
-      pianoRoll.visualizerRequestAnimationFrameId = null;
+      pianoRoll.visualizerRequestAnimationFrameId = window.requestAnimationFrame((timestamp) => updateVisualizer(pianoRoll, true)); // stop visualizer and clear it
       pianoRoll.selectedVisualizer = null;
     }else{
       // if ripples visualizer is selected, turn it off
@@ -112,9 +111,9 @@ function bindButtons(pianoRollObject){
         }
       }
       
-      // allow toggling the wave visualizer on/off
+      // turn on wave visualizer again (e.g. if the wave visualizer was just turned off)
       if(pianoRoll.selectedVisualizer === null){
-        pianoRoll.visualizerRequestAnimationFrameId = window.requestAnimationFrame((timestamp) => updateVisualizer(pianoRoll));
+        pianoRoll.visualizerRequestAnimationFrameId = window.requestAnimationFrame((timestamp) => updateVisualizer(pianoRoll, false));
       }
       
       document.getElementById('toggleVisualizer').style.backgroundColor = '#d0d0d0';
@@ -126,35 +125,40 @@ function bindButtons(pianoRollObject){
     // this one is tricky because of how the ripple visualizer is currently implemented.
     // we pass all the scheduled notes upfront to the web worker for the visualization on playback so
     // it's actually not in sync real-time with the audio (it's all pre-planned basically).
-    // this makes it difficult to just turn on/off.
-    if(pianoRoll.selectedVisualizer !== 'ripples'){
+    // this makes it a bit more difficult to just turn on/off like with the wave visualizer.
+
+    if(pianoRoll.selectedVisualizer === 'ripples'){
+      // if currently playing, stop rendering the ripples
+      document.getElementById('toggleRipplesVisualizer').style.backgroundColor = '';
+      stopRipplesVisualizerRender(pianoRoll, true);
+      pianoRoll.selectedVisualizer = null;
+    }else{
       // turn off the other visualizer first if on
       if(pianoRoll.selectedVisualizer === 'wave'){
         document.getElementById('toggleVisualizer').style.backgroundColor = '';
         cancelAnimationFrame(pianoRoll.visualizerRequestAnimationFrameId);
         pianoRoll.visualizerRequestAnimationFrameId = null;
         pianoRoll.selectedVisualizer = null;
+      
+        if(pianoRoll.visualizerCanvas){
+          removeVisualizer(pianoRoll);
+        }
+        
+        // note that turning on this visualizer whilst audio playback is happeing won't do anything. 
+        // it needs to be turned on first before the play button is pressed
+        // so if playback is already happening, let the user know
+        if(pianoRoll.isPlaying){
+          alert('this visualizer will take effect on next playback!');
+        }
       }
       
-      if(pianoRoll.visualizerCanvas){
-        removeVisualizer(pianoRoll);
+      if(pianoRoll.selectedVisualizer === null){
+        // turn on rendering of ripples if going from an off state to on state for the ripples visualizer
+        stopRipplesVisualizerRender(pianoRoll, false);
       }
       
       document.getElementById('toggleRipplesVisualizer').style.backgroundColor = '#d0d0d0';
       pianoRoll.selectedVisualizer = 'ripples';
-      
-      // note that turning on this visualizer whilst audio playback is happeing won't do anything. 
-      // it needs to be turned on first before the play button is pressed
-      // so if playback is already happening, let the user know
-      if(pianoRoll.isPlaying){
-        alert('this visualizer will take effect on next playback!');
-      }
-    }else if(pianoRoll.selectedVisualizer === 'ripples'){
-      // if currently playing, stop rendering the ripples
-      document.getElementById('toggleRipplesVisualizer').style.backgroundColor = '';
-      pianoRoll.selectedVisualizer = null;
-      // TODO: send signal to web worker to stop rendering ripples (but continue processing them)
-      // if the visualizer is currently happening
     }
   });
     

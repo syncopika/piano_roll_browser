@@ -33,7 +33,7 @@ function buildVisualizer(gridDivId, pianoRollObject){
   );
 }
 
-function updateVisualizer(pianoRollObject){
+function updateVisualizer(pianoRollObject, stop=false){
   if(pianoRollObject.visualizerCanvas){
     // use a web worker offscreen canvas to
     // do this drawing stuff. pass it the analyser node data.
@@ -45,18 +45,19 @@ function updateVisualizer(pianoRollObject){
         
     // https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects
     pianoRollObject.visualizerWebWorker.postMessage(
-      [{data: dataArray}, dataArray.buffer]
+      [{data: dataArray, stop}, dataArray.buffer]
     );
   }
   
   pianoRollObject.visualizerRequestAnimationFrameId = 
-    window.requestAnimationFrame((timestamp) => updateVisualizer(pianoRollObject)); 
+    window.requestAnimationFrame((timestamp) => updateVisualizer(pianoRollObject, stop)); 
 }
 
 // for passing note data for note ripples visualization
 // we will pass data for ALL notes of a piece to the worker (is this a bad idea?? ¯\_(ツ)_/¯)
 // I think it's easier to work with requestAnimationFrame this way
-function updateRipplesVisualizer(pianoRollObject, noteData, stop=false){
+// @stop completely stops the visualization (which should happen when switching between visualizers)  
+function updateRipplesVisualizer(pianoRollObject, noteData, stop=false, stopRender=false){
   // noteData should be an array of objects, with each object representing a note of the piece
   // each object in noteData should look like:
   // {
@@ -75,6 +76,19 @@ function updateRipplesVisualizer(pianoRollObject, noteData, stop=false){
       }]
     );
   }
+}
+
+// @stopRender only prevents the ripples from being rendered (so visualizer can still be toggled on/off sequentially)
+function stopRipplesVisualizerRender(pianoRollObject, stopRender){
+  if(pianoRollObject.visualizerCanvas){
+    pianoRollObject.visualizerWebWorker.postMessage(
+      [{
+        visualizationType: 'ripples',
+        action: 'render',
+        stopRender,
+      }]
+    );
+  }  
 }
 
 function removeVisualizer(pianoRollObject){

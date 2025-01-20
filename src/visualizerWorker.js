@@ -5,8 +5,8 @@ let canvas = null;
 
 // for note ripples visualizer
 let ripples = [];
-
-let visualizerIsRunning = false;
+let ripplesVisualizerIsRunning = false;
+let stopRenderingRipples = false;
 
 self.onmessage = function(msg){
   //console.log(msg);
@@ -15,22 +15,29 @@ self.onmessage = function(msg){
     canvas = msg.data.canvas;
   }else{
     if(msg.data[0].visualizationType === 'ripples'){
-      const stop = msg.data[0].stop;
-      if(!stop && !visualizerIsRunning){
-        visualizerIsRunning = true;
-        const noteData = msg.data[0].data;
-        drawRipplesVisualization(noteData, canvas);
-      }else if(stop && visualizerIsRunning){
-        visualizerIsRunning = false;
+      // ripples visualizer
+      if(msg.data[0].action === 'render'){
+        stopRenderingRipples = msg.data[0].stopRender;
+      }else{
+        const stop = msg.data[0].stop;
+        if(!stop && !ripplesVisualizerIsRunning){
+          ripplesVisualizerIsRunning = true;
+          const noteData = msg.data[0].data;
+          drawRipplesVisualization(noteData, canvas);
+        }else if(stop && ripplesVisualizerIsRunning){
+          ripplesVisualizerIsRunning = false;
+        }
       }
     }else{
+      // wave visualizer
       const data = msg.data[0].data;
-      drawVisualization(data, canvas);
+      const stop = msg.data[0].stop;
+      drawVisualization(data, canvas, stop);
     }
   }
 };
 
-function drawVisualization(data, canvas){
+function drawVisualization(data, canvas, stop){
   const width = canvas.width;
   const height = canvas.height;
   const bufferLen = data.length;
@@ -40,27 +47,30 @@ function drawVisualization(data, canvas){
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
   ctx.clearRect(0, 0, width, height);
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = 'rgb(0, 0, 0)';
-  ctx.beginPath();
-    
-  const sliceWidth = width / bufferLen;
-  let xPos = 0;
-    
-  for(let i = 0; i < bufferLen; i++){
-    const dataVal = data[i] / 128.0; // why 128?
-    const yPos = dataVal * (height/2);
-        
-    if(i === 0){
-      ctx.moveTo(xPos, yPos);
-    }else{
-      ctx.lineTo(xPos, yPos);
+  
+  if(!stop){
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgb(0, 0, 0)';
+    ctx.beginPath();
+      
+    const sliceWidth = width / bufferLen;
+    let xPos = 0;
+      
+    for(let i = 0; i < bufferLen; i++){
+      const dataVal = data[i] / 128.0; // why 128?
+      const yPos = dataVal * (height/2);
+          
+      if(i === 0){
+        ctx.moveTo(xPos, yPos);
+      }else{
+        ctx.lineTo(xPos, yPos);
+      }
+          
+      xPos += sliceWidth;
     }
-        
-    xPos += sliceWidth;
+      
+    ctx.stroke();
   }
-    
-  ctx.stroke();
 }
 
 class Ripple {
@@ -99,12 +109,14 @@ class Ripple {
       this.lights.forEach(l => {
         if(!l.done){
           if(l.currRadius < l.maxRadius){
-            this.ctx.strokeStyle = this.color;
-            this.ctx.lineCap = this.lineCap;
-            this.ctx.lineWidth = l.currWidth + this.speed;
-            this.ctx.beginPath();
-            this.ctx.arc(l.currX, l.currY, l.currRadius, 0, 2 * Math.PI);
-            this.ctx.stroke();
+            if(!stopRenderingRipples){
+              this.ctx.strokeStyle = this.color;
+              this.ctx.lineCap = this.lineCap;
+              this.ctx.lineWidth = l.currWidth + this.speed;
+              this.ctx.beginPath();
+              this.ctx.arc(l.currX, l.currY, l.currRadius, 0, 2 * Math.PI);
+              this.ctx.stroke();
+            }
             l.currRadius += this.speed;
           }else{
             l.done = true;
@@ -120,7 +132,7 @@ class Ripple {
 }
 
 function renderRipples(){
-  if(!visualizerIsRunning){
+  if(!ripplesVisualizerIsRunning){
     ripples = [];
     return;
   }
@@ -134,7 +146,7 @@ function renderRipples(){
     ripples = ripples.filter(f => !f.isFinished);
     
     if(ripples.length === 0){
-      visualizerIsRunning = false;
+      ripplesVisualizerIsRunning = false;
       return;
     }
     
@@ -156,4 +168,8 @@ function drawRipplesVisualization(data, canvas){
   });
   
   renderRipples();
+}
+
+function toggleRippleVisualization(stopRender){
+  stopRenderingRipples = stopRender;
 }
