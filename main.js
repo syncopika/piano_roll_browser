@@ -13,6 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // flag for toggling the toolbar to be static or sticky
+// this gets used in utils.js
+// eslint-disable-next-line prefer-const
 let toggleStickyToolbar = false;
 
 // set up piano roll

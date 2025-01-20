@@ -51,7 +51,7 @@ function bindButtons(pianoRollObject){
       if(pianoRoll.selectedVisualizer){
         buildVisualizer('grid', pianoRoll);
         if(pianoRoll.selectedVisualizer === 'wave'){
-            updateVisualizer(pianoRoll);
+          updateVisualizer(pianoRoll);
         }
       }
       play(pianoRoll);
@@ -63,7 +63,7 @@ function bindButtons(pianoRollObject){
       if(pianoRoll.selectedVisualizer){
         buildVisualizer('grid', pianoRoll);
         if(pianoRoll.selectedVisualizer === 'wave'){
-            updateVisualizer(pianoRoll);
+          updateVisualizer(pianoRoll);
         }
       }
       playAll(pianoRoll);
