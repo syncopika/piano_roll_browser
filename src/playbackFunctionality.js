@@ -668,14 +668,16 @@ function scheduler(pianoRoll, allInstruments){
         const endTime = startTime + duration;
         const otherParams = note.note;
         const boundingRect = document.getElementById(otherParams.block.id).getBoundingClientRect();
+        const vizCanvas = pianoRoll.visualizerCanvas.getBoundingClientRect();
+        
         // don't rely on thisTime because that's audioContext.currentTime, which only ever increases
         visualizerNotes.push({
           start: now + (startTimeOffset * 1000),
           end: now + ((startTimeOffset + duration) * 1000),
           volume,
           freq: otherParams.freq,
-          x: boundingRect.x,
-          y: boundingRect.y,
+          x: boundingRect.x - vizCanvas.x, // account for offset of visualizer canvas
+          y: boundingRect.y - vizCanvas.y,
         });
       });
     }
