@@ -1,4 +1,9 @@
 // for visualizing the piano roll
+//
+// WARNING: visualization appears to not work after exceeding a certain width, e.g. past 51 measures,
+// the visualizer seems to not draw anything. 51 measures seems to be the max width of the canvas allowable for visualization.
+// See https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/canvas about max canvas size.
+// I guess it makes sense though that my visualization strategy using the HTML Canvas isn't infinitely scalable lol.
 
 // @param gridDivId: a string representing an HTML element id of the grid
 // @param pianoRollObject: an instance of PianoRoll 

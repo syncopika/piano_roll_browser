@@ -671,14 +671,16 @@ function scheduler(pianoRoll, allInstruments){
         const vizCanvas = pianoRoll.visualizerCanvas.getBoundingClientRect();
         
         // don't rely on thisTime because that's audioContext.currentTime, which only ever increases
-        visualizerNotes.push({
+        const vizNote = {
           start: now + (startTimeOffset * 1000),
           end: now + ((startTimeOffset + duration) * 1000),
           volume,
           freq: otherParams.freq,
           x: boundingRect.x - vizCanvas.x, // account for offset of visualizer canvas
           y: boundingRect.y - vizCanvas.y,
-        });
+        };
+        
+        visualizerNotes.push(vizNote);
       });
     }
     updateRipplesVisualizer(pianoRoll, visualizerNotes);
@@ -888,6 +890,7 @@ function recordPlay(pianoRollObject){
 // @param pianoRollObject: an instance of PianoRoll
 function pausePlay(pianoRollObject){
   // highlightHeader comes from gridBuilder.js
+  // set play marker to where we paused so playback can begin at that spot on the next play
   highlightHeader(pianoRollObject.lastNoteColumn.id, pianoRollObject);
   
   pianoRollObject.isPlaying = false;
@@ -955,13 +958,6 @@ function stopPlay(pianoRollObject){
   if(pianoRollObject.lastNoteColumn && pianoRollObject.lastNoteColumn.id !== pianoRollObject.playMarker){
     pianoRollObject.lastNoteColumn.style.backgroundColor = '#fff';
   }
-    
-  // clear play marker if set
-  const prevMarker = document.getElementById(pianoRollObject.playMarker);
-  if(prevMarker){
-    prevMarker.style.backgroundColor = "#fff";
-  }
-  pianoRollObject.playMarker = null;
     
   // if recording
   if(pianoRollObject.recording){

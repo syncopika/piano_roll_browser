@@ -32,12 +32,12 @@ self.onmessage = function(msg){
       // wave visualizer
       const data = msg.data[0].data;
       const stop = msg.data[0].stop;
-      drawVisualization(data, canvas, stop);
+      drawWaveVisualization(data, canvas, stop);
     }
   }
 };
 
-function drawVisualization(data, canvas, stop){
+function drawWaveVisualization(data, canvas, stop){
   const width = canvas.width;
   const height = canvas.height;
   const bufferLen = data.length;
@@ -162,8 +162,6 @@ function drawRipplesVisualization(data, canvas){
   const ctx = canvas.getContext('2d');
   
   ripples = data.map(d => {
-    const x = Math.random() * width;
-    const y = Math.random() * height;
     return new Ripple(ctx, d.x, d.y, d.start);
   });
   
