@@ -349,6 +349,9 @@ import JSON data from file
 
 ****/
 function processData(data){
+  // TODO: some visual notification of project loading would be nice
+  console.log('loading project...');
+  
   // update metadata 
   document.getElementById("composer").textContent = data.composer; // could be undefined!
   document.getElementById("pieceTitle").textContent = data.title; // could be undefined!
@@ -460,11 +463,14 @@ function processData(data){
   instrument1.classList.add("context-menu-instrument");
     
   pianoRoll.currentInstrument = pianoRoll.instruments[0];
+  
+  console.log('done loading project!');
 }
 
 function fileHandler(){
   //initiate file choosing after button click
-  const input = document.getElementById('importFile');
+  const input = document.createElement('input');
+  input.type = 'file';
   input.addEventListener('change', getFile, false);
   input.click();
 }
@@ -472,15 +478,17 @@ function fileHandler(){
 function getFile(e){
   const reader = new FileReader();
   const file = e.target.files[0];
-    
-  //when the image loads, put it on the canvas.
+  console.log(`got file: ${file.name}`);
   reader.onload = (function(theFile){
     return function(e){
             
       const data = JSON.parse(e.target.result);
-            
+
+      console.log('attempting to load project...');
+       
       // make sure project is valid
       if(!validateProject(data)){
+        console.log('invalid project!');
         return;
       }
             

@@ -12,7 +12,7 @@ also influenced a bit by PxTone Collage, another great application!
 - each note is customizable    
 - togglable onion skin    
 - recordable    
-- has a visualizer (although may be a bit buggy atm)    
+- has a couple visualizers (although may be a bit buggy atm and doesn't seem to work for any projects that have more than 51 measures)    
 ![visualizer](screenshots/visualizer.gif "visualizer")    
     
 ### instructions:    
@@ -48,8 +48,10 @@ I've also implemented a rudimentary custom instrument preset import ability (use
     
 Disclaimer: the custom instrument functionality is currently pretty limited; there are lots of possible custom preset configurations that will break under my current implementation. So this feature is definitely a work-in-progress but you can maybe at least see its future potential! :)    
     
-### current issues:        
+### current issues/limitations:        
 - (Chrome) downloading the audio isn't great - the audio comes out fine but the duration is messed up (see: https://stackoverflow.com/questions/38443084/how-can-i-add-predefined-length-to-audio-recorded-from-mediarecorder-in-chrome).    
+- visualization doesn't work for projects that are more than 51 measures long
+- projects longer than 51 measures may experience some lag with some notes on playback (probably due to the way I'm scheduling notes for playback)
     
 ### current next steps?:    
 - refactoring + tests    
