@@ -74,3 +74,9 @@ document.addEventListener('contextmenu', (evt) => {
   }
 });
 
+document.getElementById('mmpExport').addEventListener('click', () => {
+  // getJSONData is from utils.js
+  const data = getJSONData(pianoRoll);
+  
+  exportMMPFile(data, pianoRoll); // from mmpGenerator.js
+});
