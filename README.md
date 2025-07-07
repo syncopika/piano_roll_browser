@@ -12,6 +12,7 @@ also influenced a bit by PxTone Collage, another great application!
 - each note is customizable    
 - togglable onion skin    
 - recordable    
+- can export project as an .mmp file for use in LMMS    
 - has a couple visualizers (although may be a bit buggy atm and doesn't seem to work for any projects that have more than 51 measures)    
 ![visualizer](screenshots/visualizer.gif "visualizer")    
     
