@@ -508,7 +508,7 @@ function changeTempo(pianoRollObject, tempoElement){
   }
     
   // getting milliseconds PER EIGHTH NOTE (1 block on grid)
-  pianoRollObject.currentTempo = ((Math.round((60000 / selectedTempo) * 1000)) / 2000 );
+  pianoRollObject.currentTempo = ((Math.round((60000 / selectedTempo) * 1000)) / 2000);
     
   // go through all instruments and adjust duration of each note in their note arrays
   // according to new current tempo
