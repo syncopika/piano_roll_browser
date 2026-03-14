@@ -87,12 +87,14 @@ function convertNoteLengthHtmlToLmms(htmlLength){
 function generateInstrumentTrack(instrumentData, pianoKeys){  
   // sort the notes first based on position
   const notes = Array.from(Object.keys(instrumentData.notes));
-  const sortedNotes = notes.sort((a, b) => parseInt(a.split('_')[1]) < parseInt(b.split('_')[1])); // e.g. Fs4col_454 vs Eb6col_450
+  
+  const sortedNotes = notes.sort((a, b) => parseInt(a.split('_')[1]) - parseInt(b.split('_')[1])); // e.g. Fs4col_454 vs Eb6col_450
   
   // then collect xml of notes
   const notesXml = [];
   
   let currLength = 0;
+  
   sortedNotes.forEach(noteName => {
     const n = instrumentData.notes[noteName]; // this is an array :/. tbh I don't remember why I designed it this way -__-. but there could be multiple notes in the same note cell, e.g. 2 16th notes
     const noteKey = pianoKeys[noteName.split('col')[0].replace('s', '#')] - 1; // my piano key numbering is off by one? :/
@@ -119,12 +121,15 @@ function generateInstrumentTrack(instrumentData, pianoKeys){
       const addKey = interpolateValues(addPos, '%key', noteKey);
       
       notesXml.push(addKey);
+      
+      currLength = Math.max(currLength, pos + len);
     });
-    
-    // find the note with the longest width in the array and add it to the running length total
-    // so we know how long to set the track pattern to be
-    currLength += convertNoteLengthHtmlToLmms(Math.max(...n.map(x => parseInt(x.width))));
   });
+  
+  // make sure length is divisible by 24 * 8 (the length of a complete measure in LMMS, which is the length of an eighth note in LMMS multiplied by 8)
+  while(currLength % (24 * 8) !== 0){
+    currLength++;
+  }
   
   // create a new track for this instrument
   // replace instrument name
