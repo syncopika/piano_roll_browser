@@ -757,16 +757,17 @@ function rubberbandSelect(pianoRoll){
     let lastStartY;
     
     const pointerDownMoveSelection = (evt) => {
-      //console.log('moving selection');
+      console.log('moving selection start');
       isMovingNotes = true;
-      lastStartX = evt.x - gridContainer.getBoundingClientRect().left;
-      lastStartY = evt.y - gridContainer.getBoundingClientRect().top;
+      lastStartX = evt.x;// - gridContainer.getBoundingClientRect().left;
+      lastStartY = evt.y;// - gridContainer.getBoundingClientRect().top;
     };
     
     const pointerMoveMoveSelection = (evt) => {
       if(isMovingNotes){
-        const currX = evt.x - gridContainer.getBoundingClientRect().left;
-        const currY = evt.y - gridContainer.getBoundingClientRect().top;
+        console.log('moving selection');
+        const currX = evt.x;// - gridContainer.getBoundingClientRect().left;
+        const currY = evt.y;// - gridContainer.getBoundingClientRect().top;
         
         const deltaX = currX - lastStartX;
         const deltaY = currY - lastStartY;
@@ -774,29 +775,28 @@ function rubberbandSelect(pianoRoll){
         // move overlay to a lower z-index temporarily so it doesn't interfere with the pointer events for moving the notes
         overlay.style.zIndex = -1;
         
-        console.log(`deltaX: ${deltaX}, deltaY: ${deltaY}`);
-        
         selectedNotes.forEach(n => {
           const noteBoundingClientRect = n.getBoundingClientRect();
-          const newNoteX = parseInt(n.style.left) + deltaX;
-          const newNoteY = n.offsetTop + deltaY;
-          const newNoteXRelativeToViewport = noteBoundingClientRect.left + deltaX;
-          const newNoteYRelativeToViewport = noteBoundingClientRect.top + deltaY;
+          const newNoteX = noteBoundingClientRect.x + deltaX; //noteBoundingClientRect.x + deltaX;
+          const newNoteY = noteBoundingClientRect.y + deltaY; //noteBoundingClientRect.y + deltaY;
+          
+          //console.log(`newNoteX: ${newNoteX}, newNoteY: ${newNoteY}, deltaX: ${deltaX}, deltaY: ${deltaY}, x: ${currX}, y: ${currY}, lastStartX: ${lastStartX}, lastStartY: ${lastStartY}`);
+          //console.log(`moving ${n.id}`);
           
           // simulate left-click on note, which will trigger some new event listeners on the piano roll div to allow us to move the note
           const newPointerDownEvt = new PointerEvent('pointerdown', {which: 1});
           n.dispatchEvent(newPointerDownEvt);
+          //n.style.backgroundColor = 'orange';
           
           // find what would be the destination for the note if we moved the note based on newNoteX and newNoteY
-          const targetContainer = document.elementFromPoint(newNoteXRelativeToViewport, newNoteYRelativeToViewport);
-          targetContainer.style.background = '#ccc';
+          const targetContainer = document.elementFromPoint(newNoteX, newNoteY);
+          //targetContainer.style.background = '#ccc';
           
           // important! we're going to dispatch the event on the destination target so we want it to bubble up to the piano roll div 
           // because the event listener for pointermove is on the piano roll div
           const newPointerMoveEvt = new PointerEvent('pointermove', {
-            x: newNoteXRelativeToViewport,
-            y: newNoteYRelativeToViewport,
-            target: targetContainer,
+            clientX: newNoteX,
+            clientY: newNoteY,
             bubbles: true, // this makes sure the event gets received by the piano roll div
           });
           //console.log(`moving to x: ${newNoteXRelativeToViewport}, y: ${newNoteYRelativeToViewport} - ${n.parentNode.id} to ${targetContainer.id}`);
@@ -807,12 +807,12 @@ function rubberbandSelect(pianoRoll){
           targetContainer.dispatchEvent(newPointerMoveEvt);
           
           // then stop by simulating pointerup evt
-          const newPointerUpEvt = new PointerEvent('pointerup', {});
+          const newPointerUpEvt = new PointerEvent('pointerup', {bubbles: true});
           pianoRollInterface.dispatchEvent(newPointerUpEvt);
         });
         
-        lastStartX = currX;
-        lastStartY = currY;
+        //lastStartX = currX;
+        //lastStartY = currY;
         
         overlay.style.zIndex = 1000;
       }
