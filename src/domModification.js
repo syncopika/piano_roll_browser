@@ -252,7 +252,7 @@ function createNewNoteElement(pianoRollObject){
     e.stopPropagation();
         
     if(e.which == 2){
-      // middle mouse button
+      // middle mouse button will delete the note
       const container = newNote.parentNode;
       const colHeader = document.getElementById(container.id.substring(container.id.indexOf("col")));
       colHeader.setAttribute("data-num-notes", colHeader.dataset.numNotes - 1);
