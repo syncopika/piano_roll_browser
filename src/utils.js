@@ -665,7 +665,6 @@ function rubberbandSelect(pianoRoll){
   const overlay = document.createElement('div');
   overlay.style.position = 'absolute';
   overlay.style.width = `${gridContainerWidth}px`;
-  console.log(overlay.style.width);
   
   overlay.style.height = '100%';
   overlay.style.top = 0;
@@ -718,39 +717,123 @@ function rubberbandSelect(pianoRoll){
   const pointerUpRubberbandSelect = (evt) => {
     isSelecting = false;
     
+    // remove initial pointerdown and pointermove event listeners and
+    // replace them with new event listeners that'll move the selected notes
+    overlay.removeEventListener('pointerdown', pointerDownRubberbandSelect);
+    overlay.removeEventListener('pointermove', pointerMoveRubberbandSelect);
+    
+    // clear rubberband
+    if(rubberband && rubberband.parentNode) rubberband.parentNode.removeChild(rubberband);
+    
     const x = evt.x - gridContainer.getBoundingClientRect().left;
     const y = evt.y - gridContainer.getBoundingClientRect().top;
     
-    console.log(`rubberband top: ${parseInt(rubberband.style.top)}, left: ${parseInt(rubberband.style.left)}, x: ${x}, y: ${y}`);
+    //console.log(`rubberband top: ${parseInt(rubberband.style.top)}, left: ${parseInt(rubberband.style.left)}, x: ${x}, y: ${y}`);
     
-    // TODO: go through current isntrument's notes and see which fall within range of the rubberbanding select box
-    // highlight them + add new event listener to move the notes together via event dispatch (pointermove)
     const minX = parseInt(rubberband.style.left);
     const minY = parseInt(rubberband.style.top);
     const maxX = x;
     const maxY = y;
     const selectedNotes = [];
-    //console.log(pianoRoll);
     const currInstNotes = pianoRoll.currentInstrument.notes;
     currInstNotes.forEach(noteArr => {
       noteArr.forEach(n => {
         const note = document.getElementById(n.block.id);
-        const noteBoundingClientRect = note.getBoundingClientRect();
         const noteX = parseInt(note.style.left);
         const noteY = note.offsetTop;
-        console.log(`note x: ${noteX}, note y: ${noteY}`);
+        //console.log(`note x: ${noteX}, note y: ${noteY}`);
         if(noteX >= minX && noteX <= maxX && noteY >= minY && noteY <= maxY){
           selectedNotes.push(note);
         }
       });
     });
     
-    // TODO: be able to move the selected notes together
-    console.log(selectedNotes);
-    selectedNotes.forEach(n => n.style.background = 'blue');
+    // temporarily highlight selected notes
+    const originalColors = selectedNotes.map(n => n.style.background);
+    selectedNotes.forEach(n => n.style.background = '#4361ee');
     
-    const quitEvent = new KeyboardEvent('keydown', {key: 'Escape', code: 'Escape', bubbles: true});
-    window.dispatchEvent(quitEvent);
+    let isMovingNotes = false;
+    let lastStartX;
+    let lastStartY;
+    
+    const pointerDownMoveSelection = (evt) => {
+      //console.log('moving selection');
+      isMovingNotes = true;
+      lastStartX = evt.x - gridContainer.getBoundingClientRect().left;
+      lastStartY = evt.y - gridContainer.getBoundingClientRect().top;
+    };
+    
+    const pointerMoveMoveSelection = (evt) => {
+      if(isMovingNotes){
+        const currX = evt.x - gridContainer.getBoundingClientRect().left;
+        const currY = evt.y - gridContainer.getBoundingClientRect().top;
+        
+        const deltaX = currX - lastStartX;
+        const deltaY = currY - lastStartY;
+        
+        // move overlay to a lower z-index temporarily so it doesn't interfere with the pointer events for moving the notes
+        overlay.style.zIndex = -1;
+        
+        console.log(`deltaX: ${deltaX}, deltaY: ${deltaY}`);
+        
+        selectedNotes.forEach(n => {
+          const noteBoundingClientRect = n.getBoundingClientRect();
+          const newNoteX = parseInt(n.style.left) + deltaX;
+          const newNoteY = n.offsetTop + deltaY;
+          const newNoteXRelativeToViewport = noteBoundingClientRect.left + deltaX;
+          const newNoteYRelativeToViewport = noteBoundingClientRect.top + deltaY;
+          
+          // simulate left-click on note, which will trigger some new event listeners on the piano roll div to allow us to move the note
+          const newPointerDownEvt = new PointerEvent('pointerdown', {which: 1});
+          n.dispatchEvent(newPointerDownEvt);
+          
+          // find what would be the destination for the note if we moved the note based on newNoteX and newNoteY
+          const targetContainer = document.elementFromPoint(newNoteXRelativeToViewport, newNoteYRelativeToViewport);
+          targetContainer.style.background = '#ccc';
+          
+          // important! we're going to dispatch the event on the destination target so we want it to bubble up to the piano roll div 
+          // because the event listener for pointermove is on the piano roll div
+          const newPointerMoveEvt = new PointerEvent('pointermove', {
+            x: newNoteXRelativeToViewport,
+            y: newNoteYRelativeToViewport,
+            target: targetContainer,
+            bubbles: true, // this makes sure the event gets received by the piano roll div
+          });
+          //console.log(`moving to x: ${newNoteXRelativeToViewport}, y: ${newNoteYRelativeToViewport} - ${n.parentNode.id} to ${targetContainer.id}`);
+          //console.log(targetContainer);
+          
+          // move the note
+          const pianoRollInterface = document.getElementById('piano');
+          targetContainer.dispatchEvent(newPointerMoveEvt);
+          
+          // then stop by simulating pointerup evt
+          const newPointerUpEvt = new PointerEvent('pointerup', {});
+          pianoRollInterface.dispatchEvent(newPointerUpEvt);
+        });
+        
+        lastStartX = currX;
+        lastStartY = currY;
+        
+        overlay.style.zIndex = 1000;
+      }
+    };
+    
+    const pointerUpMoveSelection = (evt) => {
+      console.log('done moving');
+      
+      // set the note's color back to the original
+      selectedNotes.forEach((n, idx) => {
+        n.style.background = originalColors[idx];
+      });
+      
+      isMovingNotes = false;
+      const quitEvent = new KeyboardEvent('keydown', {key: 'Escape', code: 'Escape', bubbles: true});
+      window.dispatchEvent(quitEvent);
+    };
+    
+    overlay.addEventListener('pointerdown', pointerDownMoveSelection);
+    overlay.addEventListener('pointermove', pointerMoveMoveSelection);
+    overlay.addEventListener('pointerup', pointerUpMoveSelection);
   };
   
   overlay.addEventListener('pointerdown', pointerDownRubberbandSelect);

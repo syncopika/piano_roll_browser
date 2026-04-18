@@ -54,8 +54,7 @@ function canPlaceNote(posToPlace, currContainerChildren, scrollOffset=0){
   // children that are part of this current instrument's notes, so check opacity
   for(let i = 0; i < currContainerChildren.length; i++){
     const note = currContainerChildren[i];
-    if((note.getBoundingClientRect().left + scrollOffset) === posToPlace &&
-            note.style.opacity == 1){
+    if((note.getBoundingClientRect().left + scrollOffset) === posToPlace && note.style.opacity == 1){
       return false;
     }
   }
@@ -73,6 +72,7 @@ function placeNoteAtPosition(note, pianoRollObject, evt){
     
   if(!targetContainer.classList.contains("noteContainer")){
     if(targetContainer.classList.contains("noteElement")){
+      // if a note element is the current target, make the target be its container div
       targetContainer = targetContainer.parentNode;
     }else{
       return null;
@@ -121,6 +121,7 @@ function placeNoteAtPosition(note, pianoRollObject, evt){
     }
         
     note.style.left = (posToPlace - 8) + "px"; // TODO: why is there 8px of extra padding showing up somewhere? this works but not sure why/where it's coming from :(
+    
     targetContainer.appendChild(note);
         
     const newColHeader = document.getElementById(targetContainer.id.substring(targetContainer.id.indexOf("col")));
@@ -271,6 +272,7 @@ function createNewNoteElement(pianoRollObject){
     pianoRollInterface.style.touchAction = "none"; // prevent horizontal scroll when moving note
 
     if(newNote.style.cursor === "w-resize" || e.offsetX >= (parseInt(newNote.style.width) - 3)){
+      // allow resizing the note when cursor is on the right edge of the note
       function resizeNote(evt){
         resizeHelper(newNote, pianoRollObject, evt);
       }
@@ -282,6 +284,7 @@ function createNewNoteElement(pianoRollObject){
         pianoRollInterface.style.touchAction = "auto"; // allow horizontal scroll again
       });
     }else{
+      // otherwise the whole note can be moved
       function moveNote(evt){
         moveHelper(newNote, pianoRollObject, evt);
       }
@@ -295,7 +298,9 @@ function createNewNoteElement(pianoRollObject){
         mouseupHelper(newNote, pianoRollObject, pianoRollInterface, evtsToRemove);
         pianoRollInterface.style.touchAction = "auto"; // allow horizontal scroll again
       }
-            
+      
+      // note that we're adding these event listeners on the piano roll div, which allows
+      // us to move notes around the grid in all directions
       pianoRollInterface.addEventListener("pointermove", moveNote);
       pianoRollInterface.addEventListener("pointerup", mouseupMove);
     }
