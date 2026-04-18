@@ -660,10 +660,13 @@ function getDemo(selectedDemo){
 function rubberbandSelect(pianoRoll){
   // make sure we add overlay for rubberband selection only over the grid containing the notes
   const gridContainer = document.getElementById('grid');
+  const gridContainerWidth = gridContainer.scrollWidth;
   
   const overlay = document.createElement('div');
   overlay.style.position = 'absolute';
-  overlay.style.width = '100%';
+  overlay.style.width = `${gridContainerWidth}px`;
+  console.log(overlay.style.width);
+  
   overlay.style.height = '100%';
   overlay.style.top = 0;
   overlay.style.left = 0;
@@ -682,8 +685,8 @@ function rubberbandSelect(pianoRoll){
   
   // rubberband select drawing functions
   let rubberband;
-  
   let isSelecting = false;
+  let canMoveSelection = false;
   
   const pointerDownRubberbandSelect = (evt) => {
     isSelecting = true;
@@ -713,6 +716,8 @@ function rubberbandSelect(pianoRoll){
   };
   
   const pointerUpRubberbandSelect = (evt) => {
+    isSelecting = false;
+    
     const x = evt.x - gridContainer.getBoundingClientRect().left;
     const y = evt.y - gridContainer.getBoundingClientRect().top;
     
@@ -720,8 +725,30 @@ function rubberbandSelect(pianoRoll){
     
     // TODO: go through current isntrument's notes and see which fall within range of the rubberbanding select box
     // highlight them + add new event listener to move the notes together via event dispatch (pointermove)
+    const minX = parseInt(rubberband.style.left);
+    const minY = parseInt(rubberband.style.top);
+    const maxX = x;
+    const maxY = y;
+    const selectedNotes = [];
+    //console.log(pianoRoll);
+    const currInstNotes = pianoRoll.currentInstrument.notes;
+    currInstNotes.forEach(noteArr => {
+      noteArr.forEach(n => {
+        const note = document.getElementById(n.block.id);
+        const noteBoundingClientRect = note.getBoundingClientRect();
+        const noteX = parseInt(note.style.left);
+        const noteY = note.offsetTop;
+        console.log(`note x: ${noteX}, note y: ${noteY}`);
+        if(noteX >= minX && noteX <= maxX && noteY >= minY && noteY <= maxY){
+          selectedNotes.push(note);
+        }
+      });
+    });
     
-    isSelecting = false;
+    // TODO: be able to move the selected notes together
+    console.log(selectedNotes);
+    selectedNotes.forEach(n => n.style.background = 'blue');
+    
     const quitEvent = new KeyboardEvent('keydown', {key: 'Escape', code: 'Escape', bubbles: true});
     window.dispatchEvent(quitEvent);
   };
