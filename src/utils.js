@@ -759,61 +759,58 @@ function rubberbandSelect(pianoRoll){
     const pointerDownMoveSelection = (evt) => {
       console.log('moving selection start');
       isMovingNotes = true;
-      lastStartX = evt.x;// - gridContainer.getBoundingClientRect().left;
-      lastStartY = evt.y;// - gridContainer.getBoundingClientRect().top;
+      lastStartX = evt.clientX;
+      lastStartY = evt.clientY;
     };
     
     const pointerMoveMoveSelection = (evt) => {
       if(isMovingNotes){
-        console.log('moving selection');
-        const currX = evt.x;// - gridContainer.getBoundingClientRect().left;
-        const currY = evt.y;// - gridContainer.getBoundingClientRect().top;
+        const currX = evt.clientX;
+        const currY = evt.clientY;
         
         const deltaX = currX - lastStartX;
         const deltaY = currY - lastStartY;
         
-        // move overlay to a lower z-index temporarily so it doesn't interfere with the pointer events for moving the notes
+        //console.log(`deltaX: ${deltaX}, deltaY: ${deltaY}, currX: ${currX}, currY: ${currY}`);
+        
         overlay.style.zIndex = -1;
         
+        // TODO: how can we make sure all the notes stay in their relative positions when moving?
+        // this currently runs the risk of some notes getting out of relative position, which messes up everything
+        // maybe look at https://github.com/LMMS/lmms/blob/master/src/gui/editors/PianoRoll.cpp#L3060 for inspiration
+        // make note movement all or nothing? only all selected notes move or none at all - that I think can help mitigate
+        // issues for now with notes getting out of their relative positions when moved
+        let allCanMove = true;
+        const notesToMove = [];
         selectedNotes.forEach(n => {
           const noteBoundingClientRect = n.getBoundingClientRect();
-          const newNoteX = noteBoundingClientRect.x + deltaX; //noteBoundingClientRect.x + deltaX;
-          const newNoteY = noteBoundingClientRect.y + deltaY; //noteBoundingClientRect.y + deltaY;
-          
-          //console.log(`newNoteX: ${newNoteX}, newNoteY: ${newNoteY}, deltaX: ${deltaX}, deltaY: ${deltaY}, x: ${currX}, y: ${currY}, lastStartX: ${lastStartX}, lastStartY: ${lastStartY}`);
-          //console.log(`moving ${n.id}`);
-          
-          // simulate left-click on note, which will trigger some new event listeners on the piano roll div to allow us to move the note
-          const newPointerDownEvt = new PointerEvent('pointerdown', {which: 1});
-          n.dispatchEvent(newPointerDownEvt);
-          //n.style.backgroundColor = 'orange';
+          const newNoteX = noteBoundingClientRect.x + deltaX;
+          const newNoteY = noteBoundingClientRect.y + deltaY;
+          //console.log(`newNoteX: ${newNoteX}, newNoteY: ${newNoteY}`);
           
           // find what would be the destination for the note if we moved the note based on newNoteX and newNoteY
-          const targetContainer = document.elementFromPoint(newNoteX, newNoteY);
-          //targetContainer.style.background = '#ccc';
-          
-          // important! we're going to dispatch the event on the destination target so we want it to bubble up to the piano roll div 
-          // because the event listener for pointermove is on the piano roll div
-          const newPointerMoveEvt = new PointerEvent('pointermove', {
-            clientX: newNoteX,
-            clientY: newNoteY,
-            bubbles: true, // this makes sure the event gets received by the piano roll div
+          const targetContainer = document.elementsFromPoint(newNoteX, newNoteY).find(c => {
+            return c.classList.contains('noteContainer');
           });
-          //console.log(`moving to x: ${newNoteXRelativeToViewport}, y: ${newNoteYRelativeToViewport} - ${n.parentNode.id} to ${targetContainer.id}`);
-          //console.log(targetContainer);
           
-          // move the note
-          const pianoRollInterface = document.getElementById('piano');
-          targetContainer.dispatchEvent(newPointerMoveEvt);
-          
-          // then stop by simulating pointerup evt
-          const newPointerUpEvt = new PointerEvent('pointerup', {bubbles: true});
-          pianoRollInterface.dispatchEvent(newPointerUpEvt);
+          if(targetContainer != undefined){
+            notesToMove.push({
+              target: targetContainer,
+              x: newNoteX,
+              y: newNoteY,
+            });
+          }else{
+            allCanMove = false;
+          }
         });
         
-        //lastStartX = currX;
-        //lastStartY = currY;
-        
+        if(allCanMove){
+          selectedNotes.forEach((n, idx) => {
+            // using placeNoteAtPosition() from domModification.js
+            placeNoteAtPosition(n, pianoRoll, notesToMove[idx]);
+          });
+        }
+
         overlay.style.zIndex = 1000;
       }
     };
