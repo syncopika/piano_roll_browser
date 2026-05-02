@@ -799,7 +799,7 @@ function rubberbandSelect(pianoRoll){
           const noteBoundingClientRect = n.getBoundingClientRect();
           const newNoteX = noteBoundingClientRect.x + deltaX;
           
-          // if we're trying to move the notes downwards, check against noteBoundingClientRect.y + 15 (15 is the height of a note cell)
+          // if we're trying to move the notes downwards, check against noteBoundingClientRect.y + (15 * 2) (15 is the height of a note cell)
           // because noteBoundingClientRect.y is the top-left corner y coord of the selected note. so it's fine when moving a note up but not the same moving down
           const newNoteY = deltaY < 0 ? (noteBoundingClientRect.y + deltaY) : (noteBoundingClientRect.y + (deltaY * 2));
           
