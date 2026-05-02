@@ -764,12 +764,10 @@ function rubberbandSelect(pianoRoll){
     };
     
     // important! we can't exactly know what note cell our cursor is on when moving the selection
-    // (unlike when moving a single note) so we need to estimate based on distance moved and devise our own strategy. 
+    // (unlike when moving a single note) so we need to estimate based on distance moved if we can move into a new cell.
     // we also need to take into account x and y direction.
-    // currently, a note cell (represents an eighth note) is 40px wide and 15 px high.
-    // TODO: also take into account the note lock type size?
-    const noteCellWidth = 20;
-    const noteCellHeight = 7;
+    const noteCellWidth = pianoRoll.noteSizeMap[pianoRoll.lockNoteSize];
+    const noteCellHeight = 15;
     
     const pointerMoveMoveSelection = (evt) => {
       if(isMovingNotes){
@@ -779,8 +777,6 @@ function rubberbandSelect(pianoRoll){
         const deltaX = currX - lastStartX;
         const deltaY = currY - lastStartY;
         
-        //console.log(`deltaX: ${deltaX}, deltaY: ${deltaY}, currX: ${currX}, currY: ${currY}`);
-        
         // only allow movement of the selected notes if we can estimate that
         // we'd be able to move at least +1 or -1 note cell up, down, left, or right
         if(Math.abs(deltaY) < noteCellHeight && Math.abs(deltaX) < noteCellWidth){
@@ -788,7 +784,7 @@ function rubberbandSelect(pianoRoll){
           // same note cell from where the pointerdown event happened and we shouldn't move the selection yet
           return;
         }else{
-          console.log(`can move note! deltaX: ${deltaX}, deltaY: ${deltaY}`);
+          //console.log(`can move note! deltaX: ${deltaX}, deltaY: ${deltaY}, currX: ${currX}, currY: ${currY}, lastStartX: ${lastStartX}, lastStartY: ${lastStartY}`);
         }
         
         overlay.style.zIndex = -1;
@@ -798,18 +794,21 @@ function rubberbandSelect(pianoRoll){
         // maybe look at https://github.com/LMMS/lmms/blob/master/src/gui/editors/PianoRoll.cpp#L3060 for inspiration
         // make note movement all or nothing? only all selected notes move or none at all - that I think can help mitigate
         // issues for now with notes getting out of their relative positions when moved
-        let allCanMove = true;
         const notesToMove = [];
         selectedNotes.forEach(n => {
           const noteBoundingClientRect = n.getBoundingClientRect();
           const newNoteX = noteBoundingClientRect.x + deltaX;
-          const newNoteY = noteBoundingClientRect.y + deltaY;
-          //console.log(`newNoteX: ${newNoteX}, newNoteY: ${newNoteY}`);
+          
+          // if we're trying to move the notes downwards, check against noteBoundingClientRect.y + 15 (15 is the height of a note cell)
+          // because noteBoundingClientRect.y is the top-left corner y coord of the selected note. so it's fine when moving a note up but not the same moving down
+          const newNoteY = deltaY < 0 ? (noteBoundingClientRect.y + deltaY) : (noteBoundingClientRect.y + (deltaY * 2));
           
           // find what would be the destination for the note if we moved the note based on newNoteX and newNoteY
           const targetContainer = document.elementsFromPoint(newNoteX, newNoteY).find(c => {
             return c.classList.contains('noteContainer');
           });
+          
+          //console.log(`newNoteX: ${newNoteX}, newNoteY: ${newNoteY}`);
           
           if(targetContainer != undefined){
             notesToMove.push({
@@ -817,16 +816,15 @@ function rubberbandSelect(pianoRoll){
               x: newNoteX,
               y: newNoteY,
             });
-          }else{
-            allCanMove = false;
-            //console.log('cannot move notes :(');
           }
         });
         
-        if(allCanMove){
-          selectedNotes.forEach((n, idx) => {
+        // we can only move selected notes if they all have a new cell to move to
+        if(notesToMove.length === selectedNotes.length){
+          //console.log('moving notes!');
+          selectedNotes.map((n, idx) => {
             // using placeNoteAtPosition() from domModification.js
-            placeNoteAtPosition(n, pianoRoll, notesToMove[idx]);
+            return placeNoteAtPosition(n, pianoRoll, notesToMove[idx]);
           });
         }
         
