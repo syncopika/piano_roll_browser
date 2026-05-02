@@ -763,6 +763,14 @@ function rubberbandSelect(pianoRoll){
       lastStartY = evt.clientY;
     };
     
+    // important! we can't exactly know what note cell our cursor is on when moving the selection
+    // (unlike when moving a single note) so we need to estimate based on distance moved and devise our own strategy. 
+    // we also need to take into account x and y direction.
+    // currently, a note cell (represents an eighth note) is 40px wide and 15 px high.
+    // TODO: also take into account the note lock type size?
+    const noteCellWidth = 20;
+    const noteCellHeight = 7;
+    
     const pointerMoveMoveSelection = (evt) => {
       if(isMovingNotes){
         const currX = evt.clientX;
@@ -772,6 +780,16 @@ function rubberbandSelect(pianoRoll){
         const deltaY = currY - lastStartY;
         
         //console.log(`deltaX: ${deltaX}, deltaY: ${deltaY}, currX: ${currX}, currY: ${currY}`);
+        
+        // only allow movement of the selected notes if we can estimate that
+        // we'd be able to move at least +1 or -1 note cell up, down, left, or right
+        if(Math.abs(deltaY) < noteCellHeight && Math.abs(deltaX) < noteCellWidth){
+          // we haven't moved more than noteCellWidth left/right and noteCellHeight up/down so assume we're still within the
+          // same note cell from where the pointerdown event happened and we shouldn't move the selection yet
+          return;
+        }else{
+          console.log(`can move note! deltaX: ${deltaX}, deltaY: ${deltaY}`);
+        }
         
         overlay.style.zIndex = -1;
         
@@ -801,6 +819,7 @@ function rubberbandSelect(pianoRoll){
             });
           }else{
             allCanMove = false;
+            //console.log('cannot move notes :(');
           }
         });
         
@@ -810,6 +829,9 @@ function rubberbandSelect(pianoRoll){
             placeNoteAtPosition(n, pianoRoll, notesToMove[idx]);
           });
         }
+        
+        lastStartX = currX;
+        lastStartY = currY;
 
         overlay.style.zIndex = 1000;
       }
