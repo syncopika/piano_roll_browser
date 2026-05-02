@@ -242,6 +242,15 @@ function bindButtons(pianoRollObject){
     pianoRollObject.autoScroll = !pianoRollObject.autoScroll;
     document.getElementById('toggleAutoScroll').style.backgroundColor = pianoRollObject.autoScroll ? "#d0d0d0" : "";
   });
+  
+  document.getElementById('mmpExport').addEventListener('click', () => {
+    const data = getJSONData(pianoRoll);
+    exportMMPFile(data); // from mmpGenerator.js
+  });
+  
+  document.getElementById('rubberbandSelect').addEventListener('click', () => {
+    rubberbandSelect(pianoRollObject);
+  });
 }
 
 
@@ -647,170 +656,205 @@ function getDemo(selectedDemo){
   httpRequest.send();
 }
 
-
-
-
-/////////////////////// database-specific (mongodb) stuff
-/****
-    save current project to database
-****/
-function saveProjectToDB(){
-  pianoRoll.currentInstrument.notes = readInNotes(pianoRoll.currentInstrument, pianoRoll);
-    
-  const jsonData = JSON.stringify(getJSONData(pianoRoll), null, 4);
-    
-  $.ajax({
-    type: 'POST',
-    url: '/score',
-    dataType: "JSON",
-    data: {
-      score: jsonData // the query attribute is "score"!
-    },
-    success: function(response){                
-      // TODO: add to the 'choose score' dropdown and make it the currently selected score?
-      console.log("posted score to database");
+// select multiple notes of the current instrument via rubberband selection
+function rubberbandSelect(pianoRoll){
+  // make sure we add overlay for rubberband selection only over the grid containing the notes
+  const gridContainer = document.getElementById('grid');
+  const gridContainerWidth = gridContainer.scrollWidth;
+  
+  const overlay = document.createElement('div');
+  overlay.style.position = 'absolute';
+  overlay.style.width = `${gridContainerWidth}px`;
+  
+  overlay.style.height = '100%';
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.background = 'rgba(120, 120, 120, 0.1)';
+  overlay.style.zIndex = 1000;
+  
+  // TODO: what about mobile?
+  const quitRubberbandSelect = (evt) => {
+    if(evt.key === 'Escape' || evt.code === 'Escape'){
+      overlay.parentNode.removeChild(overlay);
+      window.removeEventListener('keydown', quitRubberbandSelect);
     }
-  });
-}
-
-
-/****
-    select a score of this user in the db
-****/
-function selectProject(selectedPrj){
-  // get the selected demo from the dropbox
-  // selectedDemo is the path to the demo to load 
-  if(selectedPrj.options[selectedPrj.selectedIndex].text === ""){
-    return;
-  }
+  };
+  
+  window.addEventListener('keydown', quitRubberbandSelect);
+  
+  // rubberband select drawing functions
+  let rubberband;
+  let isSelecting = false;
+  
+  const pointerDownRubberbandSelect = (evt) => {
+    isSelecting = true;
     
-  // need to make a request for the score!
-  let data;
-  const selectedScore = selectedPrj.options[selectedPrj.selectedIndex].text;
-  $.ajax({
-    type: 'GET',
-    url: '/score/?name=' + selectedScore,
-    success: function(response){                
-      console.log("got score");
-            
-      const userScores = response[0].local.scores;
-      for(let i = 0; i < userScores.length; i++){
-        if(userScores[i].title === selectedScore){
-          data = userScores[i];
+    const x = evt.x - gridContainer.getBoundingClientRect().left;
+    const y = evt.y - gridContainer.getBoundingClientRect().top;
+    
+    rubberband = document.createElement('div');
+    rubberband.style.border = '1px solid #000';
+    rubberband.style.background = 'rgba(255, 255, 255, 0.1)';
+    rubberband.style.position = 'absolute';
+    rubberband.style.top = `${y}px`;
+    rubberband.style.left = `${x}px`;
+    
+    overlay.appendChild(rubberband);
+  };
+  
+  const pointerMoveRubberbandSelect = (evt) => {
+    if(isSelecting && rubberband){
+      const x = evt.x - gridContainer.getBoundingClientRect().left;
+      const y = evt.y - gridContainer.getBoundingClientRect().top;
+      const newWidth = `${x - parseInt(rubberband.style.left)}px`;
+      const newHeight = `${y - parseInt(rubberband.style.top)}px`;
+      rubberband.style.width = newWidth;
+      rubberband.style.height = newHeight;
+    }
+  };
+  
+  const pointerUpRubberbandSelect = (evt) => {
+    isSelecting = false;
+    
+    // remove initial pointerdown and pointermove event listeners and
+    // replace them with new event listeners that'll move the selected notes
+    overlay.removeEventListener('pointerdown', pointerDownRubberbandSelect);
+    overlay.removeEventListener('pointermove', pointerMoveRubberbandSelect);
+    
+    // clear rubberband
+    if(rubberband && rubberband.parentNode) rubberband.parentNode.removeChild(rubberband);
+    
+    const x = evt.x - gridContainer.getBoundingClientRect().left;
+    const y = evt.y - gridContainer.getBoundingClientRect().top;
+    
+    //console.log(`rubberband top: ${parseInt(rubberband.style.top)}, left: ${parseInt(rubberband.style.left)}, x: ${x}, y: ${y}`);
+    
+    const minX = parseInt(rubberband.style.left);
+    const minY = parseInt(rubberband.style.top);
+    const maxX = x;
+    const maxY = y;
+    const selectedNotes = [];
+    const currInstNotes = pianoRoll.currentInstrument.notes;
+    currInstNotes.forEach(noteArr => {
+      noteArr.forEach(n => {
+        const note = document.getElementById(n.block.id);
+        const noteX = parseInt(note.style.left);
+        const noteY = note.offsetTop;
+        //console.log(`note x: ${noteX}, note y: ${noteY}`);
+        if(noteX >= minX && noteX <= maxX && noteY >= minY && noteY <= maxY){
+          selectedNotes.push(note);
         }
+      });
+    });
+    
+    // temporarily highlight selected notes
+    const originalColors = selectedNotes.map(n => n.style.background);
+    selectedNotes.forEach(n => n.style.background = '#4361ee');
+    
+    let isMovingNotes = false;
+    let lastStartX;
+    let lastStartY;
+    
+    const pointerDownMoveSelection = (evt) => {
+      console.log('moving selection start');
+      isMovingNotes = true;
+      lastStartX = evt.clientX;
+      lastStartY = evt.clientY;
+    };
+    
+    // important! we can't exactly know what note cell our cursor is on when moving the selection
+    // (unlike when moving a single note) so we need to estimate based on distance moved if we can move into a new cell.
+    // we also need to take into account x and y direction.
+    const noteCellWidth = pianoRoll.noteSizeMap[pianoRoll.lockNoteSize];
+    const noteCellHeight = 15;
+    
+    const pointerMoveMoveSelection = (evt) => {
+      if(isMovingNotes){
+        const currX = evt.clientX;
+        const currY = evt.clientY;
+        
+        const deltaX = currX - lastStartX;
+        const deltaY = currY - lastStartY;
+        
+        // only allow movement of the selected notes if we can estimate that
+        // we'd be able to move at least +1 or -1 note cell up, down, left, or right
+        if(Math.abs(deltaY) < noteCellHeight && Math.abs(deltaX) < noteCellWidth){
+          // we haven't moved more than noteCellWidth left/right and noteCellHeight up/down so assume we're still within the
+          // same note cell from where the pointerdown event happened and we shouldn't move the selection yet
+          return;
+        }else{
+          //console.log(`can move note! deltaX: ${deltaX}, deltaY: ${deltaY}, currX: ${currX}, currY: ${currY}, lastStartX: ${lastStartX}, lastStartY: ${lastStartY}`);
+        }
+        
+        overlay.style.zIndex = -1;
+        
+        // TODO: how can we make sure all the notes stay in their relative positions when moving?
+        // this currently runs the risk of some notes getting out of relative position, which messes up everything
+        // maybe look at https://github.com/LMMS/lmms/blob/master/src/gui/editors/PianoRoll.cpp#L3060 for inspiration
+        // make note movement all or nothing? only all selected notes move or none at all - that I think can help mitigate
+        // issues for now with notes getting out of their relative positions when moved
+        const notesToMove = [];
+        selectedNotes.forEach(n => {
+          const noteBoundingClientRect = n.getBoundingClientRect();
+          const newNoteX = noteBoundingClientRect.x + deltaX;
+          
+          // if we're trying to move the notes downwards, check against noteBoundingClientRect.y + (15 * 2) (15 is the height of a note cell)
+          // because noteBoundingClientRect.y is the top-left corner y coord of the selected note. so it's fine when moving a note up but not the same moving down
+          const newNoteY = deltaY < 0 ? (noteBoundingClientRect.y + deltaY) : (noteBoundingClientRect.y + (deltaY * 2));
+          
+          // find what would be the destination for the note if we moved the note based on newNoteX and newNoteY
+          const targetContainer = document.elementsFromPoint(newNoteX, newNoteY).find(c => {
+            return c.classList.contains('noteContainer');
+          });
+          
+          //console.log(`newNoteX: ${newNoteX}, newNoteY: ${newNoteY}`);
+          
+          if(targetContainer != undefined){
+            notesToMove.push({
+              target: targetContainer,
+              x: newNoteX,
+              y: newNoteY,
+            });
+          }
+        });
+        
+        // we can only move selected notes if they all have a new cell to move to
+        if(notesToMove.length === selectedNotes.length){
+          //console.log('moving notes!');
+          selectedNotes.map((n, idx) => {
+            // using placeNoteAtPosition() from domModification.js
+            return placeNoteAtPosition(n, pianoRoll, notesToMove[idx]);
+          });
+        }
+        
+        lastStartX = currX;
+        lastStartY = currY;
+
+        overlay.style.zIndex = 1000;
       }
-            
-      // request was successful. process json data now.
-      pianoRoll.playMarker = null;
-      stopPlay(pianoRoll);
-      clearGridAll(pianoRoll);
-      processData(data);
-    }
-  });
-}
-
-function saveProfileInfo(){
-  //console.log("saving edits.");
+    };
     
-  // collect the info from the textareas
-  // TODO: probably should be using a form 
-  const locInfo = document.getElementById('editLocation').value.trim();
-  const aboutInfo = document.getElementById('editAbout').value.trim();
+    const pointerUpMoveSelection = (evt) => {
+      console.log('done moving');
+      
+      // set the note's color back to the original
+      selectedNotes.forEach((n, idx) => {
+        n.style.background = originalColors[idx];
+      });
+      
+      isMovingNotes = false;
+      const quitEvent = new KeyboardEvent('keydown', {key: 'Escape', code: 'Escape', bubbles: true});
+      window.dispatchEvent(quitEvent);
+    };
     
-  // save the info in the textareas to the database, update the display, and remove textareas
-  // is there going to be a problem if the ampersand appears in the textarea????? :/
-  $.ajax({
-    type: 'PUT',
-    url: '/profile/?' + 'location=' + locInfo + '&' + 'about=' + aboutInfo,
-    success: function(response){				
-      console.log("saved info.");
-            
-      // display the changes on the client side immediately!
-      const updatedLocInfo = document.getElementById('locationText');
-      updatedLocInfo.textContent = "location: " + locInfo;
-            
-      const updatedAbout = document.getElementById('aboutText');
-      updatedAbout.textContent = aboutInfo;
-    }
-  });
-    
-  // use cancelEdit to remove the editing stuff 
-  cancelEdit();
-}
-
-function cancelEdit(){
-  /* simply remove the text areas */
-  const locationTextbox = document.getElementById("editLocation");
-  locationTextbox.parentNode.removeChild(locationTextbox);
-    
-  const aboutTextbox = document.getElementById("editAbout");
-  aboutTextbox.parentNode.removeChild(aboutTextbox);
-    
-  // remove the buttons also!
-  const sbutton = document.getElementById("saveButton");
-  const cbutton = document.getElementById("cancelButton");
-  sbutton.parentNode.removeChild(sbutton);
-  cbutton.parentNode.removeChild(cbutton);
-}
-
-function editProfile(){
-  // check if already editing. 
-  // there are many choices to check if editing is on currently, but I will choose the presence of the save button.
-  if(document.getElementById('saveButton') !== null){
-    return;
-  }
-
-  // edit sections (location, about)
-  // show textareas corresponding to the fields
-  // what about if user clicks edit, but then tries to navigate away from page? need some check for that?
-  const loc = document.getElementById('locationField');
-  const about = document.getElementById('aboutField');
-    
-  const locationTextarea = document.createElement("textarea");
-  locationTextarea.id = "editLocation";
-    
-  const currLocation = document.getElementById('locationText').textContent;
-  locationTextarea.value = currLocation.substring(currLocation.indexOf(":") + 1).trim();
-  loc.appendChild(locationTextarea);
-    
-  const aboutTextarea = document.createElement("textarea");
-  const currAbout = document.getElementById('aboutText').textContent.trim();
-  aboutTextarea.id = "editAbout";
-  aboutTextarea.value = currAbout;
-  about.appendChild(aboutTextarea);
-    
-  // add a 'save changes' button and 'cancel' button 
-  const saveButton = document.createElement("button");
-  saveButton.innerHTML = "save changes";
-  saveButton.id = "saveButton";
-    
-  const cancelButton = document.createElement("button");
-  cancelButton.innerHTML = "cancel";
-    
-  const buttonLocation = document.getElementById('userFacts');
-    
-  // attach each button with their corresponding function 
-  saveButton.addEventListener("click", saveProfileInfo);
-  cancelButton.addEventListener("click", cancelEdit);
-  cancelButton.id = "cancelButton";
-    
-  buttonLocation.appendChild(saveButton);
-  buttonLocation.appendChild(cancelButton);
-}
-
-// delete a score 
-function deleteScore(scoreName){
-  $.ajax({
-    type: 'DELETE',
-    url: '/score?name=' + scoreName,
-    success: function(response){
-      if(response === "success"){
-        console.log("removed score: " + scoreName);
-                
-        // remove from DOM 
-        const element = document.getElementById(scoreName);
-        element.parentNode.removeChild(element);
-      }
-    }
-  });
+    overlay.addEventListener('pointerdown', pointerDownMoveSelection);
+    overlay.addEventListener('pointermove', pointerMoveMoveSelection);
+    overlay.addEventListener('pointerup', pointerUpMoveSelection);
+  };
+  
+  overlay.addEventListener('pointerdown', pointerDownRubberbandSelect);
+  overlay.addEventListener('pointermove', pointerMoveRubberbandSelect);
+  overlay.addEventListener('pointerup', pointerUpRubberbandSelect);
+  
+  gridContainer.appendChild(overlay);
 }

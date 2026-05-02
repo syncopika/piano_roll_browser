@@ -73,10 +73,3 @@ document.addEventListener('contextmenu', (evt) => {
     setupNoteContextMenu(pianoRoll, evt);
   }
 });
-
-document.getElementById('mmpExport').addEventListener('click', () => {
-  // getJSONData is from utils.js
-  const data = getJSONData(pianoRoll);
-  
-  exportMMPFile(data); // from mmpGenerator.js
-});
