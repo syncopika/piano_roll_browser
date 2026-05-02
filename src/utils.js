@@ -685,7 +685,6 @@ function rubberbandSelect(pianoRoll){
   // rubberband select drawing functions
   let rubberband;
   let isSelecting = false;
-  let canMoveSelection = false;
   
   const pointerDownRubberbandSelect = (evt) => {
     isSelecting = true;
