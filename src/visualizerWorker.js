@@ -1,4 +1,4 @@
-// this is the worker script for the audio visualizer
+// this is the worker script for the 2d audio visualizers
 // https://web.dev/articles/offscreen-canvas
 
 let canvas = null;
@@ -142,8 +142,8 @@ function renderRipples(){
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    ripples.forEach(f => f.render());
-    ripples = ripples.filter(f => !f.isFinished);
+    ripples.forEach(r => r.render());
+    ripples = ripples.filter(r => !r.isFinished);
     
     if(ripples.length === 0){
       ripplesVisualizerIsRunning = false;

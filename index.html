@@ -14,7 +14,10 @@
     <script src='src/visualizer.js'></script>
     <script src='src/utils.js'></script>
     <script src='src/mmpGenerator.js'></script>
-    
+      
+    <!-- TODO: can we fetch three.js resources only when the 3d visualizer is summoned? -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+   
     <!-- my styling -->
     <link rel="stylesheet" href="style.css" type="text/css"/>
     
@@ -480,6 +483,10 @@
               />
             </svg>
           </button>
+        </li>
+        
+        <li>
+          <button id='toggle3dVisualizer'> 3D visualizer </button>
         </li>
         
         <li>

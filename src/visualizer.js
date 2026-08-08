@@ -105,3 +105,159 @@ function removeVisualizer(pianoRollObject){
     pianoRollObject.visualizerWebWorker = null;
   }
 }
+
+// stuff for 3d visualizer 
+// the 3d visualizer only needs the note data to construct a 3d rendering of each note
+function removeVisualizer3d(pianoRollObject){
+  if(pianoRollObject.visualizerCanvas3d){
+    // detach 3d canvas container
+    pianoRollObject.visualizerCanvas3d.parentNode.removeChild(pianoRollObject.visualizerCanvas3d);
+    pianoRollObject.visualizerCanvas3d = null;
+    
+    // stop animating
+    cancelAnimationFrame(pianoRollObject.visualizerRequestAnimationFrameId3d);
+    pianoRollObject.visualizerRequestAnimationFrameId3d = null;
+    
+    pianoRollObject.visualizer3dCamera = null;
+    pianoRollObject.visualizer3dScene = null;
+    pianoRollObject.visualizerOffscreenCanvas3d = null;
+    
+    if(pianoRollObject.visualizerWebWorker3d){
+      pianoRollObject.visualizerWebWorker3d.terminate(); // important!
+      pianoRollObject.visualizerWebWorker3d = null;
+    }
+    
+    if(pianoRollObject.visualizer3dRenderer){
+      pianoRollObject.visualizer3dRenderer.dispose();
+      pianoRollObject.visualizer3dRenderer = null;
+    }
+  }
+}
+
+function buildVisualizer3D(gridDivId, pianoRollObject){
+  // remove existing visualizer if there is one (e.g. if pause -> play)
+  removeVisualizer3d(pianoRollObject);
+  
+  const thePiano = document.getElementById(gridDivId);
+    
+  const dimensions = thePiano.getBoundingClientRect();
+  const canvasContainer = document.createElement('div');
+  canvasContainer.id = 'visuailzer3d';
+  canvasContainer.style.display = 'block';
+  
+  canvasContainer.width = thePiano.scrollWidth; //dimensions.width;
+  canvasContainer.height = dimensions.height;
+  
+  canvasContainer.style.width = thePiano.scrollWidth + 'px';
+  canvasContainer.style.height = dimensions.height + 'px';
+  canvasContainer.style.position = 'absolute';
+  canvasContainer.style.top = 0;
+  canvasContainer.style.left = 0;
+  canvasContainer.style.border = '1px solid #ccc';
+    
+  thePiano.appendChild(canvasContainer);
+  
+  // set up the 3d canvas with Three.js
+  const renderer = new THREE.WebGLRenderer({antialias: true});
+  renderer.setSize(canvasContainer.width, canvasContainer.height)
+  canvasContainer.appendChild(renderer.domElement);
+  
+  // add camera, scene, lighting
+  const fov = 60;
+  const camera = new THREE.PerspectiveCamera(fov, canvasContainer.width / canvasContainer.height, 0.01, 1000); 
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xeeeeee);
+  scene.add(camera);
+  
+  const spotLight = new THREE.SpotLight(0xffffff);
+  spotLight.position.set(0, 50, 0);
+  spotLight.castShadow = true;
+  spotLight.shadow.mapSize.width = 1024;
+  spotLight.shadow.mapSize.height = 1024;
+  scene.add(spotLight);
+  
+  pianoRollObject.visualizer3dScene = scene;
+  pianoRollObject.visualizer3dCamera = camera;
+  pianoRollObject.visualizerCanvas3d = canvasContainer;
+  pianoRollObject.visualizer3dRenderer = renderer;
+  
+  /*
+  pianoRollObject.visualizerWebWorker3d = new Worker('./src/visualizerWorker3d.js');
+  
+  const canvas = renderer.domElement;  
+  const offscreen = canvas.transferControlToOffscreen();
+  pianoRollObject.visualizerWebWorker3d.postMessage(
+    {canvas: offscreen}, [offscreen]
+  );
+  */
+  
+  populateVisualizer3dScene(pianoRollObject, scene);
+  
+  // render the scene and launch animation loop
+  visualizer3dAnimationLoop(pianoRollObject);
+}
+
+function populateVisualizer3dScene(pianoRollObject, scene){
+  // data should be instruments, e.g.
+  /* 
+    pianoRoll.instruments = [
+      {
+        name, 
+        noteColorEnd, 
+        noteColorStart, 
+        notes: [ // an array of arrays, where each internal array represents a grouping of notes in the same column
+          [
+            {
+              block: {id, volume, style}, // ElementNode
+              duration,
+              freq
+            },
+            ...
+          ],
+        ]
+      }
+    ]
+  */
+  
+  // clear scene first
+  scene.children.forEach(c => scene.remove(c));
+  
+  function createNote(length, width, height, xPos, yPos, zPos, color='#aaff00'){
+    const boxGeometry = new THREE.BoxGeometry(length, width, height);
+    const boxMaterial = new THREE.MeshPhongMaterial({color});
+    const box = new THREE.Mesh(boxGeometry, boxMaterial);
+    return box;
+  }
+  
+  let currX = -10;
+  let currZ = -20;
+  
+  pianoRoll.instruments.forEach(inst => {
+    const noteColor = inst.noteColorStart;
+    inst.notes.forEach(noteGroup => {
+      // each note in this note group should belong to the same column
+      noteGroup.forEach(note => {
+        const height = 0.5;
+        const width = 0.8;
+        const length = note.duration /// 500; // duration is in ms and also depends on tempo! TODO: need to correct this
+        const xPos = currX;
+        const yPos = note.freq / 1000; // TODO: fix this - this is just for testing. yPos should be relative to freq, but needs to be adjusted in a more sensible way
+        const zPos = currZ;
+        const newNote = createNote(length, width, height, xPos, yPos, zPos);
+        scene.add(newNote);
+        currX += length + 3; // TODO: probably should depend on space between last note - how to know that?
+      });
+    });
+  });
+  
+  console.log(scene.children.length);
+}
+
+
+function visualizer3dAnimationLoop(pianoRollObject){
+  // update the 3d scene
+  pianoRollObject.visualizerRequestAnimationFrameId3d = 
+    window.requestAnimationFrame((timestamp) => visualizer3dAnimationLoop(pianoRollObject));
+  
+  pianoRollObject.visualizer3dRenderer.render(pianoRollObject.visualizer3dScene, pianoRollObject.visualizer3dCamera);
+}
