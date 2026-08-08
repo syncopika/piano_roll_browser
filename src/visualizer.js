@@ -143,31 +143,33 @@ function buildVisualizer3D(gridDivId, pianoRollObject){
   const dimensions = thePiano.getBoundingClientRect();
   const canvasContainer = document.createElement('div');
   canvasContainer.id = 'visuailzer3d';
-  canvasContainer.style.display = 'block';
+  //canvasContainer.style.display = 'block';
   
-  canvasContainer.width = thePiano.scrollWidth; //dimensions.width;
+  canvasContainer.width = dimensions.width; //thePiano.scrollWidth; //dimensions.width;
   canvasContainer.height = dimensions.height;
   
-  canvasContainer.style.width = thePiano.scrollWidth + 'px';
-  canvasContainer.style.height = dimensions.height + 'px';
+  canvasContainer.style.width = `100%`;// dimensions.width //thePiano.scrollWidth + 'px';
+  canvasContainer.style.height = `${dimensions.height}px`;
   canvasContainer.style.position = 'absolute';
   canvasContainer.style.top = 0;
   canvasContainer.style.left = 0;
   canvasContainer.style.border = '1px solid #ccc';
+  canvasContainer.style.zIndex = 999999;
     
   thePiano.appendChild(canvasContainer);
   
   // set up the 3d canvas with Three.js
   const renderer = new THREE.WebGLRenderer({antialias: true});
-  renderer.setSize(canvasContainer.width, canvasContainer.height)
+  renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight)
   canvasContainer.appendChild(renderer.domElement);
   
   // add camera, scene, lighting
   const fov = 60;
-  const camera = new THREE.PerspectiveCamera(fov, canvasContainer.width / canvasContainer.height, 0.01, 1000); 
+  const camera = new THREE.PerspectiveCamera(fov, canvasContainer.clientWidth / canvasContainer.clientHeight, 0.01, 1000); 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xeeeeee);
   scene.add(camera);
+  camera.position.set(0, 0, 50);
   
   const spotLight = new THREE.SpotLight(0xffffff);
   spotLight.position.set(0, 50, 0);
@@ -220,14 +222,18 @@ function populateVisualizer3dScene(pianoRollObject, scene){
   */
   
   // clear scene first
-  scene.children.forEach(c => scene.remove(c));
+  //scene.children.forEach(c => scene.remove(c));
   
-  function createNote(length, width, height, xPos, yPos, zPos, color='#aaff00'){
-    const boxGeometry = new THREE.BoxGeometry(length, width, height);
-    const boxMaterial = new THREE.MeshPhongMaterial({color});
+  function createNote(length, height, depth, color='#aaff00'){
+    const boxGeometry = new THREE.BoxGeometry(length, height, depth);
+    const boxMaterial = new THREE.MeshStandardMaterial({color: '#aaff00'});
     const box = new THREE.Mesh(boxGeometry, boxMaterial);
     return box;
   }
+  
+  const testNote = createNote(5.0, 3.0, 3.0);
+  scene.add(testNote);
+  testNote.position.set(0.0, 0.0, 0.0);
   
   let currX = -10;
   let currZ = -20;
@@ -241,23 +247,23 @@ function populateVisualizer3dScene(pianoRollObject, scene){
         const width = 0.8;
         const length = note.duration /// 500; // duration is in ms and also depends on tempo! TODO: need to correct this
         const xPos = currX;
-        const yPos = note.freq / 1000; // TODO: fix this - this is just for testing. yPos should be relative to freq, but needs to be adjusted in a more sensible way
+        const yPos = note.freq / 500; // TODO: fix this - this is just for testing. yPos should be relative to freq, but needs to be adjusted in a more sensible way
         const zPos = currZ;
-        const newNote = createNote(length, width, height, xPos, yPos, zPos);
+        
+        const newNote = createNote(length, height, width, noteColor);
         scene.add(newNote);
-        currX += length + 3; // TODO: probably should depend on space between last note - how to know that?
+        newNote.position.set(xPos, yPos, zPos);
       });
+      currX += length + 3; // TODO: probably should depend on space between last note - how to know that?
     });
   });
   
   console.log(scene.children.length);
 }
 
-
 function visualizer3dAnimationLoop(pianoRollObject){
   // update the 3d scene
-  pianoRollObject.visualizerRequestAnimationFrameId3d = 
-    window.requestAnimationFrame((timestamp) => visualizer3dAnimationLoop(pianoRollObject));
-  
   pianoRollObject.visualizer3dRenderer.render(pianoRollObject.visualizer3dScene, pianoRollObject.visualizer3dCamera);
+  
+  pianoRollObject.visualizerRequestAnimationFrameId3d = window.requestAnimationFrame((timestamp) => visualizer3dAnimationLoop(pianoRollObject));
 }
