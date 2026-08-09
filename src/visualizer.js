@@ -167,7 +167,7 @@ function buildVisualizer3D(gridDivId, pianoRollObject){
   const fov = 60;
   const camera = new THREE.PerspectiveCamera(fov, canvasContainer.clientWidth / canvasContainer.clientHeight, 0.01, 1000); 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xeeeeee);
+  scene.background = new THREE.Color(0xffffff);
   scene.add(camera);
   camera.position.set(0, 0, 60);
   
@@ -248,20 +248,20 @@ function populateVisualizer3dScene(pianoRollObject, scene){
       // each note in this note group should belong to the same column
       noteGroup.forEach(note => {
         const height = 0.5;
-        const width = 0.8;
+        const depth = 0.3;
         const length = note.duration / 500; // this is pretty arbitrary but it doesn't look too bad? TODO: is there a less-arbitrary way to do this
         const xPos = startX + getNoteXPosIn3dSpace(note, pianoRoll.visualizerCanvas3d.clientWidth);
         const yPos = note.freq / 100; // TODO: this looks ok too but can we figure out a more sensible/consistent/less-arbitrary way to adjust yPos?
         const zPos = startZ;
         
-        const newNote = createNote(length, height, width, noteColor);
+        const newNote = createNote(length, height, depth, noteColor);
         newNote.type = 'note';
         scene.add(newNote);
         
         newNote.position.set(xPos, yPos, zPos);
       });
     });
-    startZ -= 10; // each instrument should have its own z-axis position to be aligned with
+    startZ -= 8; // each instrument should have its own z-axis position to be aligned with
   });
 }
 
@@ -270,11 +270,18 @@ function visualizer3dAnimationLoop(pianoRollObject){
   const scene = pianoRollObject.visualizer3dScene;
   const camera = pianoRollObject.visualizer3dCamera;
   
-  // TODO: move the notes based on the set tempo
+  // move the notes based on the set tempo.
+  // we convert to bpm so that when we interpolate, we get a proportional increase in deltaX
+  // when tempo increases instead of inverse if we use milliseconds per note.
   const tempo = pianoRollObject.currentTempo;
+  const bpm = 30000 / tempo; // see changeTempo() in domModification.js
+  
+  // for now, try this. if -0.05 seems acceptable for a tempo of 250 ms, let's try interpolating
+  const deltaX = -0.05 * bpm / 120;
+  
   scene.children.forEach(child => {
     if(child.type && child.type === 'note'){
-      child.translateX(-0.05);
+      child.translateX(deltaX);
     }
   });
   
