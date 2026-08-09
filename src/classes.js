@@ -46,11 +46,7 @@ function PianoRoll(){
   this.visualizer3dRenderer = null;
   this.visualizer3dCamera = null;
   this.visualizer3dScene = null;
-  this.visualizerRequestAnimationFrameId3d = null;  
-  
-  // TODO: not sure if we need the below? maybe can do everything without offscreen + webworker?
-  this.visualizerOffscreenCanvas3d = null;
-  this.visualizerWebWorker3d = null;
+  this.visualizerRequestAnimationFrameId3d = null;
   
   // colors
   this.playMarkerColor = "rgb(50, 205, 50)";

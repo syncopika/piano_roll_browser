@@ -182,16 +182,6 @@ function buildVisualizer3D(gridDivId, pianoRollObject){
   pianoRollObject.visualizerCanvas3d = canvasContainer;
   pianoRollObject.visualizer3dRenderer = renderer;
   
-  /*
-  pianoRollObject.visualizerWebWorker3d = new Worker('./src/visualizerWorker3d.js');
-  
-  const canvas = renderer.domElement;  
-  const offscreen = canvas.transferControlToOffscreen();
-  pianoRollObject.visualizerWebWorker3d.postMessage(
-    {canvas: offscreen}, [offscreen]
-  );
-  */
-  
   populateVisualizer3dScene(pianoRollObject, scene);
   
   // render the scene and launch animation loop
@@ -227,34 +217,60 @@ function populateVisualizer3dScene(pianoRollObject, scene){
     return box;
   }
   
+  function getLeftmostScreenEdgeIn3dSpace(pianoRollObject){
+    // first calculate the half-height of the screen in 3d space
+    // we can do this by taking the tangent of half the camera's FOV (which is the vertical angle of the camera's view)
+    // and multiplying it by the camera's z-axis position (z-distance from center) because tan(theta) * adj = opp, taken from TOA in SOHCAHTOA (tan(theta) = opp/adj).
+    // this gives us the half-height. with the camera's aspect ratio (e.g. canvas width / canvas height), we can then calculate the half-width by multiplying the half-height with the aspect ratio.
+    // the half-width can tell us how far from the center along the x-axis in 3d space will get us to the edge of the screen viewport.
+    const camera = pianoRollObject.visualizer3dCamera;
+    // note that camera FOV is in degrees but we need radians
+    const fovRad = camera.fov * Math.PI / 180;
+    const halfHeight = Math.tan(fovRad / 2) * camera.position.z; // divide the angle by 2 since we want the half-height. we want half-height because SOHCAHTOA only works for right triangles and the FOV gives us more than a right triangle :)
+    const halfWidth = halfHeight * camera.aspect; // (halfHeight * (canvas width / canvas height) - should get us the proportional/equivalent halfWidth in 3d space as the canvas width
+    return -halfWidth; // negative because we want the leftmost edge of the screen and center is (0, 0, 0)
+  }
+  
   pianoRoll.instruments.forEach(inst => {
-    let currX = -50;
-    let currZ = -5;
+    let currX = getLeftmostScreenEdgeIn3dSpace(pianoRollObject) + 10; // add 1 for a little extra buffer TODO: need to take into account any offset
+    let currZ = 0;
     const noteColor = inst.noteColorStart;
     inst.notes.forEach(noteGroup => {
       // each note in this note group should belong to the same column
       noteGroup.forEach(note => {
         const height = 0.5;
         const width = 0.8;
-        const length = note.duration / 500; // duration is in ms and also depends on tempo! TODO: need to correct this
+        const length = note.duration / 500; // this is pretty arbitrary but it doesn't look too bad? TODO: is there a less-arbitrary way to do this
         const xPos = currX;
-        const yPos = note.freq / 100; // TODO: fix this - this is just for testing. yPos should be relative to freq, but needs to be adjusted in a more sensible way
+        const yPos = note.freq / 100; // TODO: this looks ok too but can we figure out a more sensible/consistent/less-arbitrary way to adjust yPos?
         const zPos = currZ;
         
         const newNote = createNote(length, height, width, noteColor);
+        newNote.type = 'note';
         scene.add(newNote);
+        
         newNote.position.set(xPos, yPos, zPos);
       });
       currX += length + 1; // TODO: probably should depend on space between last note - how to know that?
     });
     currZ -= 10; // each instrument should have its own z-axis position to be aligned with
   });
-  console.log(scene.children.length);
 }
 
 function visualizer3dAnimationLoop(pianoRollObject){
-  // update the 3d scene
-  pianoRollObject.visualizer3dRenderer.render(pianoRollObject.visualizer3dScene, pianoRollObject.visualizer3dCamera);
+  // render/update the 3d scene
+  const scene = pianoRollObject.visualizer3dScene;
+  const camera = pianoRollObject.visualizer3dCamera;
+  
+  // TODO: move the notes based on the set tempo
+  const tempo = pianoRollObject.currentTempo;
+  scene.children.forEach(child => {
+    if(child.type && child.type === 'note'){
+      child.translateX(-0.08);
+    }
+  });
+  
+  pianoRollObject.visualizer3dRenderer.render(scene, camera);
   
   pianoRollObject.visualizerRequestAnimationFrameId3d = window.requestAnimationFrame((timestamp) => visualizer3dAnimationLoop(pianoRollObject));
 }
