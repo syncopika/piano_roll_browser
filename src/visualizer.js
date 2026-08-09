@@ -169,11 +169,10 @@ function buildVisualizer3D(gridDivId, pianoRollObject){
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xeeeeee);
   scene.add(camera);
-  camera.position.set(0, 0, 50);
+  camera.position.set(0, 0, 60);
   
   const spotLight = new THREE.SpotLight(0xffffff);
   spotLight.position.set(0, 50, 0);
-  spotLight.castShadow = true;
   spotLight.shadow.mapSize.width = 1024;
   spotLight.shadow.mapSize.height = 1024;
   scene.add(spotLight);
@@ -221,43 +220,35 @@ function populateVisualizer3dScene(pianoRollObject, scene){
     ]
   */
   
-  // clear scene first
-  //scene.children.forEach(c => scene.remove(c));
-  
   function createNote(length, height, depth, color='#aaff00'){
     const boxGeometry = new THREE.BoxGeometry(length, height, depth);
-    const boxMaterial = new THREE.MeshStandardMaterial({color: '#aaff00'});
+    const boxMaterial = new THREE.MeshStandardMaterial({color});
     const box = new THREE.Mesh(boxGeometry, boxMaterial);
     return box;
   }
   
-  const testNote = createNote(5.0, 3.0, 3.0);
-  scene.add(testNote);
-  testNote.position.set(0.0, 0.0, 0.0);
-  
-  let currX = -10;
-  let currZ = -20;
-  
   pianoRoll.instruments.forEach(inst => {
+    let currX = -50;
+    let currZ = -5;
     const noteColor = inst.noteColorStart;
     inst.notes.forEach(noteGroup => {
       // each note in this note group should belong to the same column
       noteGroup.forEach(note => {
         const height = 0.5;
         const width = 0.8;
-        const length = note.duration /// 500; // duration is in ms and also depends on tempo! TODO: need to correct this
+        const length = note.duration / 500; // duration is in ms and also depends on tempo! TODO: need to correct this
         const xPos = currX;
-        const yPos = note.freq / 500; // TODO: fix this - this is just for testing. yPos should be relative to freq, but needs to be adjusted in a more sensible way
+        const yPos = note.freq / 100; // TODO: fix this - this is just for testing. yPos should be relative to freq, but needs to be adjusted in a more sensible way
         const zPos = currZ;
         
         const newNote = createNote(length, height, width, noteColor);
         scene.add(newNote);
         newNote.position.set(xPos, yPos, zPos);
       });
-      currX += length + 3; // TODO: probably should depend on space between last note - how to know that?
+      currX += length + 1; // TODO: probably should depend on space between last note - how to know that?
     });
+    currZ -= 10; // each instrument should have its own z-axis position to be aligned with
   });
-  
   console.log(scene.children.length);
 }
 
