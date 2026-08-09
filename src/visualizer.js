@@ -231,9 +231,18 @@ function populateVisualizer3dScene(pianoRollObject, scene){
     return -halfWidth; // negative because we want the leftmost edge of the screen and center is (0, 0, 0)
   }
   
+  function getNoteXPosIn3dSpace(note, canvasWidth){
+    const noteLeftPx = document.getElementById(note.block.id).getBoundingClientRect().left; // in 2d pixels
+    //console.log(noteLeftPx);
+    const offset = 60; // first note is offset by 60 px due to the piano note column on the left of the grid
+    const noteLeft = noteLeftPx - offset;
+    // convert noteLeft to a proportional amount in 3d space
+    return noteLeft / 40; // why 40? because 40px per 8th note?
+  }
+  
+  let startZ = 0;
   pianoRoll.instruments.forEach(inst => {
-    let currX = getLeftmostScreenEdgeIn3dSpace(pianoRollObject) + 10; // add 1 for a little extra buffer TODO: need to take into account any offset
-    let currZ = 0;
+    const startX = getLeftmostScreenEdgeIn3dSpace(pianoRollObject) + 1; // +1 for a little buffer room
     const noteColor = inst.noteColorStart;
     inst.notes.forEach(noteGroup => {
       // each note in this note group should belong to the same column
@@ -241,9 +250,9 @@ function populateVisualizer3dScene(pianoRollObject, scene){
         const height = 0.5;
         const width = 0.8;
         const length = note.duration / 500; // this is pretty arbitrary but it doesn't look too bad? TODO: is there a less-arbitrary way to do this
-        const xPos = currX;
+        const xPos = startX + getNoteXPosIn3dSpace(note, pianoRoll.visualizerCanvas3d.clientWidth);
         const yPos = note.freq / 100; // TODO: this looks ok too but can we figure out a more sensible/consistent/less-arbitrary way to adjust yPos?
-        const zPos = currZ;
+        const zPos = startZ;
         
         const newNote = createNote(length, height, width, noteColor);
         newNote.type = 'note';
@@ -251,9 +260,8 @@ function populateVisualizer3dScene(pianoRollObject, scene){
         
         newNote.position.set(xPos, yPos, zPos);
       });
-      currX += length + 1; // TODO: probably should depend on space between last note - how to know that?
     });
-    currZ -= 10; // each instrument should have its own z-axis position to be aligned with
+    startZ -= 10; // each instrument should have its own z-axis position to be aligned with
   });
 }
 
@@ -266,7 +274,7 @@ function visualizer3dAnimationLoop(pianoRollObject){
   const tempo = pianoRollObject.currentTempo;
   scene.children.forEach(child => {
     if(child.type && child.type === 'note'){
-      child.translateX(-0.08);
+      child.translateX(-0.05);
     }
   });
   
