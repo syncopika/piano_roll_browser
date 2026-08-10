@@ -42,7 +42,7 @@ function PianoRoll(){
   this.visualizerRequestAnimationFrameId = null;
   
   // stuff for 3d visualizer
-  this.visualizerCanvas3d = null; // the container div holding the 3d canvas elemen (e.g. renderer.domElement)
+  this.visualizerCanvas3d = null; // the container div holding the 3d canvas element (e.g. renderer.domElement)
   this.visualizer3dRenderer = null;
   this.visualizer3dCamera = null;
   this.visualizer3dScene = null;

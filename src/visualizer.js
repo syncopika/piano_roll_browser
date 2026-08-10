@@ -135,7 +135,7 @@ function removeVisualizer3d(pianoRollObject){
 }
 
 function buildVisualizer3D(gridDivId, pianoRollObject){
-  // remove existing visualizer if there is one (e.g. if pause -> play)
+  // remove existing visualizer first
   removeVisualizer3d(pianoRollObject);
   
   const thePiano = document.getElementById(gridDivId);
@@ -159,7 +159,7 @@ function buildVisualizer3D(gridDivId, pianoRollObject){
   
   // set up the 3d canvas with Three.js
   const renderer = new THREE.WebGLRenderer({antialias: true});
-  renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight)
+  renderer.setSize(canvasContainer.clientWidth, canvasContainer.clientHeight);
   canvasContainer.appendChild(renderer.domElement);
   
   // add camera, scene, lighting
