@@ -50,7 +50,8 @@ function bindButtons(pianoRollObject){
     context.resume().then(() => {
       if(pianoRoll.selectedVisualizer){
         if(pianoRoll.selectedVisualizer === '3d'){
-          // TODO
+          // TODO: just do current instrument
+          buildVisualizer3D('grid', pianoRoll);
         }else{
           buildVisualizer('grid', pianoRoll);
           if(pianoRoll.selectedVisualizer === 'wave'){
@@ -80,6 +81,11 @@ function bindButtons(pianoRollObject){
     
   document.getElementById('pausePlay').addEventListener('click', function(){
     pausePlay(pianoRoll);
+    // TODO: handle 3d visualizer properly
+    if(pianoRoll.selectedVisualizer === '3d'){
+      cancelAnimationFrame(pianoRollObject.visualizerRequestAnimationFrameId3d);
+      pianoRollObject.visualizerRequestAnimationFrameId3d = null;
+    }
   });
     
   document.getElementById('stopPlay').addEventListener('click', function(){

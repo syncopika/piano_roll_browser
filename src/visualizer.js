@@ -143,12 +143,11 @@ function buildVisualizer3D(gridDivId, pianoRollObject){
   const dimensions = thePiano.getBoundingClientRect();
   const canvasContainer = document.createElement('div');
   canvasContainer.id = 'visuailzer3d';
-  //canvasContainer.style.display = 'block';
   
-  canvasContainer.width = dimensions.width; //thePiano.scrollWidth; //dimensions.width;
+  canvasContainer.width = dimensions.width;
   canvasContainer.height = dimensions.height;
   
-  canvasContainer.style.width = `100%`;// dimensions.width //thePiano.scrollWidth + 'px';
+  canvasContainer.style.width = `100%`;
   canvasContainer.style.height = `${dimensions.height}px`;
   canvasContainer.style.position = 'absolute';
   canvasContainer.style.top = 0;
@@ -276,7 +275,7 @@ function visualizer3dAnimationLoop(pianoRollObject){
   const tempo = pianoRollObject.currentTempo;
   const bpm = 30000 / tempo; // see changeTempo() in domModification.js
   
-  // for now, try this. if -0.05 seems acceptable for a tempo of 250 ms, let's try interpolating
+  // for now, try this. if -0.05 seems acceptable for a tempo of 250 ms (bpm 120), let's try interpolating
   const deltaX = -0.05 * bpm / 120;
   
   scene.children.forEach(child => {
