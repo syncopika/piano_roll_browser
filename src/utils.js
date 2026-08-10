@@ -49,9 +49,14 @@ function bindButtons(pianoRollObject){
     // resume the context per the Web Audio autoplay policy 
     context.resume().then(() => {
       if(pianoRoll.selectedVisualizer){
-        buildVisualizer('grid', pianoRoll);
-        if(pianoRoll.selectedVisualizer === 'wave'){
-          updateVisualizer(pianoRoll);
+        if(pianoRoll.selectedVisualizer === '3d'){
+          // TODO: just do current instrument
+          buildVisualizer3D('grid', pianoRoll);
+        }else{
+          buildVisualizer('grid', pianoRoll);
+          if(pianoRoll.selectedVisualizer === 'wave'){
+            updateVisualizer(pianoRoll);
+          }
         }
       }
       play(pianoRoll);
@@ -61,9 +66,13 @@ function bindButtons(pianoRollObject){
   document.getElementById('playAll').addEventListener('click', function(){
     context.resume().then(() => {
       if(pianoRoll.selectedVisualizer){
-        buildVisualizer('grid', pianoRoll);
-        if(pianoRoll.selectedVisualizer === 'wave'){
-          updateVisualizer(pianoRoll);
+        if(pianoRoll.selectedVisualizer === '3d'){
+          buildVisualizer3D('grid', pianoRoll);
+        }else{
+          buildVisualizer('grid', pianoRoll);
+          if(pianoRoll.selectedVisualizer === 'wave'){
+            updateVisualizer(pianoRoll);
+          }
         }
       }
       playAll(pianoRoll);
@@ -72,18 +81,26 @@ function bindButtons(pianoRollObject){
     
   document.getElementById('pausePlay').addEventListener('click', function(){
     pausePlay(pianoRoll);
+    // TODO: handle 3d visualizer properly
+    if(pianoRoll.selectedVisualizer === '3d'){
+      cancelAnimationFrame(pianoRollObject.visualizerRequestAnimationFrameId3d);
+      pianoRollObject.visualizerRequestAnimationFrameId3d = null;
+    }
   });
     
   document.getElementById('stopPlay').addEventListener('click', function(){
     stopPlay(pianoRoll);
     
-    if(pianoRoll.visualizerCanvas && pianoRoll.selectedVisualizer === 'ripples'){
-      // stop the visualizer
-      updateRipplesVisualizer(pianoRoll, [], true);
-    }
-        
     if(pianoRoll.visualizerCanvas){
+      if(pianoRoll.selectedVisualizer === 'ripples'){
+        // stop the visualizer
+        updateRipplesVisualizer(pianoRoll, [], true);
+      }
       removeVisualizer(pianoRoll);
+    }
+    
+    if(pianoRoll.visualizerCanvas3d){
+      removeVisualizer3d(pianoRoll);
     }
   });
     
@@ -109,6 +126,10 @@ function bindButtons(pianoRollObject){
         if(pianoRoll.visualizerCanvas){
           removeVisualizer(pianoRoll);
         }
+      }else if(pianoRoll.selectedVisualizer === '3d'){
+        removeVisualizer3d(pianoRoll);
+        document.getElementById('toggle3dVisualizer').style.backgroundColor = '';
+        console.log('turned off 3d visualizer');
       }
       
       // turn on wave visualizer again (e.g. if the wave visualizer was just turned off)
@@ -126,7 +147,6 @@ function bindButtons(pianoRollObject){
     // we pass all the scheduled notes upfront to the web worker for the visualization on playback so
     // it's actually not in sync real-time with the audio (it's all pre-planned basically).
     // this makes it a bit more difficult to just turn on/off like with the wave visualizer.
-
     if(pianoRoll.selectedVisualizer === 'ripples'){
       // if currently playing, stop rendering the ripples
       document.getElementById('toggleRipplesVisualizer').style.backgroundColor = '';
@@ -144,12 +164,17 @@ function bindButtons(pianoRollObject){
           removeVisualizer(pianoRoll);
         }
         
-        // note that turning on this visualizer whilst audio playback is happeing won't do anything. 
+        // note that turning on this visualizer whilst audio playback is happening won't do anything. 
         // it needs to be turned on first before the play button is pressed
         // so if playback is already happening, let the user know
         if(pianoRoll.isPlaying){
           alert('this visualizer will take effect on next playback!');
         }
+      }else if(pianoRoll.selectedVisualizer === '3d'){
+        // turn off 3d visualizer
+        removeVisualizer3d(pianoRoll);
+        document.getElementById('toggle3dVisualizer').style.backgroundColor = '';
+        console.log('turned off 3d visualizer');
       }
       
       if(pianoRoll.selectedVisualizer === null){
@@ -159,6 +184,49 @@ function bindButtons(pianoRollObject){
       
       document.getElementById('toggleRipplesVisualizer').style.backgroundColor = '#d0d0d0';
       pianoRoll.selectedVisualizer = 'ripples';
+    }
+  });
+  
+  document.getElementById('toggle3dVisualizer').addEventListener('click', function(evt){
+    if(pianoRoll.selectedVisualizer === '3d'){
+      // if 3d viz currently on, turn it off
+      document.getElementById('toggle3dVisualizer').style.backgroundColor = '';
+      pianoRoll.selectedVisualizer = null;
+      removeVisualizer3d(pianoRoll);
+      console.log('turned off 3d visualizer');
+    }else{
+      // turn off any running 2d visualizers first
+      if(pianoRoll.selectedVisualizer === 'ripples'){
+        document.getElementById('toggleRipplesVisualizer').style.backgroundColor = '';
+        stopRipplesVisualizerRender(pianoRoll, true);
+        pianoRoll.selectedVisualizer = null;
+        cancelAnimationFrame(pianoRoll.visualizerRequestAnimationFrameId);
+        pianoRoll.visualizerRequestAnimationFrameId = null;
+        if(pianoRoll.visualizerCanvas){
+          removeVisualizer(pianoRoll);
+        }
+      }else if(pianoRoll.selectedVisualizer === 'wave'){
+        document.getElementById('toggleVisualizer').style.backgroundColor = '';
+        pianoRoll.visualizerRequestAnimationFrameId = window.requestAnimationFrame((timestamp) => updateVisualizer(pianoRoll, true)); // stop visualizer and clear it
+        pianoRoll.selectedVisualizer = null;
+        cancelAnimationFrame(pianoRoll.visualizerRequestAnimationFrameId);
+        pianoRoll.visualizerRequestAnimationFrameId = null;
+        if(pianoRoll.visualizerCanvas){
+          removeVisualizer(pianoRoll);
+        }
+      }
+    
+      // now turn on the 3d viz
+      // note that turning on this visualizer whilst audio playback is happening won't do anything. 
+      // it needs to be turned on first before the play button is pressed
+      if(pianoRoll.isPlaying){
+        alert('this visualizer will take effect on next playback!');
+      }
+      
+      document.getElementById('toggle3dVisualizer').style.backgroundColor = '#d0d0d0';
+      pianoRoll.selectedVisualizer = '3d';
+      
+      console.log('turning on 3d viz');
     }
   });
     

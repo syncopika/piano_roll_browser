@@ -33,14 +33,21 @@ function PianoRoll(){
   this.instrumentPresets = {};         // a dictionary to keep track of imported instrument presets
   this.noiseBuffer;                    // for percussion
     
-  // stuff needed for the visualizer
+  // stuff needed for 2d visualizers
   this.selectedVizualizer = null;
-  this.analyserNode = null;
+  this.analyserNode = null; // for waveform visualization
   this.visualizerCanvas = null;
   this.visualizerOffscreenCanvas = null;
   this.visualizerWebWorker = null;
   this.visualizerRequestAnimationFrameId = null;
-    
+  
+  // stuff for 3d visualizer
+  this.visualizerCanvas3d = null; // the container div holding the 3d canvas element (e.g. renderer.domElement)
+  this.visualizer3dRenderer = null;
+  this.visualizer3dCamera = null;
+  this.visualizer3dScene = null;
+  this.visualizerRequestAnimationFrameId3d = null;
+  
   // colors
   this.playMarkerColor = "rgb(50, 205, 50)";
   this.highlightColor = "#FFFF99"; // yellow

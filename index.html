@@ -14,7 +14,10 @@
     <script src='src/visualizer.js'></script>
     <script src='src/utils.js'></script>
     <script src='src/mmpGenerator.js'></script>
-    
+      
+    <!-- TODO: can we fetch three.js resources only when the 3d visualizer is summoned? -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js" integrity="sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==" crossorigin="anonymous"></script>
+   
     <!-- my styling -->
     <link rel="stylesheet" href="style.css" type="text/css"/>
     
@@ -431,6 +434,44 @@
               <circle cx="20" cy="20" r="4" stroke="black" stroke-width="1" fill="none"></circle>
               <circle cx="20" cy="20" r="1" stroke="black" stroke-width="0.5" fill="none"></circle>
               <circle cx="20" cy="20" r="7" stroke="black" stroke-width="0.8" fill="none"></circle>
+            </svg>
+          </button>
+        </li>
+        
+        <li>
+          <button id='toggle3dVisualizer' title='toggle 3d visualizer' class='btn'>
+            <svg viewBox="0 0 24 24" width="38" height="38">
+              <path
+                d="
+                                M 2 6
+                                l 9 -3
+                                l 12 5
+                                l -10 5
+                                l -12 -7
+
+                                M 2 16
+                                l 9 -3
+                                l 12 5
+                                l -10 5
+                                l -12 -7
+                                
+                                M 2 6
+                                l 0 10
+                                
+                                M 11 3
+                                l 0 10
+                                
+                                M 13 12
+                                l 0 10
+                                
+                                M 22 8
+                                l 0 10
+                                "
+                stroke="blue"
+                stroke-width="1.0"
+                fill="transparent"
+                stroke-linejoin="round"
+              />
             </svg>
           </button>
         </li>
