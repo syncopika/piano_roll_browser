@@ -51,7 +51,11 @@ function bindButtons(pianoRollObject){
       if(pianoRoll.selectedVisualizer){
         if(pianoRoll.selectedVisualizer === '3d'){
           // TODO: just do current instrument
-          buildVisualizer3D('grid', pianoRoll);
+          if(pianoRoll.visualizerCanvas3d && pianoRoll.visualizerRequestAnimationFrameId3d === null){
+            visualizer3dAnimationLoop(pianoRoll);
+          }else{
+            buildVisualizer3D('grid', pianoRoll);
+          }
         }else{
           buildVisualizer('grid', pianoRoll);
           if(pianoRoll.selectedVisualizer === 'wave'){
@@ -67,7 +71,12 @@ function bindButtons(pianoRollObject){
     context.resume().then(() => {
       if(pianoRoll.selectedVisualizer){
         if(pianoRoll.selectedVisualizer === '3d'){
-          buildVisualizer3D('grid', pianoRoll);
+          // if coming from a paused state, just resume animation
+          if(pianoRoll.visualizerCanvas3d && pianoRoll.visualizerRequestAnimationFrameId3d === null){
+            visualizer3dAnimationLoop(pianoRoll);
+          }else{
+            buildVisualizer3D('grid', pianoRoll);
+          }
         }else{
           buildVisualizer('grid', pianoRoll);
           if(pianoRoll.selectedVisualizer === 'wave'){
@@ -81,10 +90,9 @@ function bindButtons(pianoRollObject){
     
   document.getElementById('pausePlay').addEventListener('click', function(){
     pausePlay(pianoRoll);
-    // TODO: handle 3d visualizer properly
     if(pianoRoll.selectedVisualizer === '3d'){
-      cancelAnimationFrame(pianoRollObject.visualizerRequestAnimationFrameId3d);
-      pianoRollObject.visualizerRequestAnimationFrameId3d = null;
+      cancelAnimationFrame(pianoRoll.visualizerRequestAnimationFrameId3d);
+      pianoRoll.visualizerRequestAnimationFrameId3d = null;
     }
   });
     
@@ -215,10 +223,7 @@ function bindButtons(pianoRollObject){
           removeVisualizer(pianoRoll);
         }
       }
-    
-      // now turn on the 3d viz
-      // note that turning on this visualizer whilst audio playback is happening won't do anything. 
-      // it needs to be turned on first before the play button is pressed
+
       if(pianoRoll.isPlaying){
         alert('this visualizer will take effect on next playback!');
       }
