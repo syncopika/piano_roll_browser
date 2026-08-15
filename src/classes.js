@@ -199,7 +199,7 @@ function PianoRoll(){
     // make a recorder and set it up for recording
     const audioStream = context.createMediaStreamDestination();
     this.audioContextDestMediaStream = audioStream;
-    this.recorder = new MediaRecorder(audioStream.stream);
+    this.recorder = new MediaRecorder(audioStream.stream, {mimeType: 'audio/webm; codecs=opus'}); // mime type here should be webm? is ogg ok?
         
     this.recorder.ondataavailable = (function(pianoRoll){
       return function(evt){
@@ -208,15 +208,38 @@ function PianoRoll(){
     })(this);
         
     this.recorder.onstop = (function(pianoRoll){
-      return function(evt){
-        const blob = new Blob(pianoRoll.audioDataChunks, {'type': 'audio/ogg; codecs=opus'});
-        console.log(blob);
-        const url = URL.createObjectURL(blob);
+      return async function(evt){
+        const blob = new Blob(pianoRoll.audioDataChunks, {type: 'audio/webm; codecs=opus'}); // note the mime type here
+        
+        /*
+        if(false){
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+
+          // note this is specific to my page html
+          link.download = document.getElementById('pieceTitle').textContent + "_pianorollfun";
+          link.click();
+        }*/
+        
+        // duration for output file will be set to infinity on Chrome (as of 8/15/26, this actually does not seem to be true anymore! https://issues.chromium.org/issues/40482588 - but this is interesting to try nonetheless)
+        // so try decoding the audio via the audioContext to get the duration and downloading the
+        // resulting audio buffer as a wav
+        // https://stackoverflow.com/questions/78470608/problem-with-getting-audio-duration-from-blob-in-chrome-safari
+        // TODO: currently this doesn't work - a perfectly fine .wav file does get created but the audio data is all 0s (so silence) :/
+        const audioArrayBuf = await blob.arrayBuffer();
+        
+        const decodedAudioBuffer = await pianoRoll.audioContext.decodeAudioData(audioArrayBuf);
+        
+        console.log('exporting audio');
+        console.log("raw samples check: " + decodedAudioBuffer.getChannelData(0).slice(0, 20));
+        
+        const wavData = convertAudioBufferToWav(decodedAudioBuffer);
+        const wavBlob = new Blob([wavData], {type: 'audio/wav'});
+        
+        const url = URL.createObjectURL(wavBlob);
         const link = document.createElement('a');
         link.href = url;
-                
-        // duration for output file will be set to infinity on Chrome
-        // I don't think I can edit the file's duration unless you do some crazy annoying stuff. it's a chrome bug :/
 
         // note this is specific to my page html
         link.download = document.getElementById('pieceTitle').textContent + "_pianorollfun";
@@ -238,6 +261,90 @@ function PianoRoll(){
     this.PianoManager = new PianoManager(this);
   };
 
+}
+
+// from: https://github.com/mattdiamond/Recorderjs/blob/master/src/recorder.js
+function convertAudioBufferToWav(audioBuffer){
+  const numChannels = audioBuffer.numberOfChannels;
+  const sampleRate = audioBuffer.sampleRate;
+
+  let interleavedAudioData = [];
+  if(numChannels === 2){
+    interleavedAudioData = interleave(audioBuffer.getChannelData(0), audioBuffer.getChannelData(1));
+  }else{
+    interleavedAudioData = interleave(audioBuffer.getChannelData(0));
+  }
+
+  const dataLength = interleavedAudioData.length;
+
+  const tempBuffer = new ArrayBuffer(44 + dataLength * 2);
+  const view = new DataView(tempBuffer); // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView
+
+  console.log(`num channels: ${numChannels}, sample rate: ${sampleRate}, data length: ${dataLength}`);
+
+  // the following steps sets up the metadata chunk for the wav file.
+  /* RIFF identifier */
+  writeString(view, 0, 'RIFF');
+  /* RIFF chunk length */
+  view.setUint32(4, 36 + dataLength * 2, true);
+  /* RIFF type */
+  writeString(view, 8, 'WAVE');
+  /* format chunk identifier */
+  writeString(view, 12, 'fmt ');
+  /* format chunk length */
+  view.setUint32(16, 16, true);
+  /* sample format (raw) */
+  view.setUint16(20, 1, true);
+  /* channel count */
+  view.setUint16(22, numChannels, true); 
+  /* sample rate */
+  view.setUint32(24, sampleRate, true);
+  /* byte rate (sample rate * block align) */
+  view.setUint32(28, sampleRate * 4, true);
+  /* block align (channel count * bytes per sample) */
+  view.setUint16(32, numChannels * 2, true);
+  /* bits per sample */
+  view.setUint16(34, 16, true);
+  /* data chunk identifier */
+  writeString(view, 36, 'data');
+  /* data chunk length */
+  view.setUint32(40, dataLength * 2, true);
+
+  floatTo16BitPCM(view, 44, interleavedAudioData);
+  
+  return view;
+}
+
+// from https://github.com/mattdiamond/Recorderjs/blob/master/src/recorder.js
+function writeString(view, offset, string) {
+  for(let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
+}
+
+// from https://github.com/mattdiamond/Recorderjs/blob/master/src/recorder.js
+function floatTo16BitPCM(output, offset, input) {
+  for(let i = 0; i < input.length; i++, offset += 2) {
+    const s = Math.max(-1, Math.min(1, input[i]));
+    output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+}
+
+// from https://github.com/mattdiamond/Recorderjs/blob/master/src/recorder.js
+function interleave(chan1, chan2){
+  const length = chan1.length + chan2.length;
+  const result = new Float32Array(length);
+  
+  let idx = 0;
+  let inputIdx = 0;
+  
+  while(idx < inputIdx){
+    result[idx++] = chan1[inputIdx];
+    result[idx++] = chan2[inputIdx];
+    inputIdx++;
+  }
+  
+  return result;
 }
 
 
