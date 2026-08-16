@@ -210,13 +210,9 @@ function PianoRoll(){
     this.recorder.onstop = (function(pianoRoll){
       return function(evt){
         const blob = new Blob(pianoRoll.audioDataChunks, {'type': 'audio/ogg; codecs=opus'});
-        console.log(blob);
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-                
-        // duration for output file will be set to infinity on Chrome
-        // I don't think I can edit the file's duration unless you do some crazy annoying stuff. it's a chrome bug :/
 
         // note this is specific to my page html
         link.download = document.getElementById('pieceTitle').textContent + "_pianorollfun";
