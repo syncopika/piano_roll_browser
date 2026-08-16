@@ -134,7 +134,7 @@ function removeVisualizer3d(pianoRollObject){
   }
 }
 
-function buildVisualizer3D(gridDivId, pianoRollObject){
+function buildVisualizer3D(gridDivId, pianoRollObject, allInstruments=true){
   // remove existing visualizer first
   removeVisualizer3d(pianoRollObject);
   
@@ -181,13 +181,13 @@ function buildVisualizer3D(gridDivId, pianoRollObject){
   pianoRollObject.visualizerCanvas3d = canvasContainer;
   pianoRollObject.visualizer3dRenderer = renderer;
   
-  populateVisualizer3dScene(pianoRollObject, scene);
+  populateVisualizer3dScene(pianoRollObject, scene, allInstruments);
   
   // render the scene and launch animation loop
   visualizer3dAnimationLoop(pianoRollObject);
 }
 
-function populateVisualizer3dScene(pianoRollObject, scene){
+function populateVisualizer3dScene(pianoRollObject, scene, allInstruments){
   // data should be instruments, e.g.
   /* 
     pianoRoll.instruments = [
@@ -240,7 +240,13 @@ function populateVisualizer3dScene(pianoRollObject, scene){
   }
   
   let startZ = 0;
-  pianoRoll.instruments.forEach(inst => {
+  
+  let instruments = pianoRoll.instruments;
+  if(!allInstruments){
+    instruments = [pianoRoll.currentInstrument];
+  }
+  
+  instruments.forEach(inst => {
     const startX = getLeftmostScreenEdgeIn3dSpace(pianoRollObject) + 1; // +1 for a little buffer room
     const noteColor = inst.noteColorStart;
     inst.notes.forEach(noteGroup => {
@@ -255,6 +261,7 @@ function populateVisualizer3dScene(pianoRollObject, scene){
         
         const newNote = createNote(length, height, depth, noteColor);
         newNote.type = 'note';
+        newNote.name = document.getElementById(note.block.id).parentNode.id;
         scene.add(newNote);
         
         newNote.position.set(xPos, yPos, zPos);

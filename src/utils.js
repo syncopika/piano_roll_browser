@@ -50,11 +50,10 @@ function bindButtons(pianoRollObject){
     context.resume().then(() => {
       if(pianoRoll.selectedVisualizer){
         if(pianoRoll.selectedVisualizer === '3d'){
-          // TODO: just do current instrument
           if(pianoRoll.visualizerCanvas3d && pianoRoll.visualizerRequestAnimationFrameId3d === null){
             visualizer3dAnimationLoop(pianoRoll);
           }else{
-            buildVisualizer3D('grid', pianoRoll);
+            buildVisualizer3D('grid', pianoRoll, false); // show only current instrument's notes
           }
         }else{
           buildVisualizer('grid', pianoRoll);
