@@ -575,7 +575,7 @@ const onendFunc = function(colHeaderId, lastColId, pianoRollObject){
       // change the currently playing note to wireframe when using the 3d visualizer
       // TODO: this isn't great atm but does provide some visual indication (albeit a bit inaccurate) about where things are
       if(pianoRollObject.selectedVisualizer === '3d' && pianoRollObject.visualizer3dScene){
-        for(let child of pianoRollObject.visualizer3dScene.children){
+        for(const child of pianoRollObject.visualizer3dScene.children){
           if(child.name.includes(colHeaderId)){
             child.material.wireframe = true;
             break;
